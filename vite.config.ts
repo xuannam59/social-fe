@@ -8,15 +8,17 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      '@social': path.resolve(__dirname, './src'),
       '@social/components': path.resolve(__dirname, './src/components'),
       '@social/pages': path.resolve(__dirname, './src/pages'),
-      '@social/utils': path.resolve(__dirname, './src/utils'),
       '@social/types': path.resolve(__dirname, './src/types'),
-      '@social/config': path.resolve(__dirname, './src/config'),
-      '@social/css': path.resolve(__dirname, './src/css'),
+      '@social/axios': path.resolve(__dirname, './src/config/axios'),
+      '@social/styles': path.resolve(__dirname, './src/styles'),
       '@social/assets': path.resolve(__dirname, './src/assets'),
-      '@social/api': path.resolve(__dirname, './src/api'),
+      '@social/api': path.resolve(__dirname, './src/services/api'),
+      '@social/redux': path.resolve(__dirname, './src/services/redux'),
+      '@social/hooks': path.resolve(__dirname, './src/services/hooks'),
+      '@social/constants': path.resolve(__dirname, './src/utils/constants'),
+      '@social/defaults': path.resolve(__dirname, './src/utils/defaults'),
     },
   },
   server: {

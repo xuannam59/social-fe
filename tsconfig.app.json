@@ -28,12 +28,15 @@
     "paths": {
       "@social/components/*": ["src/components/*"],
       "@social/pages/*": ["src/pages/*"],
-      "@social/utils/*": ["src/utils/*"],
       "@social/types/*": ["src/types/*"],
-      "@social/config/*": ["src/config/*"],
-      "@social/css/*": ["src/css/*"],
+      "@social/axios/*": ["src/config/axios/*"],
+      "@social/styles/*": ["src/styles/*"],
       "@social/assets/*": ["src/assets/*"],
-      "@social/api/*": ["src/api/*"]
+      "@social/api/*": ["src/services/api/*"],
+      "@social/redux/*": ["src/services/redux/*"],
+      "@social/hooks/*": ["src/services/hooks/*"],
+      "@social/constants/*": ["src/utils/constants/*"],
+      "@social/defaults/*": ["src/utils/defaults/*"]
     }
   },
   "include": ["src"]
