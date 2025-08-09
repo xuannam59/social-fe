@@ -41,21 +41,8 @@ const RegisterPage = () => {
           <p className="text-gray-600 text-sm">Join our community and connect with friends around the world</p>
         </div>
         <Form layout="vertical" form={form} onFinish={onSubmit} disabled={isLoading}>
-          <Form.Item
-            label="First Name"
-            name="firstName"
-            rules={[{ required: true, message: 'First name is required' }]}
-          >
-            <Input placeholder="Enter your first name" allowClear />
-          </Form.Item>
-
-          <Form.Item
-            label="Last Name"
-            name="lastName"
-            rules={[{ required: true, message: 'Last name is required' }]}
-            className="mb-4"
-          >
-            <Input placeholder="Enter your last name" allowClear />
+          <Form.Item label="Full Name" name="fullName" rules={[{ required: true, message: 'Full name is required' }]}>
+            <Input placeholder="Enter your full name" allowClear />
           </Form.Item>
 
           <Form.Item

@@ -1,0 +1,16 @@
+{
+  "name": "Jun Social",
+  "short_name": "Social",
+  "description": "A social media application",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3793b6",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

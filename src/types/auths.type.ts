@@ -10,10 +10,15 @@ export interface ILoginResponse {
 }
 
 export interface IRegisterForm {
-  firstName: string;
-  lastName: string;
+  fullName: string;
   email: string;
   password: string;
   confirmPassword: string;
-  phone?: string;
+}
+
+export interface IForgotPasswordForm {
+  email: string;
+  otp: string;
+  newPassword: string;
+  confirmPassword: string;
 }
