@@ -26,14 +26,14 @@
     /* Paths */
     "baseUrl": ".",
     "paths": {
+      "@social/configs/*": ["src/configs/*"],
       "@social/components/*": ["src/components/*"],
       "@social/pages/*": ["src/pages/*"],
       "@social/types/*": ["src/types/*"],
-      "@social/axios/*": ["src/config/axios/*"],
       "@social/styles/*": ["src/assets/styles/*"],
       "@social/animations/*": ["src/assets/animations/*"],
       "@social/images/*": ["src/assets/images/*"],
-      "@social/api/*": ["src/services/api/*"],
+      "@social/apis/*": ["src/services/apis/*"],
       "@social/redux/*": ["src/services/redux/*"],
       "@social/hooks/*": ["src/services/hooks/*"],
       "@social/constants/*": ["src/utils/constants/*"],

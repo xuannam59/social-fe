@@ -1,27 +1,35 @@
+import { register } from '@social/apis/auths';
 import { ROUTES } from '@social/constants/route.constant';
 import logo from '@social/images/logo.webp';
 import type { IRegisterForm } from '@social/types/auths.type';
-import { Button, Divider, Form, Input, message, Typography } from 'antd';
+import { Button, Divider, Form, Input, message, notification, Typography } from 'antd';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const { Title } = Typography;
 
 const RegisterPage = () => {
   const [form] = Form.useForm();
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const onSubmit = async (values: IRegisterForm) => {
     setIsLoading(true);
-    try {
-      console.log(values);
+
+    const res = await register(values);
+    if (res.data) {
       message.success('Register successful');
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsLoading(false);
+      navigate(ROUTES.AUTH.LOGIN);
+    } else {
+      notification.error({
+        message: res.error,
+        description: res.message && Array.isArray(res.message) ? res.message.join(', ') : res.message,
+        duration: 3,
+      });
     }
+    setIsLoading(false);
   };
+
   return (
     <>
       <div className="flex flex-col gap-4 p-5">
@@ -41,7 +49,7 @@ const RegisterPage = () => {
           <p className="text-gray-600 text-sm">Join our community and connect with friends around the world</p>
         </div>
         <Form layout="vertical" form={form} onFinish={onSubmit} disabled={isLoading}>
-          <Form.Item label="Full Name" name="fullName" rules={[{ required: true, message: 'Full name is required' }]}>
+          <Form.Item label="Full Name" name="fullname" rules={[{ required: true, message: 'Full name is required' }]}>
             <Input placeholder="Enter your full name" allowClear />
           </Form.Item>
 

@@ -5,12 +5,18 @@ export interface ILoginForm {
 }
 
 export interface ILoginResponse {
+  _id: string;
+  fullName: string;
+  email: string;
+  phoneNumber?: string;
+  avatar?: string;
+  role: string;
+  isActive: boolean;
   accessToken: string;
-  refreshToken: string;
 }
 
 export interface IRegisterForm {
-  fullName: string;
+  fullname: string;
   email: string;
   password: string;
   confirmPassword: string;
