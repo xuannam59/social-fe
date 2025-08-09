@@ -1,11 +1,12 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import './styles/index.css';
+import '@social/styles/index.css';
 import App from './App.tsx';
 import { Provider } from 'react-redux';
-import { store } from './services/redux/stores.ts';
+import { store } from '@social/redux/stores.ts';
 
-createRoot(document.getElementById('root')!).render(
+const root = createRoot(document.getElementById('root')!);
+root.render(
   <Provider store={store}>
     <StrictMode>
       <App />

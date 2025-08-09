@@ -1,0 +1,26 @@
+import type { ButtonProps } from 'antd/es/button';
+import Button from 'antd/es/button';
+import React from 'react';
+
+interface IProps extends ButtonProps {
+  className?: string;
+  form?: string;
+  to?: string;
+  children: React.ReactNode;
+}
+
+const ButtonGradient = (props: IProps) => {
+  const { className, children, form, to, ...buttonProps } = props;
+  return (
+    <Button
+      className={`${className} !border-none !bg-gradient-to-r 
+      ${form ?? 'from-sky-500'} ${to ?? 'to-fuchsia-500'}
+      `}
+      {...buttonProps}
+    >
+      <span className="text-white font-normal text-[16px]">{children}</span>
+    </Button>
+  );
+};
+
+export default ButtonGradient;
