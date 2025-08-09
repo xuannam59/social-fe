@@ -1,27 +1,40 @@
+import { callApiLogin } from '@social/apis/auths.api';
 import LoginGoogle from '@social/components/logins/LoginGoogle';
 import { ROUTES } from '@social/constants/route.constant';
 import logo from '@social/images/logo.webp';
+import { setUser } from '@social/redux/reducers/auth.reducer';
 import type { ILoginForm } from '@social/types/auths.type';
-import { Button, Checkbox, Divider, Form, Input, message, Typography } from 'antd';
+import { Button, Checkbox, Divider, Form, Input, message, notification, Typography } from 'antd';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAppDispatch } from '@social/hooks/redux.hook';
 
 const { Title } = Typography;
 const LoginPage = () => {
   const [form] = Form.useForm();
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const dispatch = useAppDispatch();
 
   const onSubmit = async (values: ILoginForm) => {
     setIsLoading(true);
-    try {
-      console.log(values);
+    const res = await callApiLogin(values);
+    if (res.data) {
       message.success('Login successful');
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsLoading(false);
+      navigate(ROUTES.DEFAULT);
+      localStorage.setItem('access_token', res.data.access_token);
+      dispatch(setUser(res.data));
+    } else {
+      notification.error({
+        message: res.error,
+        description: res.message && Array.isArray(res.message) ? res.message.join(', ') : res.message,
+        duration: 3,
+      });
     }
+    setIsLoading(false);
   };
+
   return (
     <>
       <div className="flex flex-col gap-4 p-5">
@@ -60,10 +73,7 @@ const LoginPage = () => {
           <Form.Item label="Password" name="password" rules={[{ required: true, message: 'Password is required' }]}>
             <Input.Password placeholder="Enter your password" allowClear onPressEnter={() => form.submit()} />
           </Form.Item>
-          <div className="flex justify-between items-center mb-4">
-            <Form.Item name="remember" valuePropName="checked" noStyle>
-              <Checkbox>Remember me</Checkbox>
-            </Form.Item>
+          <div className="flex justify-end items-center mb-4">
             <Link to={ROUTES.AUTH.FORGOT_PASSWORD} className="text-primary hover:!underline">
               Forgot password?
             </Link>

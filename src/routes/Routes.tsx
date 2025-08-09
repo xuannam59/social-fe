@@ -1,6 +1,6 @@
 import { ROUTES } from '@social/constants/route.constant';
 import LoginPage from '@social/pages/auths/LoginPage';
-import LayoutAuth from '@social/components/layouts/Auth';
+import LayoutAuth from '@social/components/layouts/Auth.layout';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import RegisterPage from '@social/pages/auths/RegisterPage';
 import ForgotPasswordPage from '@social/pages/auths/ForgotPasswordPage';

@@ -35,7 +35,7 @@
       "@social/images/*": ["src/assets/images/*"],
       "@social/apis/*": ["src/services/apis/*"],
       "@social/redux/*": ["src/services/redux/*"],
-      "@social/hooks/*": ["src/services/hooks/*"],
+      "@social/hooks/*": ["src/hooks/*"],
       "@social/constants/*": ["src/utils/constants/*"],
       "@social/defaults/*": ["src/utils/defaults/*"]
     }

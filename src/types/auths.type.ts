@@ -1,3 +1,5 @@
+import type { IUser } from './user.type';
+
 export interface ILoginForm {
   email: string;
   password: string;
@@ -27,4 +29,10 @@ export interface IForgotPasswordForm {
   otp: string;
   newPassword: string;
   confirmPassword: string;
+}
+
+export interface IAuthState {
+  user: IUser;
+  isLoading: boolean;
+  isAuthenticated: boolean;
 }

@@ -17,7 +17,7 @@ export default defineConfig({
       '@social/images': path.resolve(__dirname, './src/assets/images'),
       '@social/apis': path.resolve(__dirname, './src/services/apis'),
       '@social/redux': path.resolve(__dirname, './src/services/redux'),
-      '@social/hooks': path.resolve(__dirname, './src/services/hooks'),
+      '@social/hooks': path.resolve(__dirname, './src/hooks'),
       '@social/constants': path.resolve(__dirname, './src/utils/constants'),
       '@social/defaults': path.resolve(__dirname, './src/utils/defaults'),
     },

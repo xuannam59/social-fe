@@ -1,4 +1,4 @@
-import { register } from '@social/apis/auths';
+import { callApiRegister } from '@social/apis/auths.api';
 import { ROUTES } from '@social/constants/route.constant';
 import logo from '@social/images/logo.webp';
 import type { IRegisterForm } from '@social/types/auths.type';
@@ -16,7 +16,7 @@ const RegisterPage = () => {
   const onSubmit = async (values: IRegisterForm) => {
     setIsLoading(true);
 
-    const res = await register(values);
+    const res = await callApiRegister(values);
     if (res.data) {
       message.success('Register successful');
       navigate(ROUTES.AUTH.LOGIN);

@@ -28,7 +28,7 @@ const LayoutAuth = () => {
             <Lottie animationData={animation} loop={true} />
           </div>
         </div>
-        <div className={`w-full lg:w-1/2 flex justify-center items-center`}>
+        <div className={`w-full lg:w-1/2 flex justify-center lg:justify-start items-center`}>
           <div className="max-w-lg min-w-md">
             <Outlet />
           </div>
