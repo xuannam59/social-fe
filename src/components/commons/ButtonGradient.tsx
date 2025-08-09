@@ -14,7 +14,7 @@ const ButtonGradient = (props: IProps) => {
   return (
     <Button
       className={`${className} !border-none !bg-gradient-to-r 
-      ${form ?? 'from-sky-500'} ${to ?? 'to-fuchsia-500'}
+      ${form ?? 'from-primary'} ${to ?? 'to-secondary'}
       `}
       {...buttonProps}
     >

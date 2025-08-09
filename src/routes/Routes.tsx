@@ -1,14 +1,16 @@
 import { ROUTES } from '@social/constants/route.constant';
-import Login from '@social/pages/auths/Login';
+import LoginPage from '@social/pages/auths/LoginPage';
 import LayoutAuth from '@social/components/layouts/Auth';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import RegisterPage from '@social/pages/auths/RegisterPage';
 
 const AppRoutes = () => {
   return (
     <BrowserRouter>
       <Routes>
         <Route element={<LayoutAuth />}>
-          <Route path={ROUTES.AUTH.LOGIN} element={<Login />} />
+          <Route path={ROUTES.AUTH.LOGIN} element={<LoginPage />} />
+          <Route path={ROUTES.AUTH.REGISTER} element={<RegisterPage />} />
         </Route>
         <Route path={ROUTES.DEFAULT} element={<div>helloworld</div>} />
       </Routes>

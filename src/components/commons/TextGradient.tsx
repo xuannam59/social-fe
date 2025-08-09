@@ -18,7 +18,7 @@ const TextGradient = (props: IProps) => {
     <Text
       className={`
         ${className} font-bold !text-transparent bg-clip-text bg-gradient-to-r 
-        ${form ?? 'from-sky-500'} ${to ?? 'to-fuchsia-500'}
+        ${form ?? 'from-primary'} ${to ?? 'to-secondary'}
       `}
       {...textProps}
     >

@@ -1,14 +1,13 @@
-import ButtonGradient from '@social/components/commons/ButtonGradient';
 import LoginGoogle from '@social/components/logins/LoginGoogle';
 import { ROUTES } from '@social/constants/route.constant';
 import logo from '@social/images/logo.webp';
 import type { ILoginForm } from '@social/types/auths.type';
-import { Checkbox, Divider, Form, Input, message, Typography } from 'antd';
+import { Button, Checkbox, Divider, Form, Input, message, Typography } from 'antd';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const { Title } = Typography;
-const Login = () => {
+const LoginPage = () => {
   const [form] = Form.useForm();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -37,8 +36,9 @@ const Login = () => {
         </div>
         <div className="flex flex-col">
           <Title level={3} className="!text-primary">
-            Nice to see you again!
+            Welcome Back!
           </Title>
+          <p className="text-gray-600 text-sm">Login to continue your journey with us</p>
         </div>
         <Form layout="vertical" form={form} onFinish={onSubmit} disabled={isLoading}>
           <Form.Item
@@ -58,26 +58,26 @@ const Login = () => {
             <Input placeholder="Enter your email" allowClear />
           </Form.Item>
           <Form.Item label="Password" name="password" rules={[{ required: true, message: 'Password is required' }]}>
-            <Input.Password placeholder="Enter your password" allowClear />
+            <Input.Password placeholder="Enter your password" allowClear onPressEnter={() => form.submit()} />
           </Form.Item>
           <div className="flex justify-between items-center mb-4">
             <Form.Item name="remember" valuePropName="checked" noStyle>
               <Checkbox>Remember me</Checkbox>
             </Form.Item>
-            <Link to={ROUTES.AUTH.FORGOT_PASSWORD} className="text-primary">
+            <Link to={ROUTES.AUTH.FORGOT_PASSWORD} className="text-primary hover:!underline">
               Forgot password?
             </Link>
           </div>
-          <div className="flex flex-col">
-            <ButtonGradient type="primary" size="middle" loading={isLoading} onClick={() => form.submit()}>
+          <div className="flex flex-col mb-4">
+            <Button type="primary" size="middle" loading={isLoading} onClick={() => form.submit()}>
               Login
-            </ButtonGradient>
+            </Button>
             <Divider />
             <LoginGoogle disabled={isLoading} />
           </div>
           <div className="flex justify-center items-center gap-4">
-            <span className="text-sm">Don't have an account?</span>
-            <Link to={ROUTES.AUTH.REGISTER} className="text-primary">
+            <span className="text-sm text-gray-600">Don't have an account?</span>
+            <Link to={ROUTES.AUTH.REGISTER} className="text-primary hover:!underline">
               Register
             </Link>
           </div>
@@ -87,4 +87,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default LoginPage;
