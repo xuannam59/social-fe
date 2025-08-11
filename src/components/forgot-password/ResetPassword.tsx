@@ -1,7 +1,10 @@
+import { callApiResetPassword } from '@social/apis/auths.api';
 import type { IForgotPasswordForm } from '@social/types/auths.type';
-import { Button, Form, Input, message } from 'antd';
+import { Button, Form, Input, message, notification } from 'antd';
 import React from 'react';
 import { useState } from 'react';
+import { ROUTES } from '@social/constants/route.constant';
+import { useNavigate } from 'react-router-dom';
 
 interface IProps {
   forgotPassword: IForgotPasswordForm;
@@ -10,26 +13,40 @@ interface IProps {
 const ResetPassword: React.FC<IProps> = ({ forgotPassword }) => {
   const [form] = Form.useForm();
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const onSubmit = async (values: IForgotPasswordForm) => {
+  const onSubmit = async (values: { newPassword: string; confirmPassword: string }) => {
     setIsLoading(true);
-    try {
-      console.log(values);
-      console.log(forgotPassword);
+    const data: IForgotPasswordForm = {
+      email: forgotPassword.email,
+      otp: forgotPassword.otp,
+      newPassword: values.newPassword,
+      confirmPassword: values.confirmPassword,
+    };
+    const res = await callApiResetPassword(data);
+    if (res.data) {
       message.success('Reset password successful');
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsLoading(false);
+      navigate(ROUTES.AUTH.LOGIN);
+    } else {
+      notification.error({
+        message: res.error,
+        description: res.message && Array.isArray(res.message) ? res.message.join(', ') : res.message,
+        duration: 3,
+      });
     }
+    setIsLoading(false);
   };
+
   return (
     <>
       <Form layout="vertical" form={form} onFinish={onSubmit} disabled={isLoading}>
         <Form.Item
           label="New Password"
           name="newPassword"
-          rules={[{ required: true, message: 'New password is required' }]}
+          rules={[
+            { required: true, message: 'New password is required' },
+            { min: 8, message: 'New password must be at least 8 characters' },
+          ]}
         >
           <Input.Password placeholder="Enter your new password" allowClear />
         </Form.Item>
@@ -38,6 +55,7 @@ const ResetPassword: React.FC<IProps> = ({ forgotPassword }) => {
           name="confirmPassword"
           rules={[
             { required: true, message: 'Confirm password is required' },
+            { min: 8, message: 'Confirm password must be at least 8 characters' },
             {
               validator: (_, value) => {
                 if (value !== form.getFieldValue('newPassword')) {

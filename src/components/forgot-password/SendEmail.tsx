@@ -1,5 +1,6 @@
+import { callApiForgotPassword } from '@social/apis/auths.api';
 import type { IForgotPasswordForm } from '@social/types/auths.type';
-import { Button, Form, Input, message } from 'antd';
+import { Button, Form, Input, message, notification } from 'antd';
 import { useState } from 'react';
 
 interface IProps {
@@ -12,21 +13,24 @@ const SendEmail: React.FC<IProps> = ({ setForgotPassword, handleNextStep }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const onSubmit = async (values: { email: string }) => {
-    const email = values.email;
     setIsLoading(true);
-    try {
+    const email = values.email;
+    const res = await callApiForgotPassword(email);
+    if (res.data) {
+      message.success('OTP has been sent to your email');
       setForgotPassword(prev => ({
         ...prev,
         email,
       }));
-      message.success('OTP has been sent to your email');
       handleNextStep();
-    } catch (error) {
-      console.log(error);
-      message.error('Failed to send reset password email');
-    } finally {
-      setIsLoading(false);
+    } else {
+      notification.error({
+        message: res.error,
+        description: res.message && Array.isArray(res.message) ? res.message.join(', ') : res.message,
+        duration: 3,
+      });
     }
+    setIsLoading(false);
   };
 
   return (

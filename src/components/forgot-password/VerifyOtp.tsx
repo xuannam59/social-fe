@@ -1,13 +1,15 @@
-import type { IForgotPasswordForm } from '@social/types/auths.type';
-import { Button, Form, Input, message } from 'antd';
+import { callApiForgotPassword, callApiVerifyOtp } from '@social/apis/auths.api';
+import type { IForgotPasswordForm, IVerifyOtpForm } from '@social/types/auths.type';
+import { Button, Form, Input, message, notification } from 'antd';
 import React, { useEffect, useState } from 'react';
 
 interface IProps {
+  forgotPassword: IForgotPasswordForm;
   setForgotPassword: React.Dispatch<React.SetStateAction<IForgotPasswordForm>>;
   handleNextStep: () => void;
 }
 
-const VerifyOtp: React.FC<IProps> = ({ setForgotPassword, handleNextStep }) => {
+const VerifyOtp: React.FC<IProps> = ({ forgotPassword, setForgotPassword, handleNextStep }) => {
   const [form] = Form.useForm();
   const [isLoading, setIsLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -22,33 +24,55 @@ const VerifyOtp: React.FC<IProps> = ({ setForgotPassword, handleNextStep }) => {
     return () => clearTimeout(times);
   }, [timeLeft]);
 
-  const onSubmit = async (values: IForgotPasswordForm) => {
+  const handleResendOtp = async () => {
+    setTimeLeft(60);
+    const res = await callApiForgotPassword(forgotPassword.email);
+    if (res.data) {
+      message.success('OTP has been sent to your email');
+    } else {
+      notification.error({
+        message: res.error,
+        description: res.message && Array.isArray(res.message) ? res.message.join(', ') : res.message,
+        duration: 3,
+      });
+    }
+  };
+
+  const onSubmit = async (values: { otp: string }) => {
     setIsLoading(true);
-    try {
-      console.log(values);
+    const data: IVerifyOtpForm = {
+      email: forgotPassword.email,
+      otp: values.otp,
+    };
+
+    const res = await callApiVerifyOtp(data);
+    if (res.data) {
       message.success('OTP verified successfully');
       setForgotPassword(prev => ({
         ...prev,
         otp: values.otp,
       }));
       handleNextStep();
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsLoading(false);
+    } else {
+      notification.error({
+        message: res.error,
+        description: res.message && Array.isArray(res.message) ? res.message.join(', ') : res.message,
+        duration: 3,
+      });
     }
+    setIsLoading(false);
   };
   return (
     <>
       <Form layout="vertical" form={form} onFinish={onSubmit} disabled={isLoading}>
         <Form.Item label="OTP" name="otp" rules={[{ required: true, message: 'OTP is required' }]} className="!mb-0">
-          <Input.OTP length={6} type="number" />
+          <Input.OTP length={6} className="!w-full" />
         </Form.Item>
         <div className="flex justify-between items-center mb-4">
           {timeLeft > 0 ? (
             <span className="text-sm text-gray-500">Resend OTP in {timeLeft} seconds</span>
           ) : (
-            <Button type="link" className="!p-0" onClick={() => setTimeLeft(60)}>
+            <Button type="link" className="!p-0" onClick={handleResendOtp}>
               Resend OTP
             </Button>
           )}

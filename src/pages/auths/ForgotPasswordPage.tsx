@@ -27,7 +27,13 @@ const ForgotPasswordPage = () => {
       case 0:
         return <SendEmail setForgotPassword={setForgotPassword} handleNextStep={handleNextStep} />;
       case 1:
-        return <VerifyOtp setForgotPassword={setForgotPassword} handleNextStep={handleNextStep} />;
+        return (
+          <VerifyOtp
+            forgotPassword={forgotPassword}
+            setForgotPassword={setForgotPassword}
+            handleNextStep={handleNextStep}
+          />
+        );
       case 2:
         return <ResetPassword forgotPassword={forgotPassword} />;
     }

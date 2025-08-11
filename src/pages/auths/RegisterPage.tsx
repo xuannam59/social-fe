@@ -70,7 +70,14 @@ const RegisterPage = () => {
             <Input placeholder="Enter your email" allowClear />
           </Form.Item>
 
-          <Form.Item label="Password" name="password" rules={[{ required: true, message: 'Password is required' }]}>
+          <Form.Item
+            label="Password"
+            name="password"
+            rules={[
+              { required: true, message: 'Password is required' },
+              { min: 8, message: 'Password must be at least 8 characters' },
+            ]}
+          >
             <Input.Password placeholder="Enter your password" allowClear />
           </Form.Item>
           <Form.Item
@@ -78,6 +85,7 @@ const RegisterPage = () => {
             name="confirmPassword"
             rules={[
               { required: true, message: 'Confirm password is required' },
+              { min: 8, message: 'Confirm password must be at least 8 characters' },
               {
                 validator: (_, value) => {
                   if (value !== form.getFieldValue('password')) {

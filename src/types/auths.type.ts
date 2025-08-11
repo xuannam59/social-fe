@@ -36,3 +36,8 @@ export interface IAuthState {
   isLoading: boolean;
   isAuthenticated: boolean;
 }
+
+export interface IVerifyOtpForm {
+  email: string;
+  otp: string;
+}
