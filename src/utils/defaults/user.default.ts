@@ -2,7 +2,7 @@ import type { IUser } from '@social/types/user.type';
 
 export const USER_DEFAULT: IUser = {
   _id: '',
-  fullName: '',
+  fullname: '',
   email: '',
   phoneNumber: '',
   avatar: '',

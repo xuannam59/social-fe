@@ -2,7 +2,7 @@ import { callApiLogin } from '@social/apis/auths.api';
 import LoginGoogle from '@social/components/logins/LoginGoogle';
 import { ROUTES } from '@social/constants/route.constant';
 import logo from '@social/images/logo.webp';
-import { setUser } from '@social/redux/reducers/auth.reducer';
+import { doLogin } from '@social/redux/reducers/auth.reducer';
 import type { ILoginForm } from '@social/types/auths.type';
 import { Button, Checkbox, Divider, Form, Input, message, notification, Typography } from 'antd';
 import { useState } from 'react';
@@ -24,7 +24,7 @@ const LoginPage = () => {
       message.success('Login successful');
       navigate(ROUTES.DEFAULT);
       localStorage.setItem('access_token', res.data.access_token);
-      dispatch(setUser(res.data));
+      dispatch(doLogin(res.data));
     } else {
       notification.error({
         message: res.error,

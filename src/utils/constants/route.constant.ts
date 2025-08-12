@@ -1,5 +1,8 @@
 export const ROUTES = {
   DEFAULT: '/',
+  WATCH: '/watch',
+  GROUPS: '/groups',
+  PROFILE: '/profile',
   AUTH: {
     LOGIN: '/login',
     REGISTER: '/register',

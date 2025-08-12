@@ -8,7 +8,7 @@ export interface ILoginForm {
 
 export interface ILoginResponse {
   _id: string;
-  fullName: string;
+  fullname: string;
   email: string;
   phoneNumber?: string;
   avatar?: string;
@@ -32,7 +32,7 @@ export interface IForgotPasswordForm {
 }
 
 export interface IAuthState {
-  user: IUser;
+  userInfo: IUser;
   isLoading: boolean;
   isAuthenticated: boolean;
 }

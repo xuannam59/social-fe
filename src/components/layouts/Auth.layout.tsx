@@ -9,7 +9,6 @@ import { ROUTES } from '@social/constants/route.constant';
 const LayoutAuth = () => {
   const pathname = useLocation();
   const [animation, setAnimation] = useState<any>(null);
-
   useEffect(() => {
     if (pathname.pathname === ROUTES.AUTH.LOGIN) {
       setAnimation(login);
@@ -28,7 +27,9 @@ const LayoutAuth = () => {
             <Lottie animationData={animation} loop={true} />
           </div>
         </div>
-        <div className={`w-full lg:w-1/2 flex justify-center lg:justify-start items-center`}>
+        <div
+          className={`w-full lg:w-1/2 flex justify-center lg:justify-start items-center`}
+        >
           <div className="max-w-lg min-w-md">
             <Outlet />
           </div>

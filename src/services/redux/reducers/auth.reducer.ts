@@ -3,7 +3,7 @@ import { USER_DEFAULT } from '@social/defaults/user.default';
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState: IAuthState = {
-  user: USER_DEFAULT,
+  userInfo: USER_DEFAULT,
   isLoading: false,
   isAuthenticated: false,
 };
@@ -12,8 +12,13 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setUser: (state, action) => {
-      state.user = action.payload;
+    doLogin: (state, action) => {
+      state.userInfo = action.payload;
+      state.isAuthenticated = true;
+    },
+    doGetAccount: (state, action) => {
+      state.userInfo = action.payload;
+      state.isAuthenticated = true;
     },
     setIsLoading: (state, action) => {
       state.isLoading = action.payload;
@@ -24,5 +29,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser, setIsLoading, setIsAuthenticated } = authSlice.actions;
+export const { doLogin, doGetAccount, setIsLoading, setIsAuthenticated } =
+  authSlice.actions;
 export const authReducer = authSlice.reducer;
