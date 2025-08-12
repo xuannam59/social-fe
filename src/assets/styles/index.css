@@ -4,3 +4,7 @@
 .ant-otp-input-wrapper {
   flex: 1;
 }
+
+.create-post-modal .ant-modal-content {
+  padding: 0 !important;
+}

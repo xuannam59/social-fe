@@ -12,7 +12,7 @@ const HeaderSearch = () => {
 
   return (
     <>
-      <div className="flex items-center justify-start h-full gap-1 flex-1">
+      <div className="flex items-center justify-start gap-2 h-full">
         <div className="relative w-[50px] h-10 overflow-hidden flex justify-end">
           <img
             src={logo}

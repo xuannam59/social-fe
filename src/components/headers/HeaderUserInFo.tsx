@@ -1,12 +1,12 @@
-import { useAppSelector } from '@social/hooks/redux.hook';
-import defaultAvatar from '@social/images/default-avatar.webp';
-import { Avatar, Button, Dropdown, Divider, Typography } from 'antd';
-import MessageDropdown from '../messages/MessageDropdown';
-import NotificationDropdown from '../notifications/NotificationDropdown';
-import { TbLogout, TbSettings } from 'react-icons/tb';
 import { callApiLogout } from '@social/apis/auths.api';
 import { ROUTES } from '@social/constants/route.constant';
+import { useAppSelector } from '@social/hooks/redux.hook';
+import defaultAvatar from '@social/images/default-avatar.webp';
+import { Avatar, Dropdown, Typography } from 'antd';
+import { TbLogout, TbSettings } from 'react-icons/tb';
 import { useNavigate } from 'react-router-dom';
+import MessageDropdown from '../messages/MessageDropdown';
+import NotificationDropdown from '../notifications/NotificationDropdown';
 
 const { Text } = Typography;
 
@@ -23,7 +23,7 @@ const HeaderUserInfo = () => {
   };
   return (
     <>
-      <div className="flex items-center justify-end h-full flex-1 gap-2">
+      <div className="flex items-center justify-end h-full gap-2">
         <MessageDropdown />
 
         <NotificationDropdown />

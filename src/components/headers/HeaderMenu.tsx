@@ -32,7 +32,7 @@ const HeaderMenu = () => {
 
   return (
     <>
-      <div className="flex items-center justify-center h-full gap-4 flex-1">
+      <div className="flex items-center justify-center h-full gap-4">
         {subMenuHeaderDf.map((item, index) => (
           <HeaderSubMenu
             key={index}

@@ -6,15 +6,21 @@ const Header = () => {
   return (
     <>
       <div className="sticky top-0 z-10 bg-white h-14 shadow-sm">
-        <header className="flex items-center justify-between h-full gap-4 px-4">
+        <header className="grid grid-cols-13 items-center justify-between h-full gap-4 px-4">
           {/* Left */}
-          <HeaderSearch />
+          <div className="col-span-4 h-full">
+            <HeaderSearch />
+          </div>
 
           {/* Center Menu*/}
-          <HeaderMenu />
+          <div className="col-span-5 h-full">
+            <HeaderMenu />
+          </div>
 
           {/* Right */}
-          <HeaderUserInfo />
+          <div className="col-span-4 h-full">
+            <HeaderUserInfo />
+          </div>
         </header>
       </div>
     </>
