@@ -16,9 +16,9 @@ const HeaderUserInfo = () => {
   const handleLogout = async () => {
     const res = await callApiLogout();
     if (res.data) {
+      window.location.reload();
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
-      window.location.reload();
     }
   };
   return (

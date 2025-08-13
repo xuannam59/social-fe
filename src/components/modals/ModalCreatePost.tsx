@@ -9,6 +9,7 @@ import EmojiPicker, {
   type EmojiClickData,
 } from 'emoji-picker-react';
 import { useRef, useState } from 'react';
+import { LiaUserTagSolid } from 'react-icons/lia';
 import {
   TbLock,
   TbMoodSmileBeam,
@@ -120,7 +121,7 @@ const ModalCreatePost: React.FC<IProps> = ({ isOpen, onClose }) => {
       >
         {/* User Profile & Privacy */}
 
-        <div className="px-4">
+        <div className="px-3">
           <Form
             form={form}
             onFinish={handleSubmit}
@@ -153,31 +154,33 @@ const ModalCreatePost: React.FC<IProps> = ({ isOpen, onClose }) => {
                 </div>
               </div>
               <div className="overflow-x-hidden overflow-y-auto flex flex-col gap-3 max-h-[calc(100vh-400px)]">
-                <div className="relative">
-                  <Form.Item
-                    name="content"
-                    dependencies={['content']}
-                    className="!mb-0"
-                  >
-                    <Input.TextArea
-                      placeholder="What's on your mind?"
-                      className="!border-none !resize-none !text-lg min-h-[120px]"
-                      autoSize={{ minRows: image.length > 0 ? 2 : 5 }}
-                    />
-                  </Form.Item>
-
-                  <div className="absolute bottom-1 right-1">
-                    <Button
-                      size="large"
-                      type="text"
-                      shape="circle"
-                      onClick={() => {
-                        setShowEmojiPicker(!showEmojiPicker);
-                        form.focusField('content');
-                      }}
+                <div className="flex flex-col gap-2">
+                  <div className="relative">
+                    <Form.Item
+                      name="content"
+                      dependencies={['content']}
+                      className="!mb-0"
                     >
-                      <TbMoodSmileBeam size={24} />
-                    </Button>
+                      <Input.TextArea
+                        placeholder="What's on your mind?"
+                        className="!border-none !resize-none !text-md min-h-[120px]"
+                        autoSize={{ minRows: image.length > 0 ? 2 : 5 }}
+                      />
+                    </Form.Item>
+
+                    <div className="absolute bottom-1 right-1">
+                      <Button
+                        size="large"
+                        type="text"
+                        shape="circle"
+                        onClick={() => {
+                          setShowEmojiPicker(!showEmojiPicker);
+                          form.focusField('content');
+                        }}
+                      >
+                        <TbMoodSmileBeam size={24} />
+                      </Button>
+                    </div>
                   </div>
                 </div>
                 {image && image.length > 0 && (
@@ -191,28 +194,50 @@ const ModalCreatePost: React.FC<IProps> = ({ isOpen, onClose }) => {
                     showEmojiPicker ? 'block' : 'hidden'
                   }`}
                 >
-                  <div className="bg-white rounded-lg shadow-lg border border-gray-200">
-                    <EmojiPicker
-                      onEmojiClick={onEmojiClick}
-                      width={300}
-                      height={250}
-                      previewConfig={{ showPreview: false }}
-                      searchDisabled={true}
-                      emojiStyle={EmojiStyle.FACEBOOK}
-                    />
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowEmojiPicker(false)}
+                  />
+
+                  <div className="relative z-50">
+                    <div className="bg-white rounded-lg shadow-lg border border-gray-200">
+                      <EmojiPicker
+                        onEmojiClick={onEmojiClick}
+                        width={300}
+                        height={250}
+                        previewConfig={{ showPreview: false }}
+                        searchDisabled={true}
+                        emojiStyle={EmojiStyle.FACEBOOK}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="border border-gray-200 rounded-lg p-4">
+              <div className="border border-gray-200 rounded-lg p-2">
                 <div className="flex items-center justify-between gap-2">
                   <span>Add to your article</span>
                   <div className="flex items-center gap-2">
-                    <Button
-                      type="text"
-                      icon={<TbPhoto size={24} />}
-                      onClick={() => fileInputRef.current?.click()}
-                    />
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="text"
+                        shape="circle"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <TbPhoto size={24} className="text-lime-700" />
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="text"
+                        shape="circle"
+                        onClick={() => {
+                          console.log('click');
+                        }}
+                      >
+                        <LiaUserTagSolid size={24} className="text-primary" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>

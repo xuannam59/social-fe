@@ -1,5 +1,4 @@
-import { Button, message } from 'antd';
-import { useState } from 'react';
+import { Button } from 'antd';
 import { FcGoogle } from 'react-icons/fc';
 
 interface IProps {
@@ -8,21 +7,21 @@ interface IProps {
 
 const LoginGoogle = (props: IProps) => {
   const { disabled } = props;
-  const [isLoading, setIsLoading] = useState(false);
+
   const onClick = async () => {
-    setIsLoading(true);
-    try {
-      message.info('Login Google');
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsLoading(false);
-    }
+    const backendUrl = import.meta.env.VITE_BACKEND_URL;
+    const url = `${backendUrl}/api/v1/auths/google-login`;
+    window.location.href = url;
   };
 
   return (
     <>
-      <Button size="middle" className="w-full" onClick={onClick} loading={isLoading} disabled={disabled}>
+      <Button
+        size="middle"
+        className="w-full"
+        onClick={onClick}
+        disabled={disabled}
+      >
         <div className="flex justify-center items-center gap-2">
           <FcGoogle size={22} />
           Or login with Google
