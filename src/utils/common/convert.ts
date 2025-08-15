@@ -1,3 +1,5 @@
+import type { IFile } from '@social/types/post.type';
+
 export const convertToSlug = (str: string): string => {
   if (!str) return '';
 
@@ -9,4 +11,16 @@ export const convertToSlug = (str: string): string => {
     .replace(/Đ/g, 'D')
     .replace(/ /g, '-')
     .replace(/[:!@#$%^&*()?;/]/g, '');
+};
+
+export const convertToFile = (files: FileList | null): IFile[] => {
+  if (files && files.length > 0) {
+    const fileUrls = Array.from(files).map(file => ({
+      url: URL.createObjectURL(file),
+      file,
+      type: file.type,
+    }));
+    return fileUrls;
+  }
+  return [];
 };

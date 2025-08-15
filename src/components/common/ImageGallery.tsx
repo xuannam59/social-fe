@@ -1,6 +1,6 @@
 import type { IFile } from '@social/types/post.type';
 import { useMemo } from 'react';
-import { TbTrash } from 'react-icons/tb';
+import { TbX } from 'react-icons/tb';
 
 interface ImageGalleryProps {
   images: IFile[];
@@ -26,7 +26,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, onDelete }) => {
         );
       case 2:
         return (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-1">
             {images.map((item, index) => (
               <img
                 key={index}
@@ -40,7 +40,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, onDelete }) => {
         );
       case 3:
         return (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-1">
             {images.map((item, index) => (
               <img
                 key={index}
@@ -54,7 +54,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, onDelete }) => {
         );
       case 4:
         return (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-1">
             {images.map((item, index) => (
               <img
                 key={index}
@@ -68,7 +68,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, onDelete }) => {
         );
       case 5:
         return (
-          <div className="grid grid-cols-6 gap-2">
+          <div className="grid grid-cols-6 gap-1">
             {images.map((item, index) => (
               <img
                 key={index}
@@ -82,15 +82,14 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, onDelete }) => {
         );
       default:
         return (
-          <div className="grid grid-cols-6 gap-2">
+          <div className="grid grid-cols-6 gap-1">
             {images.slice(0, 4).map((item, index) => {
-              const isLarge = index > 1;
               return (
                 <img
                   key={index}
                   src={item.url}
                   alt="image"
-                  className={`w-full h-48 object-cover rounded-lg border border-gray-200 ${isLarge ? 'col-span-2' : 'col-span-3'}`}
+                  className={`w-full h-48 object-cover rounded-lg border border-gray-200 ${index > 1 ? 'col-span-2' : 'col-span-3'}`}
                   loading="lazy"
                 />
               );
@@ -102,9 +101,9 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, onDelete }) => {
                 className="w-full h-48 object-cover rounded-lg border border-gray-200"
                 loading="lazy"
               />
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
+              <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-gray-600/20">
                 <span className="text-white text-2xl font-bold">
-                  +{count - 5}
+                  + {count - 5}
                 </span>
               </div>
             </div>
@@ -116,16 +115,16 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, onDelete }) => {
   if (!images || images.length === 0) return null;
 
   return (
-    <div className="w-full relative">
+    <div className="w-full relative p-2">
       {renderImages}
-
-      {/* Delete button */}
-      <div className="absolute top-2 right-2">
-        <div
-          className="bg-white rounded-full p-2 cursor-pointer hover:bg-gray-100 shadow-md"
-          onClick={onDelete}
-        >
-          <TbTrash size={20} className="text-red-500" />
+      <div className="absolute top-0 right-0 bottom-0 left-0 bg-gray-600/30 flex items-center justify-center z-10 rounded-lg">
+        <div className="absolute top-2 right-2">
+          <div
+            className="bg-white rounded-full p-1 cursor-pointer hover:bg-gray-100 shadow-md"
+            onClick={onDelete}
+          >
+            <TbX size={20} className="text-black" />
+          </div>
         </div>
       </div>
     </div>

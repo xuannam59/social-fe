@@ -1,4 +1,8 @@
-import { EOpenContent, type IFormCreatePost } from '@social/types/post.type';
+import {
+  EOpenContent,
+  type IFile,
+  type IFormCreatePost,
+} from '@social/types/post.type';
 import type { IUserTag } from '@social/types/user.type';
 import { Modal } from 'antd';
 import { useCallback, useMemo, useState } from 'react';
@@ -8,16 +12,26 @@ import PostFelling from './PostFelling';
 
 interface IProps {
   isOpen: boolean;
+  image: IFile[];
+  video: IFile[];
   onClose: () => void;
+  onOpenChooseFile: (type: 'image' | 'video') => void;
+  onDeleteFile: (type: 'image' | 'video') => void;
 }
 
-const ModalCreatePost: React.FC<IProps> = ({ isOpen, onClose }) => {
+const ModalCreatePost: React.FC<IProps> = ({
+  isOpen,
+  onClose,
+  image,
+  video,
+  onOpenChooseFile,
+  onDeleteFile,
+}) => {
   const [openContent, setOpenContent] = useState<EOpenContent>(
     EOpenContent.POST
   );
   const [userTags, setUserTags] = useState<IUserTag[]>([]);
   const [feeling, setFeeling] = useState<string>('');
-  console.log(feeling);
   const handleCancel = useCallback(() => {
     onClose();
     setUserTags([]);
@@ -33,13 +47,14 @@ const ModalCreatePost: React.FC<IProps> = ({ isOpen, onClose }) => {
       const data: IFormCreatePost = {
         content: values.content,
         privacy: values.privacy,
-        images: values.images,
+        images: image.map(item => item.file),
+        videos: video.map(item => item.file),
         userTags,
         feeling,
       };
       console.log(data);
     },
-    [userTags, feeling]
+    [userTags, feeling, image, video]
   );
 
   const onAddUserTag = useCallback((user: IUserTag[]) => {
@@ -61,9 +76,13 @@ const ModalCreatePost: React.FC<IProps> = ({ isOpen, onClose }) => {
           <PostEditor
             userTags={userTags}
             feeling={feeling}
+            image={image}
+            video={video}
             handleCancel={handleCancel}
             handlePostSubmit={handlePostSubmit}
             handleOpenContent={handleOpenContent}
+            onOpenChooseFile={onOpenChooseFile}
+            onDeleteFile={onDeleteFile}
           />
         );
       case EOpenContent.USER_TAG:
@@ -87,12 +106,16 @@ const ModalCreatePost: React.FC<IProps> = ({ isOpen, onClose }) => {
     openContent,
     userTags,
     feeling,
+    image,
+    video,
     handleCancel,
     handlePostSubmit,
     handleOpenContent,
     onAddUserTag,
     onBack,
     onAddFeeling,
+    onOpenChooseFile,
+    onDeleteFile,
   ]);
   return (
     <>
@@ -105,10 +128,11 @@ const ModalCreatePost: React.FC<IProps> = ({ isOpen, onClose }) => {
         maskClosable={false}
         title={false}
         destroyOnHidden={true}
+        style={{
+          top: 50,
+        }}
       >
-        <div className={`max-h-[75vh] flex flex-col gap-2`}>
-          {renderContent}
-        </div>
+        <div className="h-fit max-h-[100vh] flex flex-col">{renderContent}</div>
       </Modal>
     </>
   );

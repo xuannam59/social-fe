@@ -67,7 +67,7 @@ const PostFelling: React.FC<IProps> = ({ onBack, addFelling, felling }) => {
           Bạn đang cảm thấy như thế nào?
         </h2>
       </div>
-      <div className="flex-1 px-4 py-2 flex flex-col min-h-0">
+      <div className="max-h-[50vh] px-4 py-2 flex flex-col min-h-0">
         <div className="flex gap-2 mb-4 flex-shrink-0">
           <InputSearch
             placeholder="Tìm kiếm"

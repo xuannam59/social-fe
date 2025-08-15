@@ -4,7 +4,7 @@ export interface IFormCreatePost {
   content: string;
   privacy: string;
   images?: File[];
-  video?: string;
+  videos?: File[];
   userTags?: IUserTag[];
   feeling?: string;
 }
@@ -12,6 +12,7 @@ export interface IFormCreatePost {
 export interface IFile {
   url: string;
   file: File;
+  type: string;
 }
 
 export enum EOpenContent {
