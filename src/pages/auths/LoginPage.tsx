@@ -28,15 +28,11 @@ const LoginPage = () => {
 
   useEffect(() => {
     const status = searchParams.get('status');
-    const accessToken = searchParams.get('access_token');
     if (status && status.toLowerCase() === 'false' && counts.current === 0) {
       notification.error({
         message: 'Login google failed',
         description: 'Please try again',
       });
-    } else if (accessToken && status && status.toLowerCase() === 'true') {
-      localStorage.setItem('access_token', accessToken);
-      window.location.href = ROUTES.DEFAULT;
     }
     counts.current = 1;
   }, [searchParams, setSearchParams]);

@@ -7,3 +7,9 @@ export interface IUser {
   role: string;
   isActive: boolean;
 }
+
+export interface IUserTag {
+  id: string;
+  name: string;
+  avatar: string;
+}

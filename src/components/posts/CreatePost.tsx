@@ -3,7 +3,7 @@ import defaultAvatar from '@social/images/default-avatar.webp';
 import { Button, Input } from 'antd';
 import { useState } from 'react';
 import { FcAddImage, FcVideoCall } from 'react-icons/fc';
-import ModalCreatePost from '../modals/ModalCreatePost';
+import ModalCreatePost from '../modals/posts/ModalCreatePost';
 
 const CreatePost = () => {
   const userInfo = useAppSelector(state => state.auth.userInfo);

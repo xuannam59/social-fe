@@ -5,7 +5,7 @@ import {
   setIsLoading,
 } from '@social/redux/reducers/auth.reducer';
 import { useCallback, useEffect, useRef } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useSearchParams } from 'react-router-dom';
 import Header from '../headers/Header';
 import LoadingPage from '../loading/LoadingPage';
 
@@ -13,14 +13,20 @@ const DefaultLayout = () => {
   const dispatch = useAppDispatch();
   const count = useRef(0);
   const { isLoading } = useAppSelector(state => state.auth);
+  const [queryParams, setQueryParams] = useSearchParams();
+
   const getAccount = useCallback(async () => {
-    dispatch(setIsLoading(true));
+    const accessToken = queryParams.get('access_token');
+    if (accessToken) {
+      localStorage.setItem('access_token', accessToken);
+      setQueryParams({});
+    }
     const res = await callApiGetAccount();
     if (res.data) {
       dispatch(doGetAccount(res.data));
     }
     dispatch(setIsLoading(false));
-  }, [dispatch]);
+  }, [dispatch, queryParams, setQueryParams]);
 
   useEffect(() => {
     if (count.current === 0) {

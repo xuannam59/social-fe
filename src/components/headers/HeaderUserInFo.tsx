@@ -1,26 +1,29 @@
 import { callApiLogout } from '@social/apis/auths.api';
 import { ROUTES } from '@social/constants/route.constant';
-import { useAppSelector } from '@social/hooks/redux.hook';
+import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
 import defaultAvatar from '@social/images/default-avatar.webp';
 import { Avatar, Dropdown, Typography } from 'antd';
 import { TbLogout, TbSettings } from 'react-icons/tb';
 import { useNavigate } from 'react-router-dom';
 import MessageDropdown from '../messages/MessageDropdown';
 import NotificationDropdown from '../notifications/NotificationDropdown';
+import { setIsLoading } from '@social/redux/reducers/auth.reducer';
 
 const { Text } = Typography;
 
 const HeaderUserInfo = () => {
   const { userInfo } = useAppSelector(state => state.auth);
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const handleLogout = async () => {
     const res = await callApiLogout();
     if (res.data) {
-      window.location.reload();
+      dispatch(setIsLoading(true));
       localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
+      window.location.href = ROUTES.AUTH.LOGIN;
     }
   };
+
   return (
     <>
       <div className="flex items-center justify-end h-full gap-2">

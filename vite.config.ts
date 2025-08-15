@@ -20,6 +20,7 @@ export default defineConfig({
       '@social/hooks': path.resolve(__dirname, './src/hooks'),
       '@social/constants': path.resolve(__dirname, './src/utils/constants'),
       '@social/defaults': path.resolve(__dirname, './src/utils/defaults'),
+      '@social/common': path.resolve(__dirname, './src/utils/common'),
     },
   },
   server: {

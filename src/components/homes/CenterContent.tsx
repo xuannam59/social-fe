@@ -1,4 +1,4 @@
-import CreatePost from '../post/CreatePost';
+import CreatePost from '../posts/CreatePost';
 
 const CenterContent = () => {
   return (

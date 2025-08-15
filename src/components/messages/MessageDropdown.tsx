@@ -1,5 +1,5 @@
 import { Button, Dropdown } from 'antd';
-import InputSearch from '../commons/InputSearch';
+import InputSearch from '../common/InputSearch';
 import { TbMessageCircle } from 'react-icons/tb';
 import { Badge, Typography } from 'antd';
 import defaultAvatar from '@social/images/default-avatar.webp';

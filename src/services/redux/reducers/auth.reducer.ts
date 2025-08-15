@@ -4,7 +4,7 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialState: IAuthState = {
   userInfo: USER_DEFAULT,
-  isLoading: false,
+  isLoading: true,
   isAuthenticated: false,
 };
 

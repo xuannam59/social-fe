@@ -4,7 +4,7 @@ import { Button } from 'antd';
 import { useState } from 'react';
 import { TbArrowLeft } from 'react-icons/tb';
 import { useNavigate } from 'react-router-dom';
-import InputSearch from '../commons/InputSearch';
+import InputSearch from '../common/InputSearch';
 
 const HeaderSearch = () => {
   const [isSearchFocused, setIsSearchFocused] = useState(false);

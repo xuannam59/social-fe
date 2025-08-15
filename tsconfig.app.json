@@ -19,7 +19,7 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
+    "erasableSyntaxOnly": false,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
 
@@ -37,7 +37,8 @@
       "@social/redux/*": ["src/services/redux/*"],
       "@social/hooks/*": ["src/hooks/*"],
       "@social/constants/*": ["src/utils/constants/*"],
-      "@social/defaults/*": ["src/utils/defaults/*"]
+      "@social/defaults/*": ["src/utils/defaults/*"],
+      "@social/common/*": ["src/utils/common/*"]
     }
   },
   "include": ["src"]
