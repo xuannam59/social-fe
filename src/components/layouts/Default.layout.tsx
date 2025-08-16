@@ -42,7 +42,7 @@ const DefaultLayout = () => {
       ) : (
         <>
           <Header />
-          <div className="mt-4">
+          <div className="mt-4 h-[calc(100vh-4.5rem)]">
             <Outlet />
           </div>
         </>

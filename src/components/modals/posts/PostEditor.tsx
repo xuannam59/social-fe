@@ -1,13 +1,13 @@
+import AvatarUser from '@social/components/common/AvatarUser';
 import ImageGallery from '@social/components/common/ImageGallery';
 import VideoGalley from '@social/components/common/VideoGalley';
 import Loading from '@social/components/loading/Loading';
 import emojiData from '@social/constants/emoji';
 import { useAppSelector } from '@social/hooks/redux.hook';
-import defaultAvatar from '@social/images/default-avatar.webp';
 import type { IFile, IFormCreatePost } from '@social/types/post.type';
 import { EOpenContent } from '@social/types/post.type';
 import type { IUserTag } from '@social/types/user.type';
-import { Avatar, Button, Form, Input, Select, Tooltip, Typography } from 'antd';
+import { Button, Form, Input, Select, Tooltip, Typography } from 'antd';
 import { EmojiStyle, type EmojiClickData } from 'emoji-picker-react';
 import React, { lazy, Suspense, useCallback, useMemo, useState } from 'react';
 import { LiaUserTagSolid } from 'react-icons/lia';
@@ -202,9 +202,9 @@ const PostEditor: React.FC<IProps> = ({
             <div className="flex flex-col h-full gap-2">
               {/* User Info Section - Cố định */}
               <div className="flex items-center gap-3 flex-shrink-0 mb-4">
-                <Avatar
+                <AvatarUser
                   size={50}
-                  src={userInfo?.avatar || defaultAvatar}
+                  avatar={userInfo.avatar}
                   className="flex-shrink-0"
                 />
                 <div className="flex-1">

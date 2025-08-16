@@ -1,7 +1,5 @@
 import { useAppSelector } from '@social/hooks/redux.hook';
-import { Avatar } from 'antd';
-import defaultAvatar from '@social/images/default-avatar.webp';
-import { TbFriends } from 'react-icons/tb';
+import AvatarUser from '../common/AvatarUser';
 
 const LeftSidebar = () => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
@@ -11,7 +9,7 @@ const LeftSidebar = () => {
         <div className="overflow-y-auto overflow-x-hidden">
           <div className="flex flex-col gap-2">
             <div className="flex gap-2 justify-start items-center">
-              <Avatar size={40} src={userInfo?.avatar || defaultAvatar} />
+              <AvatarUser size={40} avatar={userInfo.avatar} />
               <span className="text-[16px]">{userInfo.fullname}</span>
             </div>
             {/* <div className="flex gap-2 justify-start items-center">

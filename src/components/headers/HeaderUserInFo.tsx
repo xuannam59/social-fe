@@ -1,13 +1,14 @@
 import { callApiLogout } from '@social/apis/auths.api';
 import { ROUTES } from '@social/constants/route.constant';
 import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
-import defaultAvatar from '@social/images/default-avatar.webp';
-import { Avatar, Dropdown, Typography } from 'antd';
+import { setIsLoading } from '@social/redux/reducers/auth.reducer';
+import { Dropdown, Typography } from 'antd';
 import { TbLogout, TbSettings } from 'react-icons/tb';
 import { useNavigate } from 'react-router-dom';
+import AvatarUser from '../common/AvatarUser';
 import MessageDropdown from '../messages/MessageDropdown';
 import NotificationDropdown from '../notifications/NotificationDropdown';
-import { setIsLoading } from '@social/redux/reducers/auth.reducer';
+import defaultAvatar from '@social/images/default-avatar.webp';
 
 const { Text } = Typography;
 
@@ -33,6 +34,7 @@ const HeaderUserInfo = () => {
         <Dropdown
           trigger={['click']}
           placement={'bottomRight'}
+          className="cursor-pointer"
           popupRender={() => {
             return (
               <div
@@ -47,9 +49,9 @@ const HeaderUserInfo = () => {
                         navigate(ROUTES.PROFILE);
                       }}
                     >
-                      <Avatar
+                      <AvatarUser
                         size={50}
-                        src={userInfo.avatar || defaultAvatar}
+                        avatar={userInfo.avatar || defaultAvatar}
                       />
                       <div className="text-[16px] font-bold text-black">
                         {userInfo.fullname || 'User Unknown'}
@@ -78,7 +80,7 @@ const HeaderUserInfo = () => {
             );
           }}
         >
-          <Avatar size={40} src={userInfo.avatar || defaultAvatar} />
+          <AvatarUser size={40} avatar={userInfo.avatar || defaultAvatar} />
         </Dropdown>
       </div>
     </>
