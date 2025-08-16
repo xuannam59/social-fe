@@ -1,5 +1,5 @@
 export interface IStory {
-  id: string;
+  _id: string;
   type: 'image' | 'video';
   file: string;
   fullName: string;

@@ -95,8 +95,8 @@ const NotificationDropdown = () => {
         }}
       >
         <div
-          className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-full
-         hover:bg-gray-200 transition-all duration-300 ease-out"
+          className="flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full
+         hover:bg-gray-300 transition-all duration-300 ease-out"
         >
           <Badge count={1}>
             <TbBell size={23} />

@@ -3,6 +3,10 @@ export const ROUTES = {
   WATCH: '/watch',
   GROUPS: '/groups',
   PROFILE: '/profile',
+  STORY: {
+    CREATE: '/story/create',
+    VIEW: '/story/:id',
+  },
   AUTH: {
     LOGIN: '/login',
     REGISTER: '/register',

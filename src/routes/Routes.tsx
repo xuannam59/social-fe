@@ -1,11 +1,14 @@
-import { ROUTES } from '@social/constants/route.constant';
-import LoginPage from '@social/pages/auths/LoginPage';
 import LayoutAuth from '@social/components/layouts/Auth.layout';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import RegisterPage from '@social/pages/auths/RegisterPage';
-import ForgotPasswordPage from '@social/pages/auths/ForgotPasswordPage';
 import DefaultLayout from '@social/components/layouts/Default.layout';
+import { ROUTES } from '@social/constants/route.constant';
+import ForgotPasswordPage from '@social/pages/auths/ForgotPasswordPage';
+import LoginPage from '@social/pages/auths/LoginPage';
+import RegisterPage from '@social/pages/auths/RegisterPage';
 import HomePages from '@social/pages/homes/HomePages';
+import StoryCreate from '@social/pages/stories/StoryCreate';
+import StoryView from '@social/pages/stories/StoryView';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import RouterPrivate from './RouterPrivate';
 
 const AppRoutes = () => {
   return (
@@ -19,12 +22,16 @@ const AppRoutes = () => {
             element={<ForgotPasswordPage />}
           />
         </Route>
-        <Route element={<DefaultLayout />}>
-          <Route path={ROUTES.DEFAULT} element={<HomePages />} />
-          <Route path={ROUTES.WATCH} element={<div>helloworld</div>} />
-          <Route path={ROUTES.GROUPS} element={<div>helloworld</div>} />
-          <Route path="*" element={<div>404</div>} />
+        <Route element={<RouterPrivate />}>
+          <Route element={<DefaultLayout />}>
+            <Route path={ROUTES.DEFAULT} element={<HomePages />} />
+            <Route path={ROUTES.WATCH} element={<div>helloworld</div>} />
+            <Route path={ROUTES.GROUPS} element={<div>helloworld</div>} />
+          </Route>
+          <Route path={ROUTES.STORY.CREATE} element={<StoryCreate />} />
+          <Route path={ROUTES.STORY.VIEW} element={<StoryView />} />
         </Route>
+        <Route path="*" element={<div>404</div>} />
       </Routes>
     </BrowserRouter>
   );

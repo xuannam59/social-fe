@@ -13,35 +13,35 @@ const StoryShow = () => {
   const stories: IStory[] = useMemo(
     () => [
       {
-        id: '1',
+        _id: '1',
         type: 'image',
         file: defaultAvatar,
         fullName: userInfo?.fullname || '',
         isCreate: true,
       },
       {
-        id: '2',
+        _id: '2',
         type: 'image',
         file: 'https://i.pinimg.com/1200x/e6/34/d3/e634d384fb0c31d7245d70d6f70f830d.jpg',
         fullName: userInfo?.fullname || '',
         avatar: defaultAvatar,
       },
       {
-        id: '6',
+        _id: '6',
         type: 'image',
         file: 'https://i.pinimg.com/1200x/e6/34/d3/e634d384fb0c31d7245d70d6f70f830d.jpg',
         fullName: userInfo?.fullname || '',
         avatar: defaultAvatar,
       },
       {
-        id: '7',
+        _id: '7',
         type: 'image',
         file: 'https://i.pinimg.com/1200x/e6/34/d3/e634d384fb0c31d7245d70d6f70f830d.jpg',
         fullName: userInfo?.fullname || '',
         avatar: defaultAvatar,
       },
       {
-        id: '8',
+        _id: '8',
         type: 'image',
         file: 'https://i.pinimg.com/1200x/e6/34/d3/e634d384fb0c31d7245d70d6f70f830d.jpg',
         fullName: userInfo?.fullname || '',
@@ -99,14 +99,7 @@ const StoryShow = () => {
         }}
       >
         {stories.map(story => (
-          <StoryItem
-            key={story.id}
-            type={story.type}
-            file={story.file}
-            fullName={story.fullName}
-            isCreate={story.isCreate}
-            avatar={story.avatar || ''}
-          />
+          <StoryItem key={story._id} story={story} />
         ))}
       </div>
 
