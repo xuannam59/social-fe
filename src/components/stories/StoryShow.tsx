@@ -1,6 +1,6 @@
 import { useAppSelector } from '@social/hooks/redux.hook';
 import defaultAvatar from '@social/images/default-avatar.webp';
-import type { IStory } from '@social/types/story.type';
+import type { IStory } from '@social/types/stories.type';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { TbChevronLeft, TbChevronRight } from 'react-icons/tb';
 import StoryItem from './StoryItem';

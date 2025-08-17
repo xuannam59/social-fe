@@ -2,7 +2,7 @@ import {
   EOpenContent,
   type IFile,
   type IFormCreatePost,
-} from '@social/types/post.type';
+} from '@social/types/posts.type';
 import type { IUserTag } from '@social/types/user.type';
 import { Modal } from 'antd';
 import { useCallback, useMemo, useState } from 'react';

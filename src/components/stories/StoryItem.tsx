@@ -3,7 +3,7 @@ import React from 'react';
 import { TbPlus } from 'react-icons/tb';
 import AvatarUser from '../common/AvatarUser';
 import { Link } from 'react-router-dom';
-import type { IStory } from '@social/types/story.type';
+import type { IStory } from '@social/types/stories.type';
 
 interface IProps {
   story: IStory;

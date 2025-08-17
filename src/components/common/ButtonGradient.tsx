@@ -13,12 +13,12 @@ const ButtonGradient = (props: IProps) => {
   const { className, children, form, to, ...buttonProps } = props;
   return (
     <Button
-      className={`${className} !border-none !bg-gradient-to-r 
+      className={`${className} !border-none !bg-gradient-to-r hover:opacity-80 
       ${form ?? 'from-primary'} ${to ?? 'to-secondary'}
       `}
       {...buttonProps}
     >
-      <span className="text-white font-normal text-[16px]">{children}</span>
+      <span className="text-white font-normal text-md">{children}</span>
     </Button>
   );
 };
