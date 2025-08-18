@@ -17,7 +17,6 @@ const StoryShow = () => {
         type: 'image',
         file: defaultAvatar,
         fullName: userInfo?.fullname || '',
-        isCreate: true,
       },
       {
         _id: '2',
@@ -98,8 +97,8 @@ const StoryShow = () => {
           transition: 'transform 0.3s ease-in-out',
         }}
       >
-        {stories.map(story => (
-          <StoryItem key={story._id} story={story} />
+        {stories.map((story, index) => (
+          <StoryItem key={story._id} story={story} isFirst={index === 0} />
         ))}
       </div>
 

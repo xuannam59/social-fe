@@ -6,54 +6,65 @@ import StoryButtonCreate from '@social/components/stories/StoryButtonCreate';
 import StoryEdit from '@social/components/stories/StoryEdit';
 import { useAppSelector } from '@social/hooks/redux.hook';
 import { Button, Form, Typography } from 'antd';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { LuImages } from 'react-icons/lu';
 import { TbSettings, TbTextSize } from 'react-icons/tb';
 
-const { Title, Paragraph, Text } = Typography;
+const { Title, Paragraph } = Typography;
 
 const StoryCreate = () => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
   const [image, setImage] = useState<File>();
-  const inputRef = useRef<HTMLInputElement>(null);
   const [isText, setIsText] = useState(false);
-  const [form] = Form.useForm();
+  const [type, setType] = useState<string>('');
   const [privacy, setPrivacy] = useState<string>('public');
   const [openSetting, setOpenSetting] = useState(false);
-  const [type, setType] = useState<string>('');
+  const file = useRef<File>();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [form] = Form.useForm();
 
-  const isShowEdit = useMemo(() => {
-    return !type || !image;
-  }, [image, type]);
-
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setImage(file);
-      inputRef.current!.value = '';
+      if (inputRef.current) inputRef.current.value = '';
     }
-  }, []);
+  };
 
-  const onCancel = useCallback(() => {
+  useEffect(() => {
+    if (image) {
+      setType('image');
+    }
+  }, [image]);
+
+  const onCancel = () => {
     setType('');
     setImage(undefined);
+  };
+
+  const handleSave = useCallback((value: File) => {
+    file.current = value;
   }, []);
 
-  const handleSave = useCallback((file: File) => {
+  const closeTextEditor = useCallback(() => setIsText(false), []);
+
+  const onSubmit = () => {
     const data = {
       type: type,
-      file,
+      file: file.current,
       privacy,
+      content: form.getFieldValue('content'),
+      background: form.getFieldValue('background'),
     };
     console.log('data', data);
-  }, []);
+  };
 
   return (
     <>
       <div className="min-h-screen bg-gray-100 w-full max-w-full">
         <div className="flex h-screen max-h-screen">
           <HeaderStory />
-          <div className="w-[360px] bg-white shadow-md relative">
+          <div className="w-[360px] bg-white shadow-md relative flex-shrink-0">
             <div className="flex flex-col border-b border-gray-200">
               <div className="w-full h-14"></div>
               <div className="flex justify-between mt-5 mb-3 mx-4">
@@ -89,54 +100,53 @@ const StoryCreate = () => {
                 </div>
               </div>
             </div>
-            {type === 'image' && image && (
-              <>
-                <div className="flex flex-col items-start justify-center m-4">
-                  <div
-                    className="p-2 rounded-lg hover:bg-gray-100 cursor-pointer w-full h-14"
-                    onClick={() => {
-                      setIsText(true);
-                    }}
-                  >
-                    <div className="flex items-center justify-start">
-                      <div className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-200">
-                        <TbTextSize size={25} />
-                      </div>
-                      <div className="text-lg font-medium ml-2">
-                        Thêm văn bản
-                      </div>
+            <div className="flex flex-col items-start justify-center m-4">
+              {type === 'image' && (
+                <div
+                  className="p-2 rounded-lg hover:bg-gray-100 cursor-pointer w-full h-14"
+                  onClick={() => {
+                    setIsText(true);
+                  }}
+                >
+                  <div className="flex items-center justify-start">
+                    <div className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-200">
+                      <TbTextSize size={25} />
                     </div>
+                    <div className="text-lg font-medium ml-2">Thêm văn bản</div>
                   </div>
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 shadow-md inset-shadow-sm px-4">
-                  <div className="flex h-[72px] justify-between items-center gap-2">
-                    <div className="flex flex-1/3 items-center">
-                      <Button
-                        color="default"
-                        variant="filled"
-                        className="!w-full"
-                        onClick={onCancel}
-                      >
-                        Bỏ qua
-                      </Button>
-                    </div>
-                    <div className="flex flex-2/3 items-center">
-                      <ButtonGradient
-                        className="!w-full"
-                        onClick={() => {
-                          form.submit();
-                        }}
-                      >
-                        Chia sẻ lên tin
-                      </ButtonGradient>
-                    </div>
+              )}
+            </div>
+            {type && (
+              <div className="absolute bottom-0 left-0 right-0 shadow-md inset-shadow-sm px-4">
+                <div className="flex h-[72px] justify-between items-center gap-2">
+                  <div className="flex flex-1/3 items-center">
+                    <Button
+                      color="default"
+                      variant="filled"
+                      className="!w-full"
+                      onClick={onCancel}
+                    >
+                      Bỏ qua
+                    </Button>
+                  </div>
+                  <div className="flex flex-2/3 items-center">
+                    <ButtonGradient
+                      className="!w-full"
+                      onClick={() => {
+                        form.submit();
+                        onSubmit();
+                      }}
+                    >
+                      Chia sẻ lên tin
+                    </ButtonGradient>
                   </div>
                 </div>
-              </>
+              </div>
             )}
           </div>
           <div className="flex-1 max-h-screen">
-            {isShowEdit ? (
+            {!type ? (
               <div className="h-full flex flex-col items-center justify-center">
                 <div className="flex justify-center items-center">
                   <div className="w-[460px] h-[330px]">
@@ -146,7 +156,6 @@ const StoryCreate = () => {
                         title="Tạo tin dạng ảnh"
                         onClick={() => {
                           inputRef.current?.click();
-                          setType('image');
                         }}
                         className="bg-gradient-to-tl from-primary to-secondary rounded-lg"
                       />
@@ -168,7 +177,7 @@ const StoryCreate = () => {
                 image={image}
                 isText={isText}
                 type={type}
-                onCancel={() => setIsText(false)}
+                onCancel={closeTextEditor}
                 handleSave={handleSave}
               />
             )}

@@ -3,10 +3,9 @@ export interface IStory {
   type: 'image' | 'video' | 'text';
   file: string;
   fullName: string;
-  isCreate?: boolean;
   avatar?: string;
   privacy?: string;
-  text?: string;
+  content?: string;
   backgroundColor?: string;
 }
 
@@ -14,6 +13,6 @@ export interface IFormCreateStory {
   type: 'image' | 'video' | 'text';
   file?: File;
   privacy: string;
-  text?: string;
+  content?: string;
   backgroundColor?: string;
 }

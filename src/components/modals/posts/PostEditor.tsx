@@ -8,8 +8,16 @@ import type { IFile, IFormCreatePost } from '@social/types/posts.type';
 import { EOpenContent } from '@social/types/posts.type';
 import type { IUserTag } from '@social/types/user.type';
 import { Button, Form, Input, Select, Tooltip, Typography } from 'antd';
+import type { TextAreaRef } from 'antd/es/input/TextArea';
 import { EmojiStyle, type EmojiClickData } from 'emoji-picker-react';
-import React, { lazy, Suspense, useCallback, useMemo, useState } from 'react';
+import React, {
+  lazy,
+  Suspense,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { LiaUserTagSolid } from 'react-icons/lia';
 import {
   TbLock,
@@ -52,6 +60,7 @@ const PostEditor: React.FC<IProps> = ({
   const hasVideos = useMemo(() => video.length > 0, [video]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [form] = Form.useForm();
+  const textAreaRef = useRef<TextAreaRef>(null);
 
   const handleCloseModal = useCallback(() => {
     form.resetFields();
@@ -63,8 +72,32 @@ const PostEditor: React.FC<IProps> = ({
     (emojiObject: EmojiClickData) => {
       const { emoji } = emojiObject;
       const currentContent = form.getFieldValue('content') || '';
-      form.setFieldsValue({ content: currentContent + emoji });
+      const el = textAreaRef.current?.resizableTextArea?.textArea as
+        | HTMLTextAreaElement
+        | undefined;
+
+      if (!el) {
+        form.setFieldValue('content', currentContent + emoji);
+        form.focusField('content');
+        return;
+      }
+      const start = el.selectionStart ?? currentContent.length;
+      const end = el.selectionEnd ?? currentContent.length;
+
+      const newContent =
+        currentContent.slice(0, start) + emoji + currentContent.slice(end);
+
+      const newCaretPos = start + emoji.length;
+      form.setFieldValue('content', newContent);
       form.focusField('content');
+
+      requestAnimationFrame(() => {
+        const el2 = textAreaRef.current?.resizableTextArea?.textArea;
+        if (el2) {
+          el2.selectionStart = newCaretPos;
+          el2.selectionEnd = newCaretPos;
+        }
+      });
     },
     [form]
   );
@@ -243,6 +276,7 @@ const PostEditor: React.FC<IProps> = ({
                             placeholder={`${userInfo?.fullname?.split(' ')[0] || 'User'} bạn đang nghĩ gì?`}
                             className="!border-none !resize-none !text-md min-h-[80px] focus:!ring-0"
                             autoSize={{ minRows: 2, maxRows: 6 }}
+                            ref={textAreaRef}
                           />
                         </Form.Item>
 

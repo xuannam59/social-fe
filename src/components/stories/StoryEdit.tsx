@@ -10,10 +10,19 @@ import {
   Input,
   Modal,
 } from 'antd';
+import type { TextAreaRef } from 'antd/es/input/TextArea';
+import type { EmojiClickData } from 'emoji-picker-react';
 import type { Stage as KonvaStage } from 'konva/lib/Stage';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { TbPlus } from 'react-icons/tb';
 import { Layer, Stage } from 'react-konva';
+import ModalEmoji from '../modals/common/ModalEmoji';
 import StoryEditableText from './StoryEditableText';
 import StoryEditImg from './StoryEditImg';
 
@@ -24,6 +33,14 @@ interface IProps {
   type: string;
   onCancel: () => void;
   handleSave: (file: File) => void;
+}
+
+interface IText {
+  id: string;
+  text: string;
+  color: string;
+  x: number;
+  y: number;
 }
 
 const StoryEdit: React.FC<IProps> = ({
@@ -39,17 +56,11 @@ const StoryEdit: React.FC<IProps> = ({
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const stageRef = useRef<KonvaStage>(null);
   const imagePositionRef = useRef<{ x: number; y: number } | null>(null);
-  const [text, setText] = useState<
-    {
-      id: string;
-      text: string;
-      color: string;
-      x: number;
-      y: number;
-    }[]
-  >([]);
+  const [text, setText] = useState<IText[]>([]);
   const [form] = Form.useForm();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const textAreaRef = useRef<TextAreaRef>(null);
 
   useEffect(() => {
     if (image && type === 'image') {
@@ -69,8 +80,8 @@ const StoryEdit: React.FC<IProps> = ({
       stageSize.height > 0 &&
       !imagePositionRef.current
     ) {
-      const imageWidth = 800; // Giả sử image width cố định
-      const imageHeight = 600; // Giả sử image height cố định
+      const imageWidth = 800;
+      const imageHeight = 600;
       const scale = Math.min(
         stageSize.width / imageWidth,
         stageSize.height / imageHeight
@@ -92,12 +103,10 @@ const StoryEdit: React.FC<IProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Tăng pixel ratio để có chất lượng cao
     const pixelRatio = Math.max(3, window.devicePixelRatio || 1);
     canvas.width = stageSize.width * pixelRatio;
     canvas.height = stageSize.height * pixelRatio;
 
-    // Cải thiện chất lượng canvas
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 
@@ -106,7 +115,6 @@ const StoryEdit: React.FC<IProps> = ({
     ctx.fillStyle = dominantColor;
     ctx.fillRect(0, 0, stageSize.width, stageSize.height);
 
-    // Tạo stageDataURL để vẽ lên canvas
     const stageDataURL = stageRef.current.toDataURL({
       pixelRatio: pixelRatio,
       width: stageSize.width,
@@ -114,9 +122,8 @@ const StoryEdit: React.FC<IProps> = ({
     });
 
     const stageImage = new window.Image();
-    stageImage.src = stageDataURL;
+    // Set onload first to avoid race when src is cached
     stageImage.onload = () => {
-      // Cải thiện chất lượng khi vẽ image
       ctx.save();
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
@@ -129,23 +136,21 @@ const StoryEdit: React.FC<IProps> = ({
       let fileName: string;
 
       try {
-        // Thử export WebP
         base64 = canvas.toDataURL('image/webp', 0.95);
         fileName = `story-${Date.now()}.webp`;
       } catch (error) {
-        // Nếu WebP không được hỗ trợ, fallback về PNG
         console.warn('WebP không được hỗ trợ, sử dụng PNG');
         base64 = canvas.toDataURL('image/png', 1.0);
         fileName = `story-${Date.now()}.png`;
       }
       const file = base64ToFile(base64, fileName);
 
-      // Gọi handleSave để truyền file về component cha
       handleSave(file);
     };
+    stageImage.src = stageDataURL;
 
     setText([]);
-  }, [dominantColor, handleSave, stageSize.width, stageSize.height]);
+  }, [dominantColor, handleSave, stageSize.height, stageSize.width]);
 
   useEffect(() => {
     if (type === 'text') return;
@@ -187,8 +192,51 @@ const StoryEdit: React.FC<IProps> = ({
   };
 
   const onClose = () => {
+    form.resetFields();
     onCancel();
   };
+
+  const toggleEmojiPicker = useCallback(() => {
+    setShowEmojiPicker(prev => !prev);
+    if (showEmojiPicker) {
+      formSubmit.focusField('content');
+    }
+  }, [showEmojiPicker, formSubmit]);
+
+  const onEmojiClick = useCallback(
+    (emojiObject: EmojiClickData) => {
+      const { emoji } = emojiObject;
+      const currentContent: string = formSubmit.getFieldValue('content') || '';
+
+      const el = textAreaRef.current?.resizableTextArea?.textArea as
+        | HTMLTextAreaElement
+        | undefined;
+
+      if (!el) {
+        formSubmit.setFieldValue('content', currentContent + emoji);
+        formSubmit.focusField('content');
+        return;
+      }
+      const start = el.selectionStart ?? currentContent.length;
+      const end = el.selectionEnd ?? currentContent.length;
+
+      const newContent =
+        currentContent.slice(0, start) + emoji + currentContent.slice(end);
+
+      const newCaretPos = start + emoji.length;
+      formSubmit.setFieldValue('content', newContent);
+      formSubmit.focusField('content');
+
+      requestAnimationFrame(() => {
+        const el2 = textAreaRef.current?.resizableTextArea?.textArea;
+        if (el2) {
+          el2.selectionStart = newCaretPos;
+          el2.selectionEnd = newCaretPos;
+        }
+      });
+    },
+    [formSubmit]
+  );
 
   return (
     <>
@@ -200,71 +248,103 @@ const StoryEdit: React.FC<IProps> = ({
               <div className="flex justify-center flex-col gap-2 items-center w-full h-full">
                 <div
                   ref={containerRef}
-                  className="h-[calc(100%-68px)] aspect-[1/1.7] w-auto rounded-lg border border-gray-200 overflow-hidden relative"
+                  className="h-[calc(100%-68px)] aspect-[1/1.7] w-auto relative"
                 >
-                  <Form
-                    form={formSubmit}
-                    onFinish={() => {
-                      saveStory();
-                    }}
-                  >
-                    {type === 'image' && image && (
-                      <Stage
-                        width={stageSize.width}
-                        height={stageSize.height}
-                        ref={stageRef}
-                        style={{ backgroundColor: dominantColor }}
-                        pixelRatio={Math.max(2, window.devicePixelRatio || 1)}
-                        onMouseDown={e => {
-                          // Bỏ chọn khi click vào vùng trống
-                          const clickedOnEmpty =
-                            e.target === e.target.getStage();
-                          if (clickedOnEmpty) {
-                            setSelectedId(null);
-                          }
-                        }}
-                        onTouchStart={e => {
-                          // Bỏ chọn khi touch vào vùng trống
-                          const clickedOnEmpty =
-                            e.target === e.target.getStage();
-                          if (clickedOnEmpty) {
-                            setSelectedId(null);
-                          }
-                        }}
-                      >
-                        <Layer>
-                          <StoryEditImg
-                            src={URL.createObjectURL(image)}
-                            stageSize={stageSize}
-                          />
+                  <div className="overflow-hidden w-full h-full rounded-lg border border-gray-200">
+                    <Form
+                      form={formSubmit}
+                      onFinish={() => {
+                        if (type === 'image') {
+                          saveStory();
+                        }
+                      }}
+                      className="h-full w-full"
+                      initialValues={{
+                        content: '',
+                        background: '#3793b6',
+                      }}
+                    >
+                      {type === 'image' && image ? (
+                        <Stage
+                          width={stageSize.width}
+                          height={stageSize.height}
+                          ref={stageRef}
+                          style={{ backgroundColor: dominantColor }}
+                          pixelRatio={Math.max(2, window.devicePixelRatio || 1)}
+                          onMouseDown={e => {
+                            const clickedOnEmpty =
+                              e.target === e.target.getStage();
+                            if (clickedOnEmpty) {
+                              setSelectedId(null);
+                            }
+                          }}
+                          onTouchStart={e => {
+                            const clickedOnEmpty =
+                              e.target === e.target.getStage();
+                            if (clickedOnEmpty) {
+                              setSelectedId(null);
+                            }
+                          }}
+                        >
+                          <Layer>
+                            {image && (
+                              <StoryEditImg
+                                src={URL.createObjectURL(image)}
+                                stageSize={stageSize}
+                              />
+                            )}
 
-                          {text.map(item => (
-                            <StoryEditableText
-                              key={item.id}
-                              item={item}
-                              isSelected={selectedId === item.id}
-                              onSelect={() => setSelectedId(item.id)}
-                              onChange={updates => {
-                                const newText = text.map(t =>
-                                  t.id === item.id ? { ...t, ...updates } : t
-                                );
-                                setText(newText);
-                              }}
-                              onRemove={() => {
-                                const newText = text.filter(
-                                  t => t.id !== item.id
-                                );
-                                setText(newText);
-                                if (selectedId === item.id) {
-                                  setSelectedId(null);
-                                }
-                              }}
-                            />
-                          ))}
-                        </Layer>
-                      </Stage>
-                    )}
-                  </Form>
+                            {text.map(item => (
+                              <StoryEditableText
+                                key={item.id}
+                                item={item}
+                                isSelected={selectedId === item.id}
+                                onSelect={() => setSelectedId(item.id)}
+                                onChange={updates => {
+                                  const newText = text.map(t =>
+                                    t.id === item.id ? { ...t, ...updates } : t
+                                  );
+                                  setText(newText);
+                                }}
+                                onRemove={() => {
+                                  const newText = text.filter(
+                                    t => t.id !== item.id
+                                  );
+                                  setText(newText);
+                                  if (selectedId === item.id) {
+                                    setSelectedId(null);
+                                  }
+                                }}
+                              />
+                            ))}
+                          </Layer>
+                        </Stage>
+                      ) : (
+                        <div className="bg-white h-full w-full relative">
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Form.Item name="content" className="w-[80%]">
+                              <Input.TextArea
+                                ref={textAreaRef}
+                                autoSize={true}
+                                maxLength={80}
+                                className="!bg-white scrollbar-hide font-semibold !text-[16px] !border-none focus:!ring-0 text-center"
+                                placeholder="BẮT ĐẦU NHẬP"
+                              />
+                            </Form.Item>
+                          </div>
+                        </div>
+                      )}
+                    </Form>
+                  </div>
+                  {type === 'text' && (
+                    <ModalEmoji
+                      toggleEmojiPicker={toggleEmojiPicker}
+                      onEmojiClick={onEmojiClick}
+                      showEmojiPicker={showEmojiPicker}
+                      bottom={2}
+                      right={2}
+                    />
+                  )}
                 </div>
                 <div className="text-md text-white">Chỉnh sửa hình ảnh</div>
               </div>

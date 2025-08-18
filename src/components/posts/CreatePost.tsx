@@ -5,8 +5,8 @@ import { useCallback, useRef, useState } from 'react';
 import { FcAddImage, FcVideoCall } from 'react-icons/fc';
 import ModalCreatePost from '../modals/posts/ModalCreatePost';
 import { Link } from 'react-router-dom';
-import type { IFile } from '@social/types/post.type';
 import { convertToFile } from '@social/common/convert';
+import type { IFile } from '@social/types/posts.type';
 
 const CreatePost = () => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
