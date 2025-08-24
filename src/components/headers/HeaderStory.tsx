@@ -8,9 +8,9 @@ const HeaderStory = () => {
   const navigate = useNavigate();
   return (
     <>
-      <div className="h-14 w-full fixed top-0 left-0 right-0 z-10">
-        <div className="flex justify-between items-center h-full">
-          <div className="flex px-4 gap-2 items-center justify-start w-[360px] shadow-sm">
+      <div className="h-14 w-full fixed top-0 left-0 right-0 z-50">
+        <div className="flex items-center h-full justify-between">
+          <div className="flex px-4 gap-2 items-center justify-start w-[360px] lg:shadow-sm">
             <div
               className="flex h-10 w-10 items-center justify-center bg-gray-500/80 rounded-full cursor-pointer"
               onClick={() => {
@@ -30,7 +30,7 @@ const HeaderStory = () => {
               />
             </div>
           </div>
-          <div className="w-fit h-14 px-4">
+          <div className="w-fit h-14 px-4 ">
             <HeaderUserInfo />
           </div>
         </div>

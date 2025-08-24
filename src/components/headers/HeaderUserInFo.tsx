@@ -49,10 +49,7 @@ const HeaderUserInfo = () => {
                         navigate(ROUTES.PROFILE);
                       }}
                     >
-                      <AvatarUser
-                        size={50}
-                        avatar={userInfo.avatar || defaultAvatar}
-                      />
+                      <AvatarUser size={50} avatar={defaultAvatar} />
                       <div className="text-[16px] font-bold text-black">
                         {userInfo.fullname || 'User Unknown'}
                       </div>
@@ -80,7 +77,7 @@ const HeaderUserInfo = () => {
             );
           }}
         >
-          <AvatarUser size={40} avatar={userInfo.avatar || defaultAvatar} />
+          <AvatarUser size={40} avatar={userInfo?.avatar || defaultAvatar} />
         </Dropdown>
       </div>
     </>

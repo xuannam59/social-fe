@@ -13,13 +13,7 @@ import {
 import type { TextAreaRef } from 'antd/es/input/TextArea';
 import type { EmojiClickData } from 'emoji-picker-react';
 import type { Stage as KonvaStage } from 'konva/lib/Stage';
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { TbPlus } from 'react-icons/tb';
 import { Layer, Stage } from 'react-konva';
 import ModalEmoji from '../modals/common/ModalEmoji';

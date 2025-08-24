@@ -1,5 +1,6 @@
 import LayoutAuth from '@social/components/layouts/Auth.layout';
 import DefaultLayout from '@social/components/layouts/Default.layout';
+import StoryLayout from '@social/components/layouts/Story.layout';
 import { ROUTES } from '@social/constants/route.constant';
 import ForgotPasswordPage from '@social/pages/auths/ForgotPasswordPage';
 import LoginPage from '@social/pages/auths/LoginPage';
@@ -28,8 +29,10 @@ const AppRoutes = () => {
             <Route path={ROUTES.WATCH} element={<div>helloworld</div>} />
             <Route path={ROUTES.GROUPS} element={<div>helloworld</div>} />
           </Route>
-          <Route path={ROUTES.STORY.CREATE} element={<StoryCreate />} />
-          <Route path={ROUTES.STORY.VIEW} element={<StoryView />} />
+          <Route element={<StoryLayout />}>
+            <Route path={ROUTES.STORY.CREATE} element={<StoryCreate />} />
+            <Route path={ROUTES.STORY.VIEW} element={<StoryView />} />
+          </Route>
         </Route>
         <Route path="*" element={<div>404</div>} />
       </Routes>
