@@ -1,29 +1,29 @@
 import {
   EOpenContent,
-  type IFile,
+  type IMedia,
   type IFormCreatePost,
 } from '@social/types/posts.type';
 import type { IUserTag } from '@social/types/user.type';
-import { Modal } from 'antd';
+import { message, Modal, notification } from 'antd';
 import { useCallback, useMemo, useState } from 'react';
 import PostEditor from './PostEditor';
-import PostUserTags from './PostUserTags';
 import PostFelling from './PostFelling';
+import PostUserTags from './PostUserTags';
+import { callApiCreatePost } from '@social/apis/posts.api';
+import { smartUpload } from '@social/common/uploads';
 
 interface IProps {
   isOpen: boolean;
-  image: IFile[];
-  video: IFile[];
+  medias: IMedia[];
   onClose: () => void;
   onOpenChooseFile: (type: 'image' | 'video') => void;
-  onDeleteFile: (type: 'image' | 'video') => void;
+  onDeleteFile: () => void;
 }
 
 const ModalCreatePost: React.FC<IProps> = ({
   isOpen,
   onClose,
-  image,
-  video,
+  medias,
   onOpenChooseFile,
   onDeleteFile,
 }) => {
@@ -32,6 +32,7 @@ const ModalCreatePost: React.FC<IProps> = ({
   );
   const [userTags, setUserTags] = useState<IUserTag[]>([]);
   const [feeling, setFeeling] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
   const handleCancel = useCallback(() => {
     onClose();
     setUserTags([]);
@@ -43,18 +44,58 @@ const ModalCreatePost: React.FC<IProps> = ({
   }, []);
 
   const handlePostSubmit = useCallback(
-    (values: IFormCreatePost) => {
-      const data: IFormCreatePost = {
-        content: values.content,
-        privacy: values.privacy,
-        images: image.map(item => item.file),
-        videos: video.map(item => item.file),
-        userTags,
-        feeling,
-      };
-      console.log(data);
+    async (values: { content: string; privacy: string }) => {
+      setIsLoading(true);
+      try {
+        const mediasUpload = [];
+        if (medias.length > 0) {
+          for (const media of medias) {
+            const file = media.file;
+            if (file) {
+              const res = await smartUpload(file);
+              if (res.data) {
+                mediasUpload.push({
+                  keyS3: res.data.key,
+                  type: file.type.split('/')[0],
+                });
+              } else {
+                throw new Error(res.message);
+              }
+            }
+          }
+        }
+
+        const data: IFormCreatePost = {
+          content: values.content,
+          privacy: values.privacy,
+          userTags,
+          feeling,
+          medias: mediasUpload,
+        };
+        console.log(data);
+
+        const res = await callApiCreatePost(data);
+        if (!res.data) {
+          notification.error({
+            message: 'Tạo bài viết thất bại',
+            description:
+              res.message && Array.isArray(res.message)
+                ? JSON.stringify(res.message)
+                : res.message,
+          });
+        }
+        message.success('Tạo bài viết thành công');
+        handleCancel();
+      } catch (error) {
+        notification.error({
+          message: 'Lỗi',
+          description: error instanceof Error ? error.message : 'Có lỗi xảy ra',
+        });
+      } finally {
+        setIsLoading(false);
+      }
     },
-    [userTags, feeling, image, video]
+    [userTags, feeling, medias, handleCancel]
   );
 
   const onAddUserTag = useCallback((user: IUserTag[]) => {
@@ -70,53 +111,59 @@ const ModalCreatePost: React.FC<IProps> = ({
   }, []);
 
   const renderContent = useMemo(() => {
-    switch (openContent) {
-      case EOpenContent.POST:
-        return (
+    return (
+      <>
+        <div
+          className={`${openContent === EOpenContent.POST ? 'block' : 'hidden'}`}
+        >
           <PostEditor
             userTags={userTags}
             feeling={feeling}
-            image={image}
-            video={video}
+            medias={medias}
+            isLoading={isLoading}
             handleCancel={handleCancel}
             handlePostSubmit={handlePostSubmit}
             handleOpenContent={handleOpenContent}
             onOpenChooseFile={onOpenChooseFile}
             onDeleteFile={onDeleteFile}
           />
-        );
-      case EOpenContent.USER_TAG:
-        return (
+        </div>
+        <div
+          className={`${openContent === EOpenContent.USER_TAG ? 'block' : 'hidden'}`}
+        >
           <PostUserTags
             onBack={onBack}
             addUserTag={onAddUserTag}
             userTags={userTags}
           />
-        );
-      case EOpenContent.FEELING:
-        return (
+        </div>
+        <div
+          className={`${openContent === EOpenContent.FEELING ? 'block' : 'hidden'}`}
+        >
           <PostFelling
             onBack={onBack}
             addFelling={onAddFeeling}
             felling={feeling}
           />
-        );
-    }
+        </div>
+      </>
+    );
   }, [
     openContent,
     userTags,
     feeling,
-    image,
-    video,
+    medias,
+    isLoading,
     handleCancel,
     handlePostSubmit,
     handleOpenContent,
-    onAddUserTag,
-    onBack,
-    onAddFeeling,
     onOpenChooseFile,
     onDeleteFile,
+    onBack,
+    onAddUserTag,
+    onAddFeeling,
   ]);
+
   return (
     <>
       <Modal

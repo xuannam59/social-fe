@@ -1,13 +1,13 @@
 import AvatarUser from '@social/components/common/AvatarUser';
-import ImageGallery from '@social/components/common/ImageGallery';
-import VideoGalley from '@social/components/common/VideoGalley';
+import ButtonGradient from '@social/components/common/ButtonGradient';
+import MediaGallery from '@social/components/common/MediaGallery';
 import Loading from '@social/components/loading/Loading';
 import emojiData from '@social/constants/emoji';
 import { useAppSelector } from '@social/hooks/redux.hook';
-import type { IFile, IFormCreatePost } from '@social/types/posts.type';
+import type { IMedia } from '@social/types/posts.type';
 import { EOpenContent } from '@social/types/posts.type';
 import type { IUserTag } from '@social/types/user.type';
-import { Button, Form, Input, Select, Tooltip, Typography } from 'antd';
+import { Button, Form, Input, Select, Tooltip } from 'antd';
 import type { TextAreaRef } from 'antd/es/input/TextArea';
 import { EmojiStyle, type EmojiClickData } from 'emoji-picker-react';
 import React, {
@@ -29,26 +29,25 @@ import {
   TbX,
 } from 'react-icons/tb';
 
-const { Text } = Typography;
 const LazyEmojiPicker = lazy(() => import('emoji-picker-react'));
 
 interface IProps {
+  isLoading: boolean;
   userTags: IUserTag[];
   feeling: string;
-  image: IFile[];
-  video: IFile[];
+  medias: IMedia[];
   handleCancel: () => void;
   handlePostSubmit: (values: any) => void;
   handleOpenContent: (content: EOpenContent) => void;
   onOpenChooseFile: (type: 'image' | 'video') => void;
-  onDeleteFile: (type: 'image' | 'video') => void;
+  onDeleteFile: () => void;
 }
 
 const PostEditor: React.FC<IProps> = ({
+  isLoading,
   userTags,
   feeling,
-  image,
-  video,
+  medias,
   handleCancel,
   handlePostSubmit,
   handleOpenContent,
@@ -56,8 +55,7 @@ const PostEditor: React.FC<IProps> = ({
   onDeleteFile,
 }) => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
-  const hasImages = useMemo(() => image.length > 0, [image]);
-  const hasVideos = useMemo(() => video.length > 0, [video]);
+  const haveMedias = useMemo(() => medias.length > 0, [medias]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [form] = Form.useForm();
   const textAreaRef = useRef<TextAreaRef>(null);
@@ -136,7 +134,7 @@ const PostEditor: React.FC<IProps> = ({
             <span>Chỉ mình tôi</span>
           </div>
         ),
-        value: 'only-me',
+        value: 'private',
       },
     ],
     []
@@ -164,9 +162,8 @@ const PostEditor: React.FC<IProps> = ({
           <>
             {` cùng với `}
             {userTags.slice(0, 3).map((user, index) => (
-              <>
+              <span key={user.id}>
                 <span
-                  key={user.id}
                   className="font-semibold text-gray-900 text-md inline-block hover:underline cursor-pointer"
                   onClick={() => handleOpenContent(EOpenContent.USER_TAG)}
                 >
@@ -178,7 +175,7 @@ const PostEditor: React.FC<IProps> = ({
                   : index < userTags.length - 1
                     ? ', '
                     : ''}
-              </>
+              </span>
             ))}
             {userTags.length > 3 && (
               <>
@@ -198,32 +195,34 @@ const PostEditor: React.FC<IProps> = ({
   }, [userTags, handleOpenContent, feeling]);
 
   const handleSubmit = useCallback(
-    (values: Pick<IFormCreatePost, 'content' | 'privacy'>) => {
-      const data: IFormCreatePost = {
+    (values: { content: string; privacy: string }) => {
+      const data = {
         content: values.content,
         privacy: values.privacy,
-        images: image.map(item => item.file),
-        videos: video.map(item => item.file),
       };
       handlePostSubmit(data);
     },
-    [handlePostSubmit, image, video]
+    [handlePostSubmit]
   );
 
   return (
     <>
       <div className="flex flex-col h-full">
-        {/* Header - Cố định */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
           <h2 className="text-xl font-bold text-center flex-1">Tạo bài viết</h2>
-          <Button type="text" shape="circle" onClick={handleCloseModal}>
+          <Button
+            type="text"
+            shape="circle"
+            onClick={handleCloseModal}
+            disabled={isLoading}
+          >
             <TbX size={20} />
           </Button>
         </div>
 
-        {/* Content Container - Cố định height */}
-        <div className="flex-1 px-3 flex flex-col min-h-0">
+        <div className="flex-1 px-3 flex flex-col min-h-0 mt-2">
           <Form
+            disabled={isLoading}
             form={form}
             onFinish={handleSubmit}
             initialValues={{
@@ -233,7 +232,6 @@ const PostEditor: React.FC<IProps> = ({
             className="h-full flex flex-col"
           >
             <div className="flex flex-col h-full gap-2">
-              {/* User Info Section - Cố định */}
               <div className="flex items-center gap-3 flex-shrink-0 mb-4">
                 <AvatarUser
                   size={50}
@@ -260,17 +258,21 @@ const PostEditor: React.FC<IProps> = ({
                 </div>
               </div>
 
-              {/* Scrollable Content Area - Chỉ phần này scroll */}
               <div className="relative">
                 <div className="flex-1 overflow-y-auto min-h-0 max-h-[calc(100vh-380px)]">
                   <div className="flex flex-col gap-3">
-                    {/* Text Input */}
                     <div className="flex flex-col gap-2">
                       <div className="relative">
                         <Form.Item
                           name="content"
                           dependencies={['content']}
                           className="!mb-0"
+                          rules={[
+                            {
+                              required: true,
+                              message: 'Vui lòng nhập nội dung',
+                            },
+                          ]}
                         >
                           <Input.TextArea
                             placeholder={`${userInfo?.fullname?.split(' ')[0] || 'User'} bạn đang nghĩ gì?`}
@@ -295,25 +297,8 @@ const PostEditor: React.FC<IProps> = ({
                       </div>
                     </div>
 
-                    {/* Media Preview */}
-                    {hasImages && (
-                      <>
-                        <Text type="secondary">Hình ảnh ({image.length})</Text>
-                        <ImageGallery
-                          images={image}
-                          onDelete={() => onDeleteFile('image')}
-                        />
-                      </>
-                    )}
-
-                    {hasVideos && (
-                      <>
-                        <Text type="secondary">Video ({video.length})</Text>
-                        <VideoGalley
-                          videos={video}
-                          onDelete={() => onDeleteFile('video')}
-                        />
-                      </>
+                    {haveMedias && (
+                      <MediaGallery medias={medias} onDelete={onDeleteFile} />
                     )}
                   </div>
                 </div>
@@ -413,13 +398,13 @@ const PostEditor: React.FC<IProps> = ({
 
                 {/* Submit Button - Cố định */}
                 <div className="py-4 flex-shrink-0">
-                  <Button
-                    type="primary"
+                  <ButtonGradient
+                    loading={isLoading}
                     onClick={() => form.submit()}
                     className="w-full"
                   >
                     Đăng bài viết
-                  </Button>
+                  </ButtonGradient>
                 </div>
               </div>
             </div>

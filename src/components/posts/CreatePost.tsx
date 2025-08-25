@@ -1,44 +1,31 @@
+import { convertToFile } from '@social/common/convert';
 import { useAppSelector } from '@social/hooks/redux.hook';
 import defaultAvatar from '@social/images/default-avatar.webp';
+import type { IMedia } from '@social/types/posts.type';
 import { Button } from 'antd';
 import { useCallback, useRef, useState } from 'react';
 import { FcAddImage, FcVideoCall } from 'react-icons/fc';
-import ModalCreatePost from '../modals/posts/ModalCreatePost';
 import { Link } from 'react-router-dom';
-import { convertToFile } from '@social/common/convert';
-import type { IFile } from '@social/types/posts.type';
+import ModalCreatePost from '../modals/posts/ModalCreatePost';
 
 const CreatePost = () => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
-  const [image, setImage] = useState<IFile[]>([]);
-  const [video, setVideo] = useState<IFile[]>([]);
+  const [medias, setMedias] = useState<IMedia[]>([]);
 
   const handleCancel = () => {
+    setMedias([]);
     setIsModalOpen(false);
   };
 
-  const handleFileSelect = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const files = event.target.files;
-      const fileUrls = convertToFile(files);
-      setImage(prev => [...prev, ...fileUrls]);
-      event.target.value = '';
-    },
-    []
-  );
-
-  const handleVideoSelect = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const files = event.target.files;
-      const fileUrls = convertToFile(files);
-      setVideo(prev => [...prev, ...fileUrls]);
-      event.target.value = '';
-    },
-    []
-  );
+  const handleMediaSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    const fileUrls = convertToFile(files);
+    setMedias(prev => [...prev, ...fileUrls]);
+    event.target.value = '';
+  };
 
   const onOpenChooseFile = useCallback((type: 'image' | 'video') => {
     if (type === 'image') {
@@ -48,12 +35,8 @@ const CreatePost = () => {
     }
   }, []);
 
-  const onDeleteFile = useCallback((type: 'image' | 'video') => {
-    if (type === 'image') {
-      setImage([]);
-    } else {
-      setVideo([]);
-    }
+  const onDeleteFile = useCallback(() => {
+    setMedias([]);
   }, []);
 
   return (
@@ -110,7 +93,7 @@ const CreatePost = () => {
         accept="image/*"
         ref={imageInputRef}
         onChange={e => {
-          handleFileSelect(e);
+          handleMediaSelect(e);
           setIsModalOpen(true);
         }}
       />
@@ -122,15 +105,14 @@ const CreatePost = () => {
         accept="video/*"
         ref={videoInputRef}
         onChange={e => {
-          handleVideoSelect(e);
+          handleMediaSelect(e);
           setIsModalOpen(true);
         }}
       />
 
       <ModalCreatePost
         isOpen={isModalOpen}
-        image={image}
-        video={video}
+        medias={medias}
         onClose={handleCancel}
         onOpenChooseFile={onOpenChooseFile}
         onDeleteFile={onDeleteFile}

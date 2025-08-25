@@ -57,12 +57,8 @@ const PostUserTags: React.FC<IProps> = ({ onBack, addUserTag, userTags }) => {
   }, []);
 
   const handleDone = useCallback(() => {
-    if (selectedUser.length > 0) {
-      addUserTag(selectedUser);
-      onBack();
-    } else {
-      onBack();
-    }
+    addUserTag(selectedUser);
+    onBack();
   }, [selectedUser, addUserTag, onBack]);
 
   const handleCancel = useCallback(() => {

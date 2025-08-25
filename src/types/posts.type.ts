@@ -3,15 +3,17 @@ import type { IUserTag } from './user.type';
 export interface IFormCreatePost {
   content: string;
   privacy: string;
-  images?: File[];
-  videos?: File[];
+  medias?: Array<{
+    keyS3: string;
+    type: string;
+  }>;
   userTags?: IUserTag[];
   feeling?: string;
 }
 
-export interface IFile {
+export interface IMedia {
   url: string;
-  file: File;
+  file?: File;
   type: string;
 }
 
