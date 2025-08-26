@@ -1,4 +1,4 @@
-import { convertToFile } from '@social/common/convert';
+import { formatFile } from '@social/common/convert';
 import { useAppSelector } from '@social/hooks/redux.hook';
 import defaultAvatar from '@social/images/default-avatar.webp';
 import type { IMedia } from '@social/types/posts.type';
@@ -22,7 +22,7 @@ const CreatePost = () => {
 
   const handleMediaSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    const fileUrls = convertToFile(files);
+    const fileUrls = formatFile(files);
     setMedias(prev => [...prev, ...fileUrls]);
     event.target.value = '';
   };

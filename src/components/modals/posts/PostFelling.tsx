@@ -1,4 +1,4 @@
-import { convertToSlug } from '@social/common/convert';
+import { formatSlug } from '@social/common/convert';
 import EmptyState from '@social/components/common/EmptyState';
 import InputSearch from '@social/components/common/InputSearch';
 import emojiData from '@social/constants/emoji';
@@ -20,7 +20,7 @@ const PostFelling: React.FC<IProps> = ({ onBack, addFelling, felling }) => {
 
   const debouncedSearch = useCallback(
     debounce((value: string) => {
-      const slug = convertToSlug(value);
+      const slug = formatSlug(value);
       const regex = new RegExp(slug, 'i');
       const results = emojiData.filter(item => regex.test(item.slug));
       setEmojiList(results);

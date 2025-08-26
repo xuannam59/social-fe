@@ -1,8 +1,8 @@
 import AvatarUser from '@social/components/common/AvatarUser';
 import ButtonGradient from '@social/components/common/ButtonGradient';
 import MediaGallery from '@social/components/common/MediaGallery';
+import UserTagsDisplay from '@social/components/common/UserTagsDisplay';
 import Loading from '@social/components/loading/Loading';
-import emojiData from '@social/constants/emoji';
 import { useAppSelector } from '@social/hooks/redux.hook';
 import type { IMedia } from '@social/types/posts.type';
 import { EOpenContent } from '@social/types/posts.type';
@@ -140,59 +140,7 @@ const PostEditor: React.FC<IProps> = ({
     []
   );
 
-  const renderUserTags = useCallback(() => {
-    return (
-      <>
-        {feeling && (
-          <>
-            {` đang `}
-            <span className=" text-gray-900 text-md inline-block hover:underline cursor-pointer">
-              {emojiData.find(e => e.id === feeling)?.emoji || ''}
-            </span>
-            {` cảm thấy `}
-            <span
-              className="font-semibold text-gray-900 text-md inline-block hover:underline cursor-pointer"
-              onClick={() => handleOpenContent(EOpenContent.FEELING)}
-            >
-              {emojiData.find(e => e.id === feeling)?.label || ''}
-            </span>
-          </>
-        )}
-        {userTags.length > 0 && (
-          <>
-            {` cùng với `}
-            {userTags.slice(0, 3).map((user, index) => (
-              <span key={user.id}>
-                <span
-                  className="font-semibold text-gray-900 text-md inline-block hover:underline cursor-pointer"
-                  onClick={() => handleOpenContent(EOpenContent.USER_TAG)}
-                >
-                  {user.name}
-                </span>
-
-                {index === userTags.length - 2
-                  ? ' và '
-                  : index < userTags.length - 1
-                    ? ', '
-                    : ''}
-              </span>
-            ))}
-            {userTags.length > 3 && (
-              <>
-                {`và `}
-                <span
-                  className="font-semibold text-gray-900 text-md inline-block hover:underline cursor-pointer"
-                  onClick={() => handleOpenContent(EOpenContent.USER_TAG)}
-                >
-                  {userTags.length - 3} {`người khác`}
-                </span>
-              </>
-            )}
-          </>
-        )}
-      </>
-    );
-  }, [userTags, handleOpenContent, feeling]);
+  // Component đã được tách ra thành UserTagsDisplay
 
   const handleSubmit = useCallback(
     (values: { content: string; privacy: string }) => {
@@ -243,7 +191,16 @@ const PostEditor: React.FC<IProps> = ({
                     <div className="font-semibold text-gray-900 text-md inline-block">
                       {userInfo?.fullname || 'Nam Minh'}
                     </div>
-                    {renderUserTags()}
+                    <UserTagsDisplay
+                      userTags={userTags}
+                      feeling={feeling}
+                      onClickFeeling={() =>
+                        handleOpenContent(EOpenContent.FEELING)
+                      }
+                      onClickUserTag={() =>
+                        handleOpenContent(EOpenContent.USER_TAG)
+                      }
+                    />
                   </div>
                   <div className="flex items-center gap-2">
                     <Form.Item name="privacy" className="!mb-0">

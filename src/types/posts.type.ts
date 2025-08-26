@@ -1,4 +1,19 @@
-import type { IUserTag } from './user.type';
+import type { IUser, IUserTag } from './user.type';
+
+export interface IPost {
+  _id: string;
+  content: string;
+  privacy: string;
+  medias: IMedia[];
+  userTags: IUserTag[];
+  feeling?: string;
+  likeCount: number;
+  commentCount: number;
+  createdAt: string;
+  updatedAt: string;
+  userId: string;
+  userInfo: Pick<IUser, '_id' | 'fullname' | 'avatar'>;
+}
 
 export interface IFormCreatePost {
   content: string;
@@ -10,7 +25,11 @@ export interface IFormCreatePost {
   userTags?: IUserTag[];
   feeling?: string;
 }
-
+export interface IActionLike {
+  postId: string;
+  type: number;
+  isLike: boolean;
+}
 export interface IMedia {
   url: string;
   file?: File;

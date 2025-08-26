@@ -4,3 +4,11 @@ export interface IEmojiItem {
   label: string;
   slug: string;
 }
+
+export interface IEmojiReaction {
+  id: string;
+  emoji: string;
+  label: string;
+  value: number;
+  color: string;
+}

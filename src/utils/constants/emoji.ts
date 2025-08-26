@@ -1,4 +1,4 @@
-import type { IEmojiItem } from '@social/types/commons.type';
+import type { IEmojiItem, IEmojiReaction } from '@social/types/commons.type';
 
 const emojiData: IEmojiItem[] = [
   {
@@ -414,6 +414,53 @@ const emojiData: IEmojiItem[] = [
     emoji: '😵‍💫',
     label: 'hoa mắt',
     slug: 'hoa-mat',
+  },
+];
+
+export const emojiReactions: IEmojiReaction[] = [
+  {
+    id: 'emoji-like-1',
+    emoji: '👍',
+    label: 'Thích',
+    value: 1,
+    color: '#1877F2',
+  },
+  {
+    id: 'emoji-love-2',
+    emoji: '❤️',
+    label: 'Yêu thích',
+    value: 2,
+    color: '#F02849',
+  },
+
+  {
+    id: 'emoji-haha-3',
+    emoji: '😆',
+    label: 'Haha',
+    value: 3,
+    color: '#F7B125',
+  },
+  {
+    id: 'emoji-wow-4',
+    emoji: '😮',
+    label: 'Wow',
+    value: 4,
+    color: '#F7B125',
+  },
+  {
+    id: 'emoji-sad-5',
+    emoji: '😭',
+    label: 'Buồn',
+    value: 5,
+    color: '#8B9DC3',
+  },
+
+  {
+    id: 'emoji-angry-6',
+    emoji: '😡',
+    label: 'Phẫn nộ',
+    value: 6,
+    color: '#E24C4B',
   },
 ];
 
