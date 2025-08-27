@@ -1,8 +1,4 @@
-import {
-  EOpenContent,
-  type IMedia,
-  type IFormCreatePost,
-} from '@social/types/posts.type';
+import { EOpenContent, type IFormCreatePost } from '@social/types/posts.type';
 import type { IUserTag } from '@social/types/user.type';
 import { message, Modal, notification } from 'antd';
 import { useCallback, useMemo, useState } from 'react';
@@ -11,10 +7,12 @@ import PostFelling from './PostFelling';
 import PostUserTags from './PostUserTags';
 import { callApiCreatePost } from '@social/apis/posts.api';
 import { smartUpload } from '@social/common/uploads';
+import type { IPreviewMedia } from '@social/types/posts.type';
+import { convertErrorMessage } from '@social/common/convert';
 
 interface IProps {
   isOpen: boolean;
-  medias: IMedia[];
+  medias: IPreviewMedia[];
   onClose: () => void;
   onOpenChooseFile: (type: 'image' | 'video') => void;
   onDeleteFile: () => void;
@@ -78,10 +76,7 @@ const ModalCreatePost: React.FC<IProps> = ({
         if (!res.data) {
           notification.error({
             message: 'Tạo bài viết thất bại',
-            description:
-              res.message && Array.isArray(res.message)
-                ? JSON.stringify(res.message)
-                : res.message,
+            description: convertErrorMessage(res.message),
           });
         }
         message.success('Tạo bài viết thành công');

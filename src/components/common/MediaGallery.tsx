@@ -1,9 +1,9 @@
-import type { IMedia } from '@social/types/posts.type';
+import type { IPreviewMedia } from '@social/types/posts.type';
 import { useMemo } from 'react';
 import { TbPlayerPlayFilled, TbX } from 'react-icons/tb';
 
 interface IProps {
-  medias: IMedia[];
+  medias: IPreviewMedia[];
   onDelete: () => void;
 }
 

@@ -5,7 +5,7 @@ const DefaultLayout = () => {
   return (
     <div className="min-h-screen bg-gray-100 w-full max-w-full">
       <Header />
-      <div className="mt-4 h-[calc(100vh-4.5rem)]">
+      <div className="h-[calc(100vh-3.5rem)]">
         <Outlet />
       </div>
     </div>

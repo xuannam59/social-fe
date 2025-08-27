@@ -4,8 +4,8 @@ import MediaGallery from '@social/components/common/MediaGallery';
 import UserTagsDisplay from '@social/components/common/UserTagsDisplay';
 import Loading from '@social/components/loading/Loading';
 import { useAppSelector } from '@social/hooks/redux.hook';
-import type { IMedia } from '@social/types/posts.type';
 import { EOpenContent } from '@social/types/posts.type';
+import type { IPreviewMedia } from '@social/types/posts.type';
 import type { IUserTag } from '@social/types/user.type';
 import { Button, Form, Input, Select, Tooltip } from 'antd';
 import type { TextAreaRef } from 'antd/es/input/TextArea';
@@ -35,7 +35,7 @@ interface IProps {
   isLoading: boolean;
   userTags: IUserTag[];
   feeling: string;
-  medias: IMedia[];
+  medias: IPreviewMedia[];
   handleCancel: () => void;
   handlePostSubmit: (values: any) => void;
   handleOpenContent: (content: EOpenContent) => void;

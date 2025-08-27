@@ -1,4 +1,5 @@
 import { callApiActionLike } from '@social/apis/posts.api';
+import { convertErrorMessage } from '@social/common/convert';
 import { emojiReactions } from '@social/constants/emoji';
 import type { IEmojiReaction } from '@social/types/commons.type';
 import type { IActionLike } from '@social/types/posts.type';
@@ -48,7 +49,7 @@ const PostButtonLike: React.FC<IProps> = ({
       onUserLiked(null);
     }
     if (!res.data) {
-      message.error('Có lỗi xảy ra');
+      message.error(convertErrorMessage(res.message));
     }
   };
   return (

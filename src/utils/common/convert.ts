@@ -1,4 +1,4 @@
-import type { IMedia } from '@social/types/posts.type';
+import type { IPreviewMedia } from '@social/types/posts.type';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import calendar from 'dayjs/plugin/calendar';
@@ -18,9 +18,9 @@ export const formatSlug = (str: string): string => {
     .replace(/[:!@#$%^&*()?;/]/g, '');
 };
 
-export const formatFile = (files: FileList | null): IMedia[] => {
+export const formatFile = (files: FileList | null): IPreviewMedia[] => {
   if (files && files.length > 0) {
-    const fileUrls = Array.from(files).map(file => ({
+    const fileUrls: IPreviewMedia[] = Array.from(files).map(file => ({
       url: URL.createObjectURL(file),
       file,
       type: file.type.split('/')[0],
@@ -86,10 +86,6 @@ export const formatFullDateTime = (date: string, isShowDay = true) => {
   return result;
 };
 
-export const converToNumber = (value: string) => {
-  return value.replace(/,/g, '');
-};
-
 export const formatNumberAbbreviate = (count: number): string => {
   const formatter = new Intl.NumberFormat('en', {
     notation: 'compact',
@@ -98,4 +94,14 @@ export const formatNumberAbbreviate = (count: number): string => {
   }).format(count);
 
   return formatter.replace('.', ',');
+};
+
+export const convertUrlString = (key: string) => {
+  const region = import.meta.env.VITE_AWS_REGION;
+  const bucket = import.meta.env.VITE_S3_BUCKET_KEY;
+  return `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
+};
+
+export const convertErrorMessage = (message: string | string[]) => {
+  return message && Array.isArray(message) ? JSON.stringify(message) : message;
 };

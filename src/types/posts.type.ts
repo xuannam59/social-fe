@@ -4,7 +4,10 @@ export interface IPost {
   _id: string;
   content: string;
   privacy: string;
-  medias: IMedia[];
+  medias: {
+    keyS3: string;
+    type: string;
+  }[];
   userTags: IUserTag[];
   feeling?: string;
   likeCount: number;
@@ -30,7 +33,7 @@ export interface IActionLike {
   type: number;
   isLike: boolean;
 }
-export interface IMedia {
+export interface IPreviewMedia {
   url: string;
   file?: File;
   type: string;

@@ -5,14 +5,14 @@ import RightSidebar from '@social/components/homes/RightSidebar';
 const HomePages = () => {
   return (
     <>
-      <div className="grid grid-cols-13 h-full gap-4 px-4 relative">
-        <div className="col-span-4 h-full max-h-full min-h-full">
+      <div className="grid grid-cols-13 h-full gap-4 px-4 overflow-y-auto pt-4">
+        <div className="col-span-4 h-full">
           <LeftSidebar />
         </div>
-        <div className="col-span-5 h-full max-h-full min-h-full z-10">
+        <div className="col-span-5 h-full">
           <CenterContent />
         </div>
-        <div className="col-span-4 h-full max-h-full min-h-full">
+        <div className="col-span-4 h-full">
           <RightSidebar />
         </div>
       </div>

@@ -1,19 +1,19 @@
 import { formatFile } from '@social/common/convert';
 import { useAppSelector } from '@social/hooks/redux.hook';
 import defaultAvatar from '@social/images/default-avatar.webp';
-import type { IMedia } from '@social/types/posts.type';
 import { Button } from 'antd';
 import { useCallback, useRef, useState } from 'react';
 import { FcAddImage, FcVideoCall } from 'react-icons/fc';
 import { Link } from 'react-router-dom';
 import ModalCreatePost from '../modals/posts/ModalCreatePost';
+import type { IPreviewMedia } from '@social/types/posts.type';
 
 const CreatePost = () => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
-  const [medias, setMedias] = useState<IMedia[]>([]);
+  const [medias, setMedias] = useState<IPreviewMedia[]>([]);
 
   const handleCancel = () => {
     setMedias([]);

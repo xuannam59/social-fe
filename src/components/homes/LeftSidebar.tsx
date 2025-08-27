@@ -5,7 +5,7 @@ const LeftSidebar = () => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
   return (
     <>
-      <div className="flex flex-1 justify-start items-start">
+      <div className="flex flex-1 justify-start items-start sticky top-0 left-0">
         <div className="overflow-y-auto overflow-x-hidden">
           <div className="flex flex-col gap-2">
             <div className="flex gap-2 justify-start items-center">
