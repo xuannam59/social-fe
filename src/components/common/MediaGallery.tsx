@@ -16,11 +16,11 @@ const MediaGallery: React.FC<IProps> = ({ medias, onDelete }) => {
       case 1:
         return (
           <div className="w-full">
-            {medias.map((media, index) => {
+            {medias.map(media => {
               if (media.type === 'image') {
                 return (
                   <img
-                    key={index}
+                    key={media.id}
                     src={media.url}
                     alt="image"
                     className="w-full h-48 object-cover rounded-lg border border-gray-200"
@@ -28,7 +28,7 @@ const MediaGallery: React.FC<IProps> = ({ medias, onDelete }) => {
                 );
               } else {
                 return (
-                  <div key={index} className="relative bg-black/50">
+                  <div key={media.id} className="relative bg-black/50">
                     <video
                       src={media.url}
                       className="w-full h-auto max-h-96 object-contain border border-gray-200"
@@ -52,7 +52,7 @@ const MediaGallery: React.FC<IProps> = ({ medias, onDelete }) => {
               if (media.type === 'image') {
                 return (
                   <img
-                    key={index}
+                    key={media.id}
                     src={media.url}
                     alt="image"
                     className="w-full h-48 object-cover rounded-lg border border-gray-200"
@@ -62,7 +62,7 @@ const MediaGallery: React.FC<IProps> = ({ medias, onDelete }) => {
               } else {
                 return (
                   <div
-                    key={index}
+                    key={media.id}
                     className="relative rounded-lg overflow-hidden bg-black/50"
                   >
                     <video
@@ -86,7 +86,7 @@ const MediaGallery: React.FC<IProps> = ({ medias, onDelete }) => {
           <div className="grid grid-cols-2">
             {medias.map((media, index) => (
               <div
-                key={index}
+                key={media.id}
                 className={`${index === 2 ? 'col-span-2' : ''} relative bg-black/50`}
               >
                 {media.type === 'image' ? (
@@ -121,7 +121,7 @@ const MediaGallery: React.FC<IProps> = ({ medias, onDelete }) => {
               if (media.type === 'image') {
                 return (
                   <img
-                    key={index}
+                    key={media.id}
                     src={media.url}
                     alt="image"
                     className="w-full h-48 object-cover rounded-lg border border-gray-200"
@@ -130,7 +130,7 @@ const MediaGallery: React.FC<IProps> = ({ medias, onDelete }) => {
                 );
               } else {
                 return (
-                  <div key={index} className="relative bg-black/50">
+                  <div key={media.id} className="relative bg-black/50">
                     <video
                       src={media.url}
                       className="w-full h-48 object-contain border border-gray-200"
@@ -152,7 +152,7 @@ const MediaGallery: React.FC<IProps> = ({ medias, onDelete }) => {
           <div className="grid grid-cols-6">
             {medias.map((media, index) => (
               <div
-                key={index}
+                key={media.id}
                 className={`${index > 1 ? 'col-span-2' : 'col-span-3'} relative bg-black/50`}
               >
                 {media.type === 'image' ? (
@@ -185,7 +185,7 @@ const MediaGallery: React.FC<IProps> = ({ medias, onDelete }) => {
           <div className="grid grid-cols-6">
             {medias.slice(0, 4).map((media, index) => (
               <div
-                key={index}
+                key={media.id}
                 className={`${index > 1 ? 'col-span-2' : 'col-span-3'} relative bg-black/50`}
               >
                 {media.type === 'image' ? (

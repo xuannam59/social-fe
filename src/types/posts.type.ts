@@ -34,6 +34,7 @@ export interface IActionLike {
   isLike: boolean;
 }
 export interface IPreviewMedia {
+  id: string;
   url: string;
   file?: File;
   type: string;

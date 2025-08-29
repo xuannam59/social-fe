@@ -1,5 +1,6 @@
 import Lottie from 'lottie-react';
 import loading from '@social/animations/loading-page.json';
+import logo from '@social/images/logo.webp';
 
 const LoadingPage = () => {
   return (
@@ -13,12 +14,10 @@ const LoadingPage = () => {
             className="w-48 h-48 relative z-10"
           />
         </div>
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-            Loading...
-          </h1>
+        <div className="text-center mb-6 flex flex-col gap-1 items-center justify-center">
+          <img src={logo} alt="logo" className="h-10 w-auto" />
           <p className="text-gray-600 text-lg">
-            Please wait while we prepare everything for you
+            Vui lòng đợi trong giây lát...
           </p>
         </div>
       </div>

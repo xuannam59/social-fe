@@ -16,11 +16,11 @@ const PostMediaGallery: React.FC<IProps> = ({ medias }) => {
       case 1:
         return (
           <div className="w-full">
-            {displayedMedias.map((media, index) => {
+            {displayedMedias.map(media => {
               if (media.type === 'image') {
                 return (
                   <div
-                    key={index}
+                    key={media.id}
                     className="max-h-[400px] bg-black border border-gray-200  overflow-hidden"
                   >
                     <div className="flex items-center justify-center w-full h-full">
@@ -40,11 +40,11 @@ const PostMediaGallery: React.FC<IProps> = ({ medias }) => {
       case 2:
         return (
           <div className="grid grid-cols-2">
-            {displayedMedias.map((media, index) => {
+            {displayedMedias.map(media => {
               if (media.type === 'image') {
                 return (
                   <div
-                    key={index}
+                    key={media.id}
                     className="h-[250px] bg-black border border-gray-200 overflow-hidden"
                   >
                     <div className="flex items-center justify-center w-full h-full">
@@ -68,7 +68,7 @@ const PostMediaGallery: React.FC<IProps> = ({ medias }) => {
               if (media.type === 'image') {
                 return (
                   <div
-                    key={index}
+                    key={media.id}
                     className={`h-[250px] bg-black border border-gray-200 overflow-hidden ${
                       index === 0 ? 'col-span-2' : ''
                     }`}
@@ -90,11 +90,11 @@ const PostMediaGallery: React.FC<IProps> = ({ medias }) => {
       case 4:
         return (
           <div className="grid grid-cols-2">
-            {displayedMedias.map((media, index) => {
+            {displayedMedias.map(media => {
               if (media.type === 'image') {
                 return (
                   <div
-                    key={index}
+                    key={media.id}
                     className="h-[200px] bg-black border border-gray-200 overflow-hidden"
                   >
                     <div className="flex items-center justify-center w-full h-full">
@@ -118,7 +118,7 @@ const PostMediaGallery: React.FC<IProps> = ({ medias }) => {
             {displayedMedias.map((media, index) => {
               return (
                 <div
-                  key={index}
+                  key={media.id}
                   className={`relative h-[150px] bg-black border border-gray-200 overflow-hidden ${
                     index > 1 ? 'col-span-2' : 'col-span-3'
                   }`}

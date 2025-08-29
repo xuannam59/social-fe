@@ -2,6 +2,7 @@ import type { IPreviewMedia } from '@social/types/posts.type';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import calendar from 'dayjs/plugin/calendar';
+import { v4 as uuidv4 } from 'uuid';
 dayjs.extend(relativeTime);
 dayjs.extend(calendar);
 
@@ -21,6 +22,7 @@ export const formatSlug = (str: string): string => {
 export const formatFile = (files: FileList | null): IPreviewMedia[] => {
   if (files && files.length > 0) {
     const fileUrls: IPreviewMedia[] = Array.from(files).map(file => ({
+      id: uuidv4(),
       url: URL.createObjectURL(file),
       file,
       type: file.type.split('/')[0],
@@ -104,4 +106,22 @@ export const convertUrlString = (key: string) => {
 
 export const convertErrorMessage = (message: string | string[]) => {
   return message && Array.isArray(message) ? JSON.stringify(message) : message;
+};
+
+export const convertMentions = (content: string) => {
+  const mentionRegex = /@\[([^\]]+)\]\(([^)]+)\)/g;
+  const mentions = [];
+  let match;
+
+  while ((match = mentionRegex.exec(content)) !== null) {
+    mentions.push({
+      userInfo: match[2],
+      position: {
+        start: match.index,
+        end: match.index + match[0].length - 1,
+      },
+    });
+  }
+
+  return mentions;
 };

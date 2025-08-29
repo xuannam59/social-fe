@@ -232,7 +232,7 @@ const PostEditor: React.FC<IProps> = ({
                           ]}
                         >
                           <Input.TextArea
-                            placeholder={`${userInfo?.fullname?.split(' ')[0] || 'User'} bạn đang nghĩ gì?`}
+                            placeholder={`${userInfo.fullname} bạn đang nghĩ gì?`}
                             className="!border-none !resize-none !text-md min-h-[80px] focus:!ring-0"
                             autoSize={{ minRows: 2, maxRows: 6 }}
                             ref={textAreaRef}

@@ -1,12 +1,15 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import CreatePost from '../posts/CreatePost';
 import StoryPreviewList from '../stories/StoryPreviewList';
 import { useAppDispatch } from '@social/hooks/redux.hook';
 import { setUserStories } from '@social/redux/reducers/story.reducer';
 import PostItem from '../posts/PostItem';
 import type { IPost } from '@social/types/posts.type';
+import ModalViewPost from '../modals/posts/ModalViewPost';
+import { v4 as uuidv4 } from 'uuid';
 
 const CenterContent = () => {
+  const [openModalViewPost, setOpenModalViewPost] = useState(false);
   const userStories: any[] = useMemo(
     () => [
       {
@@ -84,7 +87,7 @@ const CenterContent = () => {
   const posts: IPost[] = useMemo(() => {
     return [
       {
-        _id: '1',
+        _id: uuidv4(),
         content: `Trong ảnh là sông Tô lịch hiện tại!
 “Hà Nội sau cơn mưa lớn kéo dài từ hôm qua 25/08 đến tận sáng nay 26/08, rất nhiều tuyến phố, tuyến đường rơi vào cảnh ngập nặng. Giao thông ùn tắc tê liệt. 
 Nước sông Tô Lịch dâng cao kỷ lục. Dự báo mưa lớn sẽ còn tiếp tục trong vài giờ tới và chưa có dấu hiệu ngừng. Các bác chú ý lộ trình di chuyển. Lắng nghe các kênh giao thông để có phương án hợp lý”
@@ -158,7 +161,23 @@ Cập nhật của bác Dũng Sky trong Chuyện của Hà Nội group.`,
         </div>
         <div className="flex flex-col gap-2 w-full">
           {posts.map(post => (
-            <PostItem key={post._id} post={post} />
+            <>
+              <div key={post._id}>
+                <div className="w-full h-fit bg-white rounded-lg overflow-hidden shadow-md border border-gray-200">
+                  <PostItem
+                    post={post}
+                    onClickComment={() => {
+                      setOpenModalViewPost(true);
+                    }}
+                  />
+                </div>
+                <ModalViewPost
+                  post={post}
+                  open={openModalViewPost}
+                  onClose={() => setOpenModalViewPost(false)}
+                />
+              </div>
+            </>
           ))}
         </div>
       </div>

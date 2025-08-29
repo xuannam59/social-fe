@@ -70,7 +70,6 @@ const ModalCreatePost: React.FC<IProps> = ({
           feeling,
           medias: mediasUpload,
         };
-        console.log(data);
 
         const res = await callApiCreatePost(data);
         if (!res.data) {
