@@ -37,19 +37,29 @@ const PostButtonLike: React.FC<IProps> = ({
   };
 
   const handleActionLike = async (type: number, isLike: boolean) => {
-    const payload: IActionLike = {
-      postId,
-      type,
-      isLike,
-    };
-    const res = await callApiActionLike(payload);
+    const previousState = userLiked;
+
     if (isLike) {
       onUserLiked(emojiReactions.find(emoji => emoji.value === type) ?? null);
     } else {
       onUserLiked(null);
     }
-    if (!res.data) {
-      message.error(convertErrorMessage(res.message));
+
+    try {
+      const payload: IActionLike = {
+        postId,
+        type,
+        isLike,
+      };
+      const res = await callApiActionLike(payload);
+
+      if (!res.data) {
+        onUserLiked(previousState);
+        message.error(convertErrorMessage(res.message));
+      }
+    } catch (error) {
+      onUserLiked(previousState);
+      message.error('Có lỗi xảy ra');
     }
   };
   return (

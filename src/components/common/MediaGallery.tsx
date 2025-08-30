@@ -48,7 +48,7 @@ const MediaGallery: React.FC<IProps> = ({ medias, onDelete }) => {
       case 2:
         return (
           <div className="grid grid-cols-2">
-            {medias.map((media, index) => {
+            {medias.map(media => {
               if (media.type === 'image') {
                 return (
                   <img
@@ -117,7 +117,7 @@ const MediaGallery: React.FC<IProps> = ({ medias, onDelete }) => {
       case 4:
         return (
           <div className="grid grid-cols-2">
-            {medias.map((media, index) => {
+            {medias.map(media => {
               if (media.type === 'image') {
                 return (
                   <img

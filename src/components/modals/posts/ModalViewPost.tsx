@@ -1,20 +1,20 @@
 import CommentInput from '@social/components/comments/CommentInput';
 import PostItem from '@social/components/posts/PostItem';
 import type { IFormComment } from '@social/types/comments.type';
-import type { IPost } from '@social/types/posts.type';
 import { Button, Form, Modal, Typography } from 'antd';
 import React from 'react';
 import { TbX } from 'react-icons/tb';
+import { useAppSelector } from '@social/hooks/redux.hook';
 
 interface IProps {
-  post: IPost;
   open: boolean;
   onClose: () => void;
 }
 
 const { Title } = Typography;
 
-const ModalViewPost: React.FC<IProps> = ({ post, open, onClose }) => {
+const ModalViewPost: React.FC<IProps> = ({ open, onClose }) => {
+  const currentPost = useAppSelector(state => state.post.currentPost);
   const [form] = Form.useForm();
   const onCancel = () => {
     form.resetFields();
@@ -45,7 +45,7 @@ const ModalViewPost: React.FC<IProps> = ({ post, open, onClose }) => {
           <div className="border-b border-gray-200 p-3 flex-shrink-0">
             <div className="flex items-center justify-between gap-2">
               <Title level={3} className="!m-0 flex-1 flex justify-center">
-                Bài viết của {post.userInfo.fullname}
+                Bài viết của {currentPost.authorId.fullname}
               </Title>
               <Button type="text" shape="circle" onClick={onCancel}>
                 <TbX size={24} className="text-gray-500" />
@@ -54,8 +54,8 @@ const ModalViewPost: React.FC<IProps> = ({ post, open, onClose }) => {
           </div>
           <div className="flex flex-col overflow-y-auto">
             <PostItem
-              post={post}
-              onClickComment={() => form.focusField('comments')}
+              post={currentPost}
+              onClickComment={() => form.focusField('content')}
               buttonClose={false}
             />
           </div>

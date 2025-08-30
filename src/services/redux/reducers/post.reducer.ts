@@ -1,18 +1,68 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { callApiGetPost } from '@social/apis/posts.api';
+import { POST_DEFAULT } from '@social/defaults/post';
+import type { IPostState } from '@social/types/posts.type';
 
-const initialState = {
-  posts: [],
+const initialState: IPostState = {
+  currentPost: POST_DEFAULT,
+  listPosts: [],
 };
+
+export const fetchPosts = createAsyncThunk('posts/fetchPosts', async () => {
+  const res = await callApiGetPost();
+  return res.data;
+});
 
 const postSlice = createSlice({
   name: 'post',
   initialState,
   reducers: {
-    setPosts: (state, action) => {
-      state.posts = action.payload;
+    setCurrentPost: (state, action) => {
+      const post = state.listPosts.find(post => post._id === action.payload);
+      if (post) {
+        state.currentPost = post;
+      }
     },
+    setPosts: (state, action) => {
+      state.listPosts = action.payload;
+    },
+    doToggleLike: (state, action) => {
+      const payload = action.payload;
+      const index = state.listPosts.findIndex(
+        post => post._id === payload.postId
+      );
+      if (index !== -1) {
+        const currentPost = state.listPosts[index];
+        const wasLiked = currentPost.userLiked.isLiked;
+
+        // Cập nhật trong listPosts
+        state.listPosts[index].userLiked = {
+          isLiked: payload.isLike,
+          type: payload.isLike ? payload.type : null,
+        };
+
+        if (payload.isLike && !wasLiked) {
+          state.listPosts[index].likeCount += 1;
+        } else if (!payload.isLike && wasLiked) {
+          state.listPosts[index].likeCount = Math.max(
+            0,
+            state.listPosts[index].likeCount - 1
+          );
+        }
+
+        // Sync currentPost nếu đây là post hiện tại đang được xem trong modal
+        if (state.currentPost._id === payload.postId) {
+          state.currentPost = { ...state.listPosts[index] };
+        }
+      }
+    },
+  },
+  extraReducers: builder => {
+    builder.addCase(fetchPosts.fulfilled, (state, action) => {
+      state.listPosts = action.payload;
+    });
   },
 });
 
-export const { setPosts } = postSlice.actions;
+export const { setPosts, setCurrentPost, doToggleLike } = postSlice.actions;
 export const postReducer = postSlice.reducer;

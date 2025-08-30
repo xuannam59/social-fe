@@ -1,5 +1,10 @@
 import type { IUser, IUserTag } from './user.type';
 
+export interface IPostState {
+  listPosts: IPost[];
+  currentPost: IPost;
+}
+
 export interface IPost {
   _id: string;
   content: string;
@@ -14,8 +19,11 @@ export interface IPost {
   commentCount: number;
   createdAt: string;
   updatedAt: string;
-  userId: string;
-  userInfo: Pick<IUser, '_id' | 'fullname' | 'avatar'>;
+  authorId: Pick<IUser, '_id' | 'fullname' | 'avatar'>;
+  userLiked: {
+    isLiked: boolean;
+    type: number | null;
+  };
 }
 
 export interface IFormCreatePost {

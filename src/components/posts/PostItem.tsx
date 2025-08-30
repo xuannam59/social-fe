@@ -1,4 +1,3 @@
-import { callApiGetUserLiked } from '@social/apis/posts.api';
 import {
   convertUrlString,
   formatFullDateTime,
@@ -9,7 +8,7 @@ import { emojiReactions } from '@social/constants/emoji';
 import type { IEmojiReaction } from '@social/types/commons.type';
 import type { IPost } from '@social/types/posts.type';
 import { Button, Tooltip, Typography } from 'antd';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   TbDots,
   TbMessageCircle,
@@ -22,6 +21,8 @@ import UserTagsDisplay from '../common/UserTagsDisplay';
 import PostButtonLike from './PostButtonLike';
 import PostMediaGallery from './PostMediaGallery';
 import { v4 as uuidv4 } from 'uuid';
+import { doToggleLike } from '@social/redux/reducers/post.reducer';
+import { useAppDispatch } from '@social/hooks/redux.hook';
 
 const { Text } = Typography;
 
@@ -36,10 +37,19 @@ const PostItem: React.FC<IProps> = ({
   onClickComment,
   buttonClose = true,
 }) => {
+  const dispatch = useAppDispatch();
   const time = formatRelativeTime(post.createdAt);
   const exactTime = formatFullDateTime(post.createdAt);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [userLiked, setUserLiked] = useState<IEmojiReaction | null>(null);
+  const userLiked = useMemo(() => {
+    if (post.userLiked.isLiked) {
+      return (
+        emojiReactions.find(emoji => emoji.value === post.userLiked.type) ??
+        null
+      );
+    }
+    return null;
+  }, [post.userLiked.type, post.userLiked.isLiked]);
 
   const medias = useMemo(() => {
     return post.medias.map(media => ({
@@ -49,21 +59,18 @@ const PostItem: React.FC<IProps> = ({
     }));
   }, [post.medias]);
 
-  const getUserLiked = useCallback(async () => {
-    const res = await callApiGetUserLiked(post._id);
-    if (res.data) {
-      const emoji = emojiReactions.find(emoji => emoji.value === res.data.type);
-      setUserLiked(emoji ?? null);
-    }
-  }, [post._id]);
+  const onUserLiked = useCallback(
+    (value: IEmojiReaction | null) => {
+      const payload = {
+        postId: post._id,
+        type: value?.value ?? null,
+        isLike: value !== null,
+      };
+      dispatch(doToggleLike(payload));
+    },
+    [dispatch, post._id]
+  );
 
-  const onUserLiked = useCallback((value: IEmojiReaction | null) => {
-    setUserLiked(value);
-  }, []);
-
-  useEffect(() => {
-    getUserLiked();
-  }, [getUserLiked]);
   return (
     <>
       <div className="w-full h-full flex flex-col">
@@ -71,13 +78,13 @@ const PostItem: React.FC<IProps> = ({
           <div className="flex-1 flex items-start gap-1">
             <AvatarUser
               size={50}
-              avatar={post.userInfo.avatar}
+              avatar={post.authorId.avatar}
               className="flex-shrink-0"
             />
             <div className="flex-1">
               <div className="w-full">
                 <div className="font-semibold text-base inline-block">
-                  {post.userInfo.fullname}
+                  {post.authorId.fullname}
                 </div>
                 <UserTagsDisplay
                   userTags={post.userTags}
@@ -142,11 +149,9 @@ const PostItem: React.FC<IProps> = ({
             <div className="flex items-center gap-1 cursor-pointer">
               {post.likeCount > 0 && (
                 <>
-                  <span className="text-base">{emojiReactions[0].emoji}</span>
+                  <span className="text-base">{userLiked?.emoji}</span>
                   <span className="text-gray-500 text-base hover:underline">
-                    {userLiked && 'Bạn và '}
                     {formatNumberAbbreviate(post.likeCount)}
-                    {userLiked && ' người khác'}
                   </span>
                 </>
               )}
@@ -166,11 +171,13 @@ const PostItem: React.FC<IProps> = ({
             </div>
           </div>
           <div className="flex border-t border-gray-200 pt-2">
+            {/* TODO: Thích */}
             <PostButtonLike
               postId={post._id}
               userLiked={userLiked}
               onUserLiked={onUserLiked}
             />
+            {/* TODO: Bình luận */}
             <Button
               type="text"
               className="flex items-center flex-1"
@@ -179,6 +186,7 @@ const PostItem: React.FC<IProps> = ({
               <TbMessageCircle size={24} className="text-gray-500" />
               <Text className="text-sm font-semibold">Bình luận</Text>
             </Button>
+            {/* TODO: Chia sẻ */}
             <Button type="text" className="flex items-center flex-1">
               <TbShare3 size={24} className="text-gray-500" />
               <Text className="text-sm font-semibold">Chia sẻ</Text>

@@ -1,9 +1,17 @@
 import axios from '@social/configs/axios/axiosCustom';
-import type { IFormCreatePost, IActionLike } from '@social/types/posts.type';
+import type {
+  IFormCreatePost,
+  IActionLike,
+  IPost,
+} from '@social/types/posts.type';
 import type { IBackendRes } from '@social/types/backend.type';
 
 export const callApiCreatePost = (data: IFormCreatePost) => {
   return axios.post<IBackendRes<{ _id: string }>>('/api/v1/posts', data);
+};
+
+export const callApiGetPost = () => {
+  return axios.get<IBackendRes<IPost[]>>(`/api/v1/posts`);
 };
 
 export const callApiActionLike = (data: IActionLike) => {
