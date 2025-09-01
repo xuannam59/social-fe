@@ -25,6 +25,7 @@ const MentionComponent = Mention as any;
 interface IProps {
   inputRef: React.RefObject<any>;
   onPressEnter: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  fieldName?: string;
 }
 
 const users = [
@@ -78,8 +79,73 @@ const users = [
   },
 ];
 
-const MentionsUser = ({ inputRef, onPressEnter }: IProps) => {
+const MentionsUser: React.FC<IProps> = ({
+  inputRef,
+  onPressEnter,
+  fieldName = 'content',
+}) => {
   const mentionsRef = React.useRef<any>(null);
+  const [domElement, setDomElement] = React.useState<HTMLElement | null>(null);
+
+  React.useEffect(() => {
+    if (mentionsRef.current) {
+      const timer = setTimeout(() => {
+        if (mentionsRef.current) {
+          let element = mentionsRef.current;
+
+          if (mentionsRef.current.$el) {
+            element = mentionsRef.current.$el;
+          } else if (mentionsRef.current.querySelector) {
+            element = mentionsRef.current;
+          } else {
+            const textarea = document.querySelector(
+              `textarea[id="${fieldName}"]`
+            );
+            if (textarea) {
+              element = textarea.parentElement || textarea;
+            }
+          }
+
+          setDomElement(element);
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [mentionsRef.current]);
+
+  React.useImperativeHandle(
+    inputRef,
+    () => ({
+      querySelector: (selector: string) => {
+        if (domElement && domElement.querySelector) {
+          return domElement.querySelector(selector);
+        }
+        return document.querySelector(selector);
+      },
+      textareaRef: {
+        current:
+          domElement?.querySelector('textarea') ||
+          document.querySelector(`textarea[id="${fieldName}"]`),
+      },
+      getBoundingClientRect: () => {
+        if (domElement && domElement.getBoundingClientRect) {
+          return domElement.getBoundingClientRect();
+        }
+
+        return {
+          left: 0,
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: 0,
+          height: 0,
+        };
+      },
+    }),
+    [domElement]
+  );
+
   const searchUsers = (query: string, callback: (data: any[]) => void) => {
     if (!query) {
       callback(users);
@@ -123,17 +189,16 @@ const MentionsUser = ({ inputRef, onPressEnter }: IProps) => {
       </div>
     );
   };
-  // Expose ref để ButtonEmoji có thể truy cập
-  React.useImperativeHandle(inputRef, () => mentionsRef.current, []);
 
   return (
-    <Form.Item name="content" className="!m-0">
+    <Form.Item name={fieldName} className="!m-0">
       <MentionsInputComponent
         ref={mentionsRef}
         placeholder="Thêm bình luận..."
         style={defaultStyle}
         allowSuggestionsAboveCursor
         onKeyDown={onPressEnter}
+        id={`${fieldName}`}
       >
         <MentionComponent
           trigger="@"

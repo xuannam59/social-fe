@@ -1,6 +1,6 @@
 import MentionsUser from '@social/components/common/MentionsUser';
-import { Button, Form, Image, type FormInstance } from 'antd';
-import React, { useRef, useState } from 'react';
+import { Button, Form, Image, Input, type FormInstance } from 'antd';
+import React, { useCallback, useRef, useState } from 'react';
 import AvatarUser from '../common/AvatarUser';
 import ButtonEmoji from '../common/ButtonEmoji';
 import { TbPhotoPlus, TbSend, TbX } from 'react-icons/tb';
@@ -12,17 +12,34 @@ import type { IFormComment } from '@social/types/comments.type';
 interface IProps {
   onSubmit: (values: IFormComment) => void;
   form: FormInstance;
+  parentId?: string;
+  placeEmoji?: 'bottomRight' | 'bottomLeft' | 'topRight' | 'topLeft';
+  level: number;
 }
 
-const CommentInput: React.FC<IProps> = ({ onSubmit, form }) => {
+const CommentInput: React.FC<IProps> = ({
+  onSubmit,
+  form,
+  parentId,
+  placeEmoji = 'bottomRight',
+  level,
+}) => {
   const [medias, setMedias] = useState<IPreviewMedia[]>([]);
   const hasImage = useRef(true);
   const inputRef = useRef<any>(null);
   const fileInputRef = useRef<any>(null);
   const userInfo = useAppSelector(state => state.auth.userInfo);
+  const emojiInputRef = useRef<any>(null);
+  const checkEmptyContent = Form.useWatch(parentId, form);
+  React.useEffect(() => {
+    if (inputRef.current) {
+      emojiInputRef.current = inputRef.current;
+    }
+  }, []);
 
   const onFinish = (values: any) => {
-    const { content } = values;
+    const { parentId } = values;
+    const content = level === 0 ? values.content : values[parentId];
     try {
       const mediasUpload: { key: string; type: string }[] = [];
       if (medias.length > 0) {
@@ -43,6 +60,9 @@ const CommentInput: React.FC<IProps> = ({ onSubmit, form }) => {
       }
 
       const payload: IFormComment = {
+        postId: '',
+        parentId,
+        level: Math.min(level, 2),
         content,
         medias: mediasUpload.map(media => ({
           keyS3: media.key,
@@ -50,6 +70,8 @@ const CommentInput: React.FC<IProps> = ({ onSubmit, form }) => {
         })),
         mentions: convertMentions(content),
       };
+
+      console.log('payload', payload);
 
       onSubmit(payload);
 
@@ -74,30 +96,46 @@ const CommentInput: React.FC<IProps> = ({ onSubmit, form }) => {
     hasImage.current = true;
   };
 
+  const onPressEnter = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        if (!checkEmptyContent) {
+          return;
+        }
+        e.preventDefault();
+        form.submit();
+      }
+    },
+    [checkEmptyContent, form]
+  );
+
   return (
     <>
-      <Form form={form} layout="vertical" onFinish={onFinish}>
-        <div className="flex-shrink-0 flex gap-2 items-start p-3 border-t border-gray-200">
-          <AvatarUser avatar={userInfo.avatar} size={36} />
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={onFinish}
+        initialValues={{ parentId: parentId }}
+      >
+        <div className="flex-shrink-0 flex gap-2 items-start p-3">
+          <AvatarUser avatar={userInfo.avatar} size={30} />
           <div className="flex flex-col flex-1 gap-2">
+            <Form.Item name="parentId" hidden>
+              <Input />
+            </Form.Item>
             <div className="bg-gray-200 rounded-lg flex flex-col">
               <MentionsUser
                 inputRef={inputRef}
-                onPressEnter={e => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    // Enter không có Shift -> Submit form
-                    e.preventDefault();
-                    form.submit();
-                  }
-                }}
+                onPressEnter={onPressEnter}
+                fieldName={parentId}
               />
               <div className="flex justify-start cursor-text mx-1">
                 <div className="flex items-center flex-1">
                   <ButtonEmoji
                     form={form}
-                    inputRef={inputRef}
-                    field="content"
-                    placements="bottomRight"
+                    inputRef={emojiInputRef}
+                    placements={placeEmoji}
+                    fieldName={parentId}
                   />
                   {hasImage.current && (
                     <Button
@@ -109,13 +147,19 @@ const CommentInput: React.FC<IProps> = ({ onSubmit, form }) => {
                     </Button>
                   )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center">
                   <Button
                     type="text"
                     shape="circle"
+                    disabled={!checkEmptyContent}
                     onClick={() => form.submit()}
                   >
-                    <TbSend size={20} className="text-gray-500" />
+                    <TbSend
+                      size={20}
+                      className={
+                        !checkEmptyContent ? 'text-gray-500' : 'text-primary'
+                      }
+                    />
                   </Button>
                 </div>
               </div>

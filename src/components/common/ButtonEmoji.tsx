@@ -3,11 +3,11 @@ import { EmojiStyle, type EmojiClickData } from 'emoji-picker-react';
 import React, { lazy, Suspense, useCallback, useMemo, useState } from 'react';
 import { TbMoodSmileBeam } from 'react-icons/tb';
 import Loading from '../loading/Loading';
+import { calculateFormPosition } from '@social/common/mentions';
 
 interface IProps {
   form: FormInstance;
   inputRef: React.RefObject<any>;
-  field: string;
   placements?:
     | 'top'
     | 'bottom'
@@ -16,6 +16,7 @@ interface IProps {
     | 'topLeft'
     | 'topRight';
   size?: number;
+  fieldName?: string;
 }
 
 const LazyEmojiPicker = lazy(() => import('emoji-picker-react'));
@@ -23,9 +24,9 @@ const LazyEmojiPicker = lazy(() => import('emoji-picker-react'));
 const ButtonEmoji: React.FC<IProps> = ({
   form,
   inputRef,
-  field,
   placements,
   size = 20,
+  fieldName = 'content',
 }) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
@@ -51,7 +52,7 @@ const ButtonEmoji: React.FC<IProps> = ({
   const toggleEmojiPicker = () => {
     setShowEmojiPicker(prev => !prev);
     if (showEmojiPicker) {
-      form.focusField(field);
+      form.focusField(fieldName);
     }
   };
 
@@ -62,54 +63,88 @@ const ButtonEmoji: React.FC<IProps> = ({
       let textAreaElement: HTMLTextAreaElement | null = null;
 
       if (inputRef.current) {
-        if (inputRef.current.querySelector) {
+        if (inputRef.current instanceof HTMLTextAreaElement) {
+          textAreaElement = inputRef.current;
+        } else if (inputRef.current.querySelector) {
           textAreaElement = inputRef.current.querySelector('textarea');
         } else if (inputRef.current.textareaRef?.current) {
           textAreaElement = inputRef.current.textareaRef.current;
+        } else {
+          const container =
+            inputRef.current.closest('.ant-form-item') ||
+            inputRef.current.parentElement ||
+            inputRef.current;
+          textAreaElement = container.querySelector('textarea');
         }
       }
 
-      if (!textAreaElement) {
-        const textareas = document.querySelectorAll(
-          'textarea[placeholder="Thêm bình luận..."]'
+      if (!textAreaElement && inputRef.current) {
+        const inputRect = inputRef.current.getBoundingClientRect();
+        const allTextareas = document.querySelectorAll(
+          `textarea[id="${fieldName}"]`
         );
-        if (textareas.length > 0) {
-          textAreaElement = textareas[
-            textareas.length - 1
-          ] as HTMLTextAreaElement;
+
+        if (allTextareas.length > 0) {
+          let closestTextarea = allTextareas[0] as HTMLTextAreaElement;
+          let minDistance = Infinity;
+
+          allTextareas.forEach(textarea => {
+            const textareaRect = textarea.getBoundingClientRect();
+            const distance = Math.sqrt(
+              Math.pow(inputRect.left - textareaRect.left, 2) +
+                Math.pow(inputRect.top - textareaRect.top, 2)
+            );
+            if (distance < minDistance) {
+              minDistance = distance;
+              closestTextarea = textarea as HTMLTextAreaElement;
+            }
+          });
+
+          textAreaElement = closestTextarea;
         }
       }
 
       if (!textAreaElement) {
-        const currentContent = form.getFieldValue(field) || '';
-        form.setFieldValue(field, currentContent + emoji);
+        const currentContent = form.getFieldValue(fieldName) || '';
+        form.setFieldValue(fieldName, currentContent + emoji);
         setShowEmojiPicker(false);
         return;
       }
 
-      const start = textAreaElement.selectionStart || 0;
-      const end = textAreaElement.selectionEnd || 0;
-      const currentContent = textAreaElement.value || '';
+      const textareaCursorStart = textAreaElement.selectionStart || 0;
+      const textareaCursorEnd = textAreaElement.selectionEnd || 0;
 
-      const newContent =
-        currentContent.slice(0, start) + emoji + currentContent.slice(end);
+      const formValue = form.getFieldValue(fieldName) || '';
+      console.log(formValue);
+      const formCursorStart = calculateFormPosition(
+        textareaCursorStart,
+        formValue
+      );
+      const formCursorEnd = calculateFormPosition(textareaCursorEnd, formValue);
 
-      const newCaretPos = start + emoji.length;
+      const newFormValue =
+        formValue.slice(0, formCursorStart) +
+        emoji +
+        formValue.slice(formCursorEnd);
 
-      form.setFieldValue(field, newContent);
+      form.setFieldValue(fieldName, newFormValue);
 
       const inputEvent = new Event('input', { bubbles: true });
-      textAreaElement.value = newContent;
       textAreaElement.dispatchEvent(inputEvent);
+
+      const newTextareaCursorPos = textareaCursorStart + emoji.length;
 
       requestAnimationFrame(() => {
         if (textAreaElement) {
           textAreaElement.focus();
-          textAreaElement.setSelectionRange(newCaretPos, newCaretPos);
+          textAreaElement.setSelectionRange(
+            newTextareaCursorPos,
+            newTextareaCursorPos
+          );
         }
       });
     },
-    [form, inputRef, field]
+    [form, inputRef, fieldName]
   );
 
   return (

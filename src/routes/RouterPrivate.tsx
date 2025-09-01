@@ -23,8 +23,8 @@ const RouterPrivate = () => {
     const res = await callApiGetAccount();
     if (res.data) {
       dispatch(doGetAccount(res.data));
+      dispatch(setIsLoading(false));
     }
-    dispatch(setIsLoading(false));
   }, [dispatch, queryParams, setQueryParams]);
 
   useEffect(() => {

@@ -1,11 +1,12 @@
-import { callApiActionLike } from '@social/apis/posts.api';
+import { callApiPostLike } from '@social/apis/posts.api';
 import { convertErrorMessage } from '@social/common/convert';
 import { emojiReactions } from '@social/constants/emoji';
 import type { IEmojiReaction } from '@social/types/commons.type';
-import type { IActionLike } from '@social/types/posts.type';
-import { Dropdown, message, Tooltip, Typography } from 'antd';
-import React, { useRef, useState } from 'react';
+import type { IPostLike } from '@social/types/posts.type';
+import { message, Typography } from 'antd';
+import React from 'react';
 import { TbThumbUp } from 'react-icons/tb';
+import ButtonLike from '../common/ButtonLike';
 
 const { Text } = Typography;
 
@@ -20,22 +21,6 @@ const PostButtonLike: React.FC<IProps> = ({
   userLiked,
   onUserLiked,
 }) => {
-  const [open, setOpen] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-  const handleVisibleChange = (nextVisible: boolean) => {
-    if (nextVisible) {
-      timerRef.current = setTimeout(() => {
-        setOpen(true);
-      }, 300);
-    } else {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-      setOpen(false);
-    }
-  };
-
   const handleActionLike = async (type: number, isLike: boolean) => {
     const previousState = userLiked;
 
@@ -46,12 +31,12 @@ const PostButtonLike: React.FC<IProps> = ({
     }
 
     try {
-      const payload: IActionLike = {
+      const payload: IPostLike = {
         postId,
         type,
         isLike,
       };
-      const res = await callApiActionLike(payload);
+      const res = await callApiPostLike(payload);
 
       if (!res.data) {
         onUserLiked(previousState);
@@ -64,38 +49,7 @@ const PostButtonLike: React.FC<IProps> = ({
   };
   return (
     <>
-      <Dropdown
-        trigger={['hover']}
-        open={open}
-        onOpenChange={handleVisibleChange}
-        placement={'top'}
-        className="cursor-pointer flex-1"
-        popupRender={() => {
-          return (
-            <>
-              <div className="flex items-center bg-white rounded-full shadow-md p-1 border border-gray-300">
-                {emojiReactions.map(emoji => (
-                  <div
-                    key={emoji.id}
-                    className={`w-10 h-10 p-2 rounded-full  cursor-pointer`}
-                    onClick={() => {
-                      handleActionLike(emoji.value, true);
-                    }}
-                  >
-                    <Tooltip title={emoji.label}>
-                      <div className="flex items-center justify-center w-full h-full">
-                        <span className="text-3xl font-semibold hover:scale-150 transition-all duration-300">
-                          {emoji.emoji}
-                        </span>
-                      </div>
-                    </Tooltip>
-                  </div>
-                ))}
-              </div>
-            </>
-          );
-        }}
-      >
+      <ButtonLike onActionLike={handleActionLike}>
         <div className=" flex-1 group/like hover:bg-gray-100 rounded-md cursor-pointer">
           <div className="flex items-center justify-center h-full w-full">
             {userLiked ? (
@@ -126,7 +80,7 @@ const PostButtonLike: React.FC<IProps> = ({
             )}
           </div>
         </div>
-      </Dropdown>
+      </ButtonLike>
     </>
   );
 };

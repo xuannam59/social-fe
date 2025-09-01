@@ -35,7 +35,6 @@ const postSlice = createSlice({
         const currentPost = state.listPosts[index];
         const wasLiked = currentPost.userLiked.isLiked;
 
-        // Cập nhật trong listPosts
         state.listPosts[index].userLiked = {
           isLiked: payload.isLike,
           type: payload.isLike ? payload.type : null,
@@ -50,7 +49,6 @@ const postSlice = createSlice({
           );
         }
 
-        // Sync currentPost nếu đây là post hiện tại đang được xem trong modal
         if (state.currentPost._id === payload.postId) {
           state.currentPost = { ...state.listPosts[index] };
         }

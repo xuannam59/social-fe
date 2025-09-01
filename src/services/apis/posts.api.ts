@@ -1,8 +1,8 @@
 import axios from '@social/configs/axios/axiosCustom';
 import type {
   IFormCreatePost,
-  IActionLike,
   IPost,
+  IPostLike,
 } from '@social/types/posts.type';
 import type { IBackendRes } from '@social/types/backend.type';
 
@@ -14,7 +14,7 @@ export const callApiGetPost = () => {
   return axios.get<IBackendRes<IPost[]>>(`/api/v1/posts`);
 };
 
-export const callApiActionLike = (data: IActionLike) => {
+export const callApiPostLike = (data: IPostLike) => {
   return axios.post<IBackendRes<{ type: number; isLike: boolean }>>(
     `/api/v1/posts/likes`,
     data

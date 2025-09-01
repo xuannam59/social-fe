@@ -36,7 +36,7 @@ export interface IFormCreatePost {
   userTags?: IUserTag[];
   feeling?: string;
 }
-export interface IActionLike {
+export interface IPostLike {
   postId: string;
   type: number;
   isLike: boolean;

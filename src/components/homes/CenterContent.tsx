@@ -128,10 +128,12 @@ const CenterContent = () => {
           ))}
         </div>
       </div>
-      <ModalViewPost
-        open={openModalViewPost}
-        onClose={handleCloseModalViewPost}
-      />
+      {openModalViewPost && (
+        <ModalViewPost
+          open={openModalViewPost}
+          onClose={handleCloseModalViewPost}
+        />
+      )}
     </>
   );
 };

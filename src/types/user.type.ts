@@ -3,7 +3,7 @@ export interface IUser {
   fullname: string;
   email: string;
   phoneNumber?: string;
-  avatar?: string;
+  avatar: string;
   role: string;
   isActive: boolean;
 }

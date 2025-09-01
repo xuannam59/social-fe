@@ -11,9 +11,12 @@ import { Button, Tooltip, Typography } from 'antd';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   TbDots,
+  TbLock,
   TbMessageCircle,
   TbMessageCircleFilled,
   TbShare3,
+  TbUsers,
+  TbWorld,
   TbX,
 } from 'react-icons/tb';
 import AvatarUser from '../common/AvatarUser';
@@ -93,12 +96,22 @@ const PostItem: React.FC<IProps> = ({
                   onClickUserTag={() => {}}
                 />
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-0.5">
                 <Tooltip title={exactTime} placement="bottom" arrow={false}>
                   <Text type="secondary" className="text-sm font-semibold">
                     {time}
                   </Text>
                 </Tooltip>
+                <div className="flex items-center gap-2">·</div>
+                {post.privacy === 'public' && (
+                  <TbWorld size={16} className="text-gray-500" />
+                )}
+                {post.privacy === 'friends' && (
+                  <TbUsers size={16} className="text-gray-500" />
+                )}
+                {post.privacy === 'private' && (
+                  <TbLock size={16} className="text-gray-500" />
+                )}
               </div>
             </div>
           </div>

@@ -47,11 +47,15 @@ export const formatRelativeTime = (date: string) => {
   } else if (diffInHours < 48) {
     return 'Hôm qua';
   } else {
-    return formatFullDateTime(date, false);
+    return formatFullDateTime(date, false, false);
   }
 };
 
-export const formatFullDateTime = (date: string, isShowDay = true) => {
+export const formatFullDateTime = (
+  date: string,
+  showDayOfWeek = true,
+  showYear = true
+) => {
   const day = dayjs(date).day();
   const month = dayjs(date).month() + 1;
   const year = dayjs(date).year();
@@ -81,11 +85,7 @@ export const formatFullDateTime = (date: string, isShowDay = true) => {
       dayText = 'Thứ Bảy';
       break;
   }
-  const result = `${day} Tháng ${month}, ${year} lúc ${hour}:${minute}`;
-  if (isShowDay) {
-    return `${dayText}, ${result}`;
-  }
-  return result;
+  return `${showDayOfWeek ? `${dayText}, ` : ''} ${day} Tháng ${month}${showYear ? `, ${year}` : ''} lúc ${hour}:${minute}`;
 };
 
 export const formatNumberAbbreviate = (count: number): string => {
@@ -115,10 +115,10 @@ export const convertMentions = (content: string) => {
 
   while ((match = mentionRegex.exec(content)) !== null) {
     mentions.push({
-      userInfo: match[2],
+      userId: match[2],
       position: {
         start: match.index,
-        end: match.index + match[0].length - 1,
+        end: match.index + match[0].length,
       },
     });
   }
