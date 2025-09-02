@@ -22,3 +22,9 @@ export const callApiCommentLike = (data: ICommentLike) => {
     data
   );
 };
+
+export const callApiDeleteComment = (commentId: string) => {
+  return axios.delete<
+    IBackendRes<{ countDeleted: number; postId: string; commentId: string }>
+  >(`/api/v1/comments/${commentId}`);
+};

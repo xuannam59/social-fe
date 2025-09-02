@@ -16,7 +16,7 @@ const ButtonLike: React.FC<IProps> = ({ onActionLike, children }) => {
       placement="topLeft"
       className="cursor-pointer"
       mouseEnterDelay={0.8}
-      mouseLeaveDelay={0.05}
+      mouseLeaveDelay={0.2}
       open={open}
       onOpenChange={visible => setOpen(visible)}
       popupRender={() => (

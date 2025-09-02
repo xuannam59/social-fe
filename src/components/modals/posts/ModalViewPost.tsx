@@ -1,7 +1,7 @@
 import CommentInput from '@social/components/comments/CommentInput';
 import PostItem from '@social/components/posts/PostItem';
 import type { IComment, IFormComment } from '@social/types/comments.type';
-import { Button, Form, Modal, notification, Typography } from 'antd';
+import { Button, Form, message, Modal, Typography } from 'antd';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { TbX } from 'react-icons/tb';
 import { useAppSelector } from '@social/hooks/redux.hook';
@@ -11,6 +11,8 @@ import { callGetComments } from '@social/apis/comment.api';
 import CommentItem from '@social/components/comments/CommentItem';
 import LoadingComment from '@social/components/loading/LoadingComment';
 import EmptyState from '@social/components/common/EmptyState';
+import { COMMENT_DEFAULT } from '@social/defaults/post';
+import { v4 as uuidv4 } from 'uuid';
 
 interface IProps {
   open: boolean;
@@ -21,8 +23,13 @@ const { Title } = Typography;
 
 const ModalViewPost: React.FC<IProps> = ({ open, onClose }) => {
   const currentPost = useAppSelector(state => state.post.currentPost);
+  const userInfo = useAppSelector(state => state.auth.userInfo);
   const parentId = useRef<string>('');
   const [comments, setComments] = useState<IComment[]>([]);
+  const comment = useRef<IComment | null>(null);
+  const [commentProcess, setCommentProcess] = useState<
+    'success' | 'error' | 'pending'
+  >('success');
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [form] = Form.useForm();
   const onCancel = () => {
@@ -46,6 +53,7 @@ const ModalViewPost: React.FC<IProps> = ({ open, onClose }) => {
   }, [getComments, currentPost._id]);
 
   const onSubmit = async (values: IFormComment) => {
+    setCommentProcess('pending');
     try {
       const { content, medias, mentions, level } = values;
       const payload = {
@@ -56,15 +64,38 @@ const ModalViewPost: React.FC<IProps> = ({ open, onClose }) => {
         level,
         parentId: parentId.current,
       };
+      comment.current = {
+        ...COMMENT_DEFAULT,
+        ...payload,
+        mentions: mentions.map(mention => ({
+          _id: uuidv4(),
+          ...mention,
+        })),
+        authorId: {
+          _id: userInfo._id,
+          fullname: userInfo.fullname,
+          avatar: userInfo.avatar,
+        },
+      };
+
       const res = await callApiCreateComment(payload);
-      if (!res.data) {
-        notification.error({
-          message: 'Tạo bình luận thất bại',
-          description: convertErrorMessage(res.message),
-        });
+      if (res.data) {
+        const commentCurrent = comment.current;
+        if (commentCurrent) {
+          setComments(prev => [
+            { ...commentCurrent, _id: res.data._id },
+            ...prev,
+          ]);
+          comment.current = null;
+        }
+        setCommentProcess('success');
+      } else {
+        message.error(convertErrorMessage(res.message));
+        setCommentProcess('error');
       }
     } catch (error) {
       console.log(error);
+      setCommentProcess('error');
     }
   };
 
@@ -103,6 +134,13 @@ const ModalViewPost: React.FC<IProps> = ({ open, onClose }) => {
             />
             <div className="px-3 mb-3">
               <div className="border-t border-gray-200 pt-2 flex flex-col gap-2 h-fit">
+                {comment.current && (
+                  <CommentItem
+                    comment={comment.current}
+                    level={1}
+                    commentStatus={commentProcess}
+                  />
+                )}
                 {isLoadingComments ? (
                   <LoadingComment />
                 ) : comments.length > 0 ? (
@@ -111,6 +149,11 @@ const ModalViewPost: React.FC<IProps> = ({ open, onClose }) => {
                       key={comment._id}
                       comment={comment}
                       level={1}
+                      onDeleteComment={commentId =>
+                        setComments(prev =>
+                          prev.filter(child => child._id !== commentId)
+                        )
+                      }
                     />
                   ))
                 ) : (

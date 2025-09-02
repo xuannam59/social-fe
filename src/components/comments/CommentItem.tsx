@@ -1,40 +1,55 @@
 import {
   callApiCommentLike,
   callApiCreateComment,
+  callApiDeleteComment,
   callGetComments,
 } from '@social/apis/comment.api';
 import {
   convertErrorMessage,
+  convertUrlString,
   formatRelativeTime,
 } from '@social/common/convert';
 import { renderComment } from '@social/common/render';
 import { emojiReactions } from '@social/constants/emoji';
 import { COMMENT_DEFAULT } from '@social/defaults/post';
-import { useAppSelector } from '@social/hooks/redux.hook';
+import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
 import type { IComment, IFormComment } from '@social/types/comments.type';
 import type { IEmojiReaction } from '@social/types/commons.type';
-import { Button, Form, message, Spin, Typography } from 'antd';
+import {
+  Button,
+  Form,
+  Image,
+  Spin,
+  Typography,
+  message,
+  notification,
+} from 'antd';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { TbChevronDown, TbLoader2, TbTrash } from 'react-icons/tb';
 import { v4 as uuidv4 } from 'uuid';
 import AvatarUser from '../common/AvatarUser';
 import ButtonLike from '../common/ButtonLike';
 import CommentInput from './CommentInput';
+import { doDeleteComment } from '@social/redux/reducers/post.reducer';
 
 interface IProps {
   comment: IComment;
   level: number;
-  replyStatus?: 'success' | 'error' | 'pending';
+  commentStatus?: 'success' | 'error' | 'pending';
   requestReplyOnParent?: (fullname: string, authorId: string) => void;
+  onDeleteComment?: (commentId: string) => void;
 }
 const { Paragraph } = Typography;
 
 const CommentItem: React.FC<IProps> = ({
   comment,
   level,
-  replyStatus = 'success',
+  commentStatus = 'success',
   requestReplyOnParent,
+  onDeleteComment,
 }) => {
+  const userInfo = useAppSelector(state => state.auth.userInfo);
+  const dispatch = useAppDispatch();
   const time = useMemo(
     () => formatRelativeTime(comment.createdAt),
     [comment.createdAt]
@@ -51,12 +66,12 @@ const CommentItem: React.FC<IProps> = ({
     'success' | 'error' | 'pending'
   >('success');
   const [isLoadingShowMore, setIsLoadingShowMore] = useState(false);
+  const [isLoadingDelete, setIsLoadingDelete] = useState(false);
   const [commentChildren, setCommentChildren] = useState<IComment[]>([]);
   const commentReply = useRef<IComment | null>(null);
   const commentInputRef = useRef<HTMLDivElement>(null);
   const countReplyPresent = useRef(0);
   const [form] = Form.useForm();
-  const userInfo = useAppSelector(state => state.auth.userInfo);
   const author = comment.authorId;
   const defaultEmoji = emojiReactions[0];
 
@@ -67,10 +82,12 @@ const CommentItem: React.FC<IProps> = ({
       `level=${Math.min(level, 2)}&parentId=${comment._id}`
     );
     if (res.data) {
-      setCommentChildren(prev => [...prev, ...res.data]);
+      const existedIds = commentChildren.map(child => child._id);
+      const getData = res.data.filter(child => !existedIds.includes(child._id));
+      setCommentChildren(prev => [...prev, ...getData]);
     }
     setIsLoadingShowMore(false);
-  }, [comment, level]);
+  }, [comment, level, commentChildren]);
 
   const onUserLiked = useCallback(
     async (type: number, isLike: boolean) => {
@@ -139,11 +156,6 @@ const CommentItem: React.FC<IProps> = ({
 
   const onSubmitReply = useCallback(
     async (values: IFormComment) => {
-      const commentReplyCurrent = commentReply.current;
-      if (commentReplyCurrent) {
-        setCommentChildren(prev => [...prev, commentReplyCurrent]);
-        countReplyPresent.current++;
-      }
       const { content, parentId, medias, mentions, level } = values;
       const payload = {
         content,
@@ -171,7 +183,15 @@ const CommentItem: React.FC<IProps> = ({
         setReplyProcess('pending');
         const res = await callApiCreateComment(payload);
         if (res.data) {
-          commentReply.current._id = res.data._id;
+          const commentReplyCurrent = commentReply.current;
+          if (commentReplyCurrent) {
+            setCommentChildren(prev => [
+              { ...commentReplyCurrent, _id: res.data._id },
+              ...prev,
+            ]);
+            countReplyPresent.current++;
+            commentReply.current = null;
+          }
           setReplyProcess('success');
         } else {
           message.error(convertErrorMessage(res.message));
@@ -186,7 +206,7 @@ const CommentItem: React.FC<IProps> = ({
   );
 
   const renderReplyProcess = useCallback(() => {
-    switch (replyStatus) {
+    switch (commentStatus) {
       case 'pending':
         return (
           <div className="text-gray-500 flex gap-2 items-center">
@@ -245,7 +265,7 @@ const CommentItem: React.FC<IProps> = ({
         );
     }
   }, [
-    replyStatus,
+    commentStatus,
     time,
     onUserLiked,
     countLike,
@@ -254,9 +274,35 @@ const CommentItem: React.FC<IProps> = ({
     defaultEmoji,
   ]);
 
-  const handleDeleteComment = useCallback(() => {
-    console.log('delete comment', comment._id);
-  }, [comment]);
+  const handleDeleteComment = useCallback(async () => {
+    try {
+      setIsLoadingDelete(true);
+      const res = await callApiDeleteComment(comment._id);
+      if (res.data) {
+        message.success('Xóa bình luận thành công');
+        onDeleteComment?.(res.data.commentId);
+        dispatch(
+          doDeleteComment({
+            postId: res.data.postId,
+            countDeleted: res.data.countDeleted,
+          })
+        );
+      } else {
+        notification.error({
+          message: 'Xóa bình luận thất bại',
+          description: convertErrorMessage(res.message),
+        });
+      }
+    } catch (error: any) {
+      console.log(error);
+      notification.error({
+        message: 'Xóa bình luận thất bại',
+        description: convertErrorMessage(error.message),
+      });
+    } finally {
+      setIsLoadingDelete(false);
+    }
+  }, [comment, onDeleteComment, dispatch]);
   return (
     <>
       <div className={`flex items-start gap-2 `}>
@@ -279,12 +325,28 @@ const CommentItem: React.FC<IProps> = ({
                       type="text"
                       shape="circle"
                       onClick={handleDeleteComment}
+                      disabled={isLoadingDelete}
+                      danger
                     >
-                      <TbTrash size={16} className="text-red-500" />
+                      <TbTrash size={16} />
                     </Button>
                   </div>
                 )}
               </div>
+              {comment.medias.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {comment.medias.map(media => (
+                    <div className="w-30">
+                      <Image
+                        src={convertUrlString(media.keyS3)}
+                        alt="image"
+                        className="w-full h-full object-cover rounded-lg border border-gray-200 "
+                        loading="lazy"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
               {renderReplyProcess()}
             </div>
           </div>
@@ -303,6 +365,16 @@ const CommentItem: React.FC<IProps> = ({
                   )}
                 </div>
               )}
+            {commentReply.current && (
+              <div className="mt-2">
+                <CommentItem
+                  comment={commentReply.current}
+                  level={level + 1}
+                  commentStatus={replyProcess}
+                  requestReplyOnParent={onClickReply}
+                />
+              </div>
+            )}
             {level <= 2 &&
               commentChildren.length > 0 &&
               commentChildren.map(child => (
@@ -311,19 +383,14 @@ const CommentItem: React.FC<IProps> = ({
                     comment={child}
                     level={level + 1}
                     requestReplyOnParent={onClickReply}
+                    onDeleteComment={commentId =>
+                      setCommentChildren(prev =>
+                        prev.filter(child => child._id !== commentId)
+                      )
+                    }
                   />
                 </div>
               ))}
-            {commentReply.current && (
-              <div className="mt-2">
-                <CommentItem
-                  comment={commentReply.current}
-                  level={level + 1}
-                  replyStatus={replyProcess}
-                  requestReplyOnParent={onClickReply}
-                />
-              </div>
-            )}
           </div>
           {openReply && level <= 2 && (
             <div ref={commentInputRef}>

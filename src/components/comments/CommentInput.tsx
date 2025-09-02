@@ -8,6 +8,7 @@ import type { IPreviewMedia } from '@social/types/posts.type';
 import { convertMentions, formatFile } from '@social/common/convert';
 import { useAppSelector } from '@social/hooks/redux.hook';
 import type { IFormComment } from '@social/types/comments.type';
+import { smartUpload } from '@social/common/uploads';
 
 interface IProps {
   onSubmit: (values: IFormComment) => void;
@@ -28,6 +29,7 @@ const CommentInput: React.FC<IProps> = ({
   const hasImage = useRef(true);
   const inputRef = useRef<any>(null);
   const fileInputRef = useRef<any>(null);
+  const [isLoadingSubmit, setIsLoadingSubmit] = useState(false);
   const userInfo = useAppSelector(state => state.auth.userInfo);
   const emojiInputRef = useRef<any>(null);
   const checkEmptyContent = Form.useWatch(parentId, form);
@@ -37,26 +39,27 @@ const CommentInput: React.FC<IProps> = ({
     }
   }, []);
 
-  const onFinish = (values: any) => {
+  const onFinish = async (values: any) => {
     const { parentId } = values;
     const content = level === 0 ? values.content : values[parentId];
+    setIsLoadingSubmit(true);
     try {
-      const mediasUpload: { key: string; type: string }[] = [];
+      const mediasUpload = [];
       if (medias.length > 0) {
-        // for (const media of medias) {
-        //   const file = media.file;
-        //   if (file) {
-        //     const res = await smartUpload(file);
-        //     if (res.data) {
-        //       mediasUpload.push({
-        //         keyS3: res.data.key,
-        //         type: file.type.split('/')[0],
-        //       });
-        //     } else {
-        //       throw new Error(res.message);
-        //     }
-        //   }
-        // }
+        for (const media of medias) {
+          const file = media.file;
+          if (file) {
+            const res = await smartUpload(file);
+            if (res.data) {
+              mediasUpload.push({
+                keyS3: res.data.key,
+                type: file.type.split('/')[0],
+              });
+            } else {
+              throw new Error(res.message);
+            }
+          }
+        }
       }
 
       const payload: IFormComment = {
@@ -64,10 +67,7 @@ const CommentInput: React.FC<IProps> = ({
         parentId,
         level: Math.min(level, 2),
         content,
-        medias: mediasUpload.map(media => ({
-          keyS3: media.key,
-          type: media.type,
-        })),
+        medias: mediasUpload,
         mentions: convertMentions(content),
       };
 
@@ -80,6 +80,8 @@ const CommentInput: React.FC<IProps> = ({
       hasImage.current = true;
     } catch (error) {
       console.log(error);
+    } finally {
+      setIsLoadingSubmit(false);
     }
   };
 
@@ -116,6 +118,7 @@ const CommentInput: React.FC<IProps> = ({
         layout="vertical"
         onFinish={onFinish}
         initialValues={{ parentId: parentId }}
+        disabled={isLoadingSubmit}
       >
         <div className="flex-shrink-0 flex gap-2 items-start p-3">
           <AvatarUser avatar={userInfo.avatar} size={30} />
@@ -128,6 +131,7 @@ const CommentInput: React.FC<IProps> = ({
                 inputRef={inputRef}
                 onPressEnter={onPressEnter}
                 fieldName={parentId}
+                loading={isLoadingSubmit}
               />
               <div className="flex justify-start cursor-text mx-1">
                 <div className="flex items-center flex-1">
@@ -142,6 +146,7 @@ const CommentInput: React.FC<IProps> = ({
                       type="text"
                       shape="circle"
                       onClick={() => fileInputRef.current?.click()}
+                      disabled={isLoadingSubmit}
                     >
                       <TbPhotoPlus size={20} className="text-gray-500" />
                     </Button>
@@ -151,13 +156,15 @@ const CommentInput: React.FC<IProps> = ({
                   <Button
                     type="text"
                     shape="circle"
-                    disabled={!checkEmptyContent}
+                    disabled={!checkEmptyContent || isLoadingSubmit}
                     onClick={() => form.submit()}
                   >
                     <TbSend
                       size={20}
                       className={
-                        !checkEmptyContent ? 'text-gray-500' : 'text-primary'
+                        !checkEmptyContent || isLoadingSubmit
+                          ? 'text-gray-500'
+                          : 'text-primary'
                       }
                     />
                   </Button>

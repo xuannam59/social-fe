@@ -26,6 +26,7 @@ interface IProps {
   inputRef: React.RefObject<any>;
   onPressEnter: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   fieldName?: string;
+  loading: boolean;
 }
 
 const users = [
@@ -83,6 +84,7 @@ const MentionsUser: React.FC<IProps> = ({
   inputRef,
   onPressEnter,
   fieldName = 'content',
+  loading = false,
 }) => {
   const mentionsRef = React.useRef<any>(null);
   const [domElement, setDomElement] = React.useState<HTMLElement | null>(null);
@@ -193,6 +195,7 @@ const MentionsUser: React.FC<IProps> = ({
   return (
     <Form.Item name={fieldName} className="!m-0">
       <MentionsInputComponent
+        disabled={loading}
         ref={mentionsRef}
         placeholder="Thêm bình luận..."
         style={defaultStyle}
