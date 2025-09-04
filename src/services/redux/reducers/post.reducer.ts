@@ -54,6 +54,17 @@ const postSlice = createSlice({
         }
       }
     },
+    doAddComment: (state, action) => {
+      const payload = action.payload;
+      const postId = payload.postId;
+      state.currentPost.commentCount += 1;
+      state.listPosts = state.listPosts.map(post => {
+        if (post._id === postId) {
+          post.commentCount += 1;
+        }
+        return post;
+      });
+    },
     doDeleteComment: (state, action) => {
       const payload = action.payload;
       const countDeleted = payload.countDeleted;
@@ -75,6 +86,11 @@ const postSlice = createSlice({
   },
 });
 
-export const { setPosts, setCurrentPost, doToggleLike, doDeleteComment } =
-  postSlice.actions;
+export const {
+  setPosts,
+  setCurrentPost,
+  doToggleLike,
+  doDeleteComment,
+  doAddComment,
+} = postSlice.actions;
 export const postReducer = postSlice.reducer;

@@ -44,34 +44,21 @@ const CommentInput: React.FC<IProps> = ({
     const content = level === 0 ? values.content : values[parentId];
     setIsLoadingSubmit(true);
     try {
-      const mediasUpload = [];
-      if (medias.length > 0) {
-        for (const media of medias) {
-          const file = media.file;
-          if (file) {
-            const res = await smartUpload(file);
-            if (res.data) {
-              mediasUpload.push({
-                keyS3: res.data.key,
-                type: file.type.split('/')[0],
-              });
-            } else {
-              throw new Error(res.message);
-            }
-          }
-        }
-      }
-
       const payload: IFormComment = {
         postId: '',
         parentId,
         level: Math.min(level, 2),
         content,
-        medias: mediasUpload,
+        media:
+          medias.length > 0
+            ? {
+                keyS3: '',
+                type: '',
+                file: medias[0].file,
+              }
+            : undefined,
         mentions: convertMentions(content),
       };
-
-      console.log('payload', payload);
 
       onSubmit(payload);
 

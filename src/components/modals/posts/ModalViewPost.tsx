@@ -1,17 +1,21 @@
+import {
+  callApiCreateComment,
+  callGetComments,
+} from '@social/apis/comment.api';
+import { convertErrorMessage } from '@social/common/convert';
+import { smartUpload } from '@social/common/uploads';
 import CommentInput from '@social/components/comments/CommentInput';
+import CommentItem from '@social/components/comments/CommentItem';
+import EmptyState from '@social/components/common/EmptyState';
+import LoadingComment from '@social/components/loading/LoadingComment';
 import PostItem from '@social/components/posts/PostItem';
+import { COMMENT_DEFAULT } from '@social/defaults/post';
+import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
+import { doAddComment } from '@social/redux/reducers/post.reducer';
 import type { IComment, IFormComment } from '@social/types/comments.type';
 import { Button, Form, message, Modal, Typography } from 'antd';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { TbX } from 'react-icons/tb';
-import { useAppSelector } from '@social/hooks/redux.hook';
-import { callApiCreateComment } from '@social/apis/comment.api';
-import { convertErrorMessage } from '@social/common/convert';
-import { callGetComments } from '@social/apis/comment.api';
-import CommentItem from '@social/components/comments/CommentItem';
-import LoadingComment from '@social/components/loading/LoadingComment';
-import EmptyState from '@social/components/common/EmptyState';
-import { COMMENT_DEFAULT } from '@social/defaults/post';
 import { v4 as uuidv4 } from 'uuid';
 
 interface IProps {
@@ -24,6 +28,7 @@ const { Title } = Typography;
 const ModalViewPost: React.FC<IProps> = ({ open, onClose }) => {
   const currentPost = useAppSelector(state => state.post.currentPost);
   const userInfo = useAppSelector(state => state.auth.userInfo);
+  const dispatch = useAppDispatch();
   const parentId = useRef<string>('');
   const [comments, setComments] = useState<IComment[]>([]);
   const comment = useRef<IComment | null>(null);
@@ -52,52 +57,76 @@ const ModalViewPost: React.FC<IProps> = ({ open, onClose }) => {
     }
   }, [getComments, currentPost._id]);
 
-  const onSubmit = async (values: IFormComment) => {
-    setCommentProcess('pending');
-    try {
-      const { content, medias, mentions, level } = values;
-      const payload = {
-        content,
-        medias,
-        mentions,
-        postId: currentPost._id,
-        level,
-        parentId: parentId.current,
-      };
-      comment.current = {
-        ...COMMENT_DEFAULT,
-        ...payload,
-        mentions: mentions.map(mention => ({
-          _id: uuidv4(),
-          ...mention,
-        })),
-        authorId: {
-          _id: userInfo._id,
-          fullname: userInfo.fullname,
-          avatar: userInfo.avatar,
-        },
-      };
+  const onSubmit = useCallback(
+    async (values: IFormComment) => {
+      setCommentProcess('pending');
+      try {
+        const { content, media, mentions, level } = values;
+        const payload = {
+          content,
+          media,
+          mentions,
+          postId: currentPost._id,
+          level,
+          parentId: parentId.current,
+        };
+        comment.current = {
+          ...COMMENT_DEFAULT,
+          ...payload,
+          mentions: mentions.map(mention => ({
+            _id: uuidv4(),
+            ...mention,
+          })),
+          authorId: {
+            _id: userInfo._id,
+            fullname: userInfo.fullname,
+            avatar: userInfo.avatar,
+          },
+        };
 
-      const res = await callApiCreateComment(payload);
-      if (res.data) {
-        const commentCurrent = comment.current;
-        if (commentCurrent) {
-          setComments(prev => [
-            { ...commentCurrent, _id: res.data._id },
-            ...prev,
-          ]);
-          comment.current = null;
+        let mediasUpload: { keyS3: string; type: string } | undefined =
+          undefined;
+        if (media?.file) {
+          const file = media.file;
+          if (file) {
+            const uploadRes = await smartUpload(file);
+            if (uploadRes.data) {
+              mediasUpload = {
+                keyS3: uploadRes.data.key,
+                type: file.type.split('/')[0],
+              };
+            } else {
+              throw new Error(uploadRes.message);
+            }
+          }
         }
-        setCommentProcess('success');
-      } else {
-        message.error(convertErrorMessage(res.message));
+
+        const res = await callApiCreateComment({
+          ...payload,
+          media: mediasUpload,
+        });
+        if (res.data) {
+          const commentCurrent = comment.current;
+          if (commentCurrent) {
+            setComments(prev => [
+              { ...commentCurrent, _id: res.data._id, media: mediasUpload },
+              ...prev,
+            ]);
+            comment.current = null;
+          }
+          dispatch(doAddComment({ postId: currentPost._id }));
+          setCommentProcess('success');
+        } else {
+          message.error(convertErrorMessage(res.message));
+          setCommentProcess('error');
+        }
+      } catch (error) {
+        console.log(error);
         setCommentProcess('error');
       }
-    } catch (error) {
-      console.log(error);
-      setCommentProcess('error');
-    }
-  };
+    },
+    [currentPost._id, userInfo, dispatch]
+  );
 
   return (
     <>

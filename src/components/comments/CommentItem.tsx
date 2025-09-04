@@ -10,9 +10,14 @@ import {
   formatRelativeTime,
 } from '@social/common/convert';
 import { renderComment } from '@social/common/render';
+import { smartUpload } from '@social/common/uploads';
 import { emojiReactions } from '@social/constants/emoji';
 import { COMMENT_DEFAULT } from '@social/defaults/post';
 import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
+import {
+  doAddComment,
+  doDeleteComment,
+} from '@social/redux/reducers/post.reducer';
 import type { IComment, IFormComment } from '@social/types/comments.type';
 import type { IEmojiReaction } from '@social/types/commons.type';
 import {
@@ -30,7 +35,6 @@ import { v4 as uuidv4 } from 'uuid';
 import AvatarUser from '../common/AvatarUser';
 import ButtonLike from '../common/ButtonLike';
 import CommentInput from './CommentInput';
-import { doDeleteComment } from '@social/redux/reducers/post.reducer';
 
 interface IProps {
   comment: IComment;
@@ -156,12 +160,12 @@ const CommentItem: React.FC<IProps> = ({
 
   const onSubmitReply = useCallback(
     async (values: IFormComment) => {
-      const { content, parentId, medias, mentions, level } = values;
+      const { content, parentId, media, mentions, level } = values;
       const payload = {
         content,
         parentId,
         postId: comment.postId,
-        medias,
+        media,
         mentions,
         level,
       };
@@ -181,18 +185,42 @@ const CommentItem: React.FC<IProps> = ({
       };
       try {
         setReplyProcess('pending');
-        const res = await callApiCreateComment(payload);
+        let mediasUpload: { keyS3: string; type: string } | undefined =
+          undefined;
+        if (media?.file) {
+          const file = media.file;
+          if (file) {
+            const res = await smartUpload(file);
+            if (res.data) {
+              mediasUpload = {
+                keyS3: res.data.key,
+                type: file.type.split('/')[0],
+              };
+            } else {
+              throw new Error(res.message);
+            }
+          }
+        }
+        const res = await callApiCreateComment({
+          ...payload,
+          media: mediasUpload,
+        });
         if (res.data) {
           const commentReplyCurrent = commentReply.current;
           if (commentReplyCurrent) {
             setCommentChildren(prev => [
-              { ...commentReplyCurrent, _id: res.data._id },
+              {
+                ...commentReplyCurrent,
+                _id: res.data._id,
+                media: mediasUpload,
+              },
               ...prev,
             ]);
             countReplyPresent.current++;
             commentReply.current = null;
           }
           setReplyProcess('success');
+          dispatch(doAddComment({ postId: comment.postId }));
         } else {
           message.error(convertErrorMessage(res.message));
           setReplyProcess('error');
@@ -202,7 +230,7 @@ const CommentItem: React.FC<IProps> = ({
         setReplyProcess('error');
       }
     },
-    [comment.postId, userInfo]
+    [comment.postId, userInfo, dispatch]
   );
 
   const renderReplyProcess = useCallback(() => {
@@ -333,18 +361,20 @@ const CommentItem: React.FC<IProps> = ({
                   </div>
                 )}
               </div>
-              {comment.medias.length > 0 && (
+              {comment.media && (
                 <div className="flex flex-wrap gap-2">
-                  {comment.medias.map(media => (
-                    <div className="w-30">
-                      <Image
-                        src={convertUrlString(media.keyS3)}
-                        alt="image"
-                        className="w-full h-full object-cover rounded-lg border border-gray-200 "
-                        loading="lazy"
-                      />
-                    </div>
-                  ))}
+                  <div className="w-30">
+                    <Image
+                      src={
+                        comment.media.file
+                          ? URL.createObjectURL(comment.media.file)
+                          : convertUrlString(comment.media.keyS3)
+                      }
+                      alt="image"
+                      className="w-full h-full object-cover rounded-lg border border-gray-200 "
+                      loading="lazy"
+                    />
+                  </div>
                 </div>
               )}
               {renderReplyProcess()}

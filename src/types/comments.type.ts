@@ -9,10 +9,11 @@ export interface IComment {
     avatar: string;
   };
   content: string;
-  medias: {
+  media?: {
     keyS3: string;
+    file?: File;
     type: string;
-  }[];
+  };
   mentions: {
     _id: string;
     userId: string;
@@ -37,10 +38,11 @@ export interface IFormComment {
   postId: string;
   content: string;
   parentId?: string;
-  medias: {
+  media?: {
     keyS3: string;
     type: string;
-  }[];
+    file?: File;
+  };
   level: number;
   mentions: {
     userId: string;
