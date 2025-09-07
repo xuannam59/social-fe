@@ -105,7 +105,7 @@ export const convertUrlString = (key: string) => {
 };
 
 export const convertErrorMessage = (message: string | string[]) => {
-  return message && Array.isArray(message) ? JSON.stringify(message) : message;
+  return message && Array.isArray(message) ? JSON.stringify(message.join(', ')) : message;
 };
 
 export const convertMentions = (content: string) => {

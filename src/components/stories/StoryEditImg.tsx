@@ -1,17 +1,25 @@
-import React, { useRef } from 'react';
+import { forwardRef, useEffect, useRef } from 'react';
 import { Image } from 'react-konva';
 import useImage from 'use-image';
 
 interface IProps {
   src: string;
   stageSize: { width: number; height: number };
+  onReady?: () => void;
+  onSelect?: () => void;
 }
 
-const StoryEditImg: React.FC<IProps> = ({ src, stageSize }) => {
-  const [image] = useImage(src, 'anonymous');
+const StoryEditImg = forwardRef<any, IProps>(({ src, stageSize, onReady, onSelect }, ref) => {
+  const [image, status] = useImage(src, 'anonymous');
   const imageRef = useRef<any>(null);
 
   const imagePositionRef = useRef<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    if (status === 'loaded') {
+      onReady?.();
+    }
+  }, [status, onReady]);
 
   if (!image) return null;
 
@@ -35,13 +43,19 @@ const StoryEditImg: React.FC<IProps> = ({ src, stageSize }) => {
 
   return (
     <Image
-      ref={imageRef}
+      ref={(node) => {
+        imageRef.current = node;
+        if (typeof ref === 'function') ref(node);
+        else if (ref) (ref as any).current = node;
+      }}
       image={image}
       x={x}
       y={y}
       width={finalWidth}
       height={finalHeight}
       draggable
+      onClick={onSelect}
+      onTap={onSelect}
       // Cải thiện chất lượng image
       imageSmoothingEnabled={true}
       imageSmoothingQuality="high"
@@ -52,6 +66,6 @@ const StoryEditImg: React.FC<IProps> = ({ src, stageSize }) => {
       }}
     />
   );
-};
+});
 
 export default StoryEditImg;

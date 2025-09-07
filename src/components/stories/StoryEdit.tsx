@@ -9,32 +9,28 @@ import {
   type FormInstance,
   Input,
   Modal,
+  Spin,
 } from 'antd';
 import type { TextAreaRef } from 'antd/es/input/TextArea';
 import type { EmojiClickData } from 'emoji-picker-react';
 import type { Stage as KonvaStage } from 'konva/lib/Stage';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { TbPlus } from 'react-icons/tb';
-import { Layer, Stage } from 'react-konva';
+import { Layer, Rect, Stage, Transformer } from 'react-konva';
 import ModalEmoji from '../modals/common/ModalEmoji';
 import StoryEditableText from './StoryEditableText';
 import StoryEditImg from './StoryEditImg';
+import type { ITextStory } from '@social/types/stories.type';
+import Loading from '../loading/Loading';
 
 interface IProps {
   formSubmit: FormInstance<any>;
   image?: File;
   isText: boolean;
   type: string;
+  isLoading: boolean;
   onCancel: () => void;
   handleSave: (file: File) => void;
-}
-
-interface IText {
-  id: string;
-  text: string;
-  color: string;
-  x: number;
-  y: number;
 }
 
 const StoryEdit: React.FC<IProps> = ({
@@ -42,6 +38,7 @@ const StoryEdit: React.FC<IProps> = ({
   image,
   isText,
   type,
+  isLoading,
   onCancel,
   handleSave,
 }) => {
@@ -50,11 +47,27 @@ const StoryEdit: React.FC<IProps> = ({
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const stageRef = useRef<KonvaStage>(null);
   const imagePositionRef = useRef<{ x: number; y: number } | null>(null);
-  const [text, setText] = useState<IText[]>([]);
+  const [text, setText] = useState<ITextStory[]>([]);
   const [form] = Form.useForm();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const textAreaRef = useRef<TextAreaRef>(null);
+  const [imageReady, setImageReady] = useState(false);
+  const [imageSrc, setImageSrc] = useState<string | undefined>(undefined);
+  const imageNodeRef = useRef<any>(null);
+  const imageTransformerRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (!image) {
+      setImageSrc(undefined);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageSrc(typeof reader.result === 'string' ? reader.result : undefined);
+    };
+    reader.readAsDataURL(image);
+  }, [image]);
 
   useEffect(() => {
     if (image && type === 'image') {
@@ -88,63 +101,40 @@ const StoryEdit: React.FC<IProps> = ({
         y: (stageSize.height - finalHeight) / 2,
       };
     }
-  }, [stageSize.width, stageSize.height, type]);
+  }, [stageSize.width, stageSize.height, type]); 
 
   const saveStory = useCallback(async () => {
     if (stageRef.current === null) return;
+    if (!imageReady && type === 'image') return;
 
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    await new Promise(requestAnimationFrame);
 
     const pixelRatio = Math.max(3, window.devicePixelRatio || 1);
-    canvas.width = stageSize.width * pixelRatio;
-    canvas.height = stageSize.height * pixelRatio;
 
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-
-    ctx.scale(pixelRatio, pixelRatio);
-
-    ctx.fillStyle = dominantColor;
-    ctx.fillRect(0, 0, stageSize.width, stageSize.height);
-
-    const stageDataURL = stageRef.current.toDataURL({
-      pixelRatio: pixelRatio,
-      width: stageSize.width,
-      height: stageSize.height,
+    stageRef.current.toDataURL({
+      pixelRatio,
+      mimeType: 'image/webp',
+      quality: 0.95,
+      callback: (dataUrl: string) => {
+        try {
+          const file = base64ToFile(dataUrl, `story-${Date.now()}.webp`);
+          handleSave(file);
+        } catch (e) { 
+          try {
+            const pngDataUrl = stageRef.current?.toDataURL({
+              pixelRatio,
+              mimeType: 'image/png',
+              quality: 1,
+            }) as string;
+            const file = base64ToFile(pngDataUrl, `story-${Date.now()}.png`);
+            handleSave(file);
+          } catch (_) {
+            // no-op
+          }
+        }
+      },
     });
-
-    const stageImage = new window.Image();
-    // Set onload first to avoid race when src is cached
-    stageImage.onload = () => {
-      ctx.save();
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-
-      ctx.drawImage(stageImage, 0, 0, stageSize.width, stageSize.height);
-
-      ctx.restore();
-
-      let base64: string;
-      let fileName: string;
-
-      try {
-        base64 = canvas.toDataURL('image/webp', 0.95);
-        fileName = `story-${Date.now()}.webp`;
-      } catch (error) {
-        console.warn('WebP không được hỗ trợ, sử dụng PNG');
-        base64 = canvas.toDataURL('image/png', 1.0);
-        fileName = `story-${Date.now()}.png`;
-      }
-      const file = base64ToFile(base64, fileName);
-
-      handleSave(file);
-    };
-    stageImage.src = stageDataURL;
-
-    setText([]);
-  }, [dominantColor, handleSave, stageSize.height, stageSize.width]);
+  }, [handleSave, imageReady, type]);
 
   useEffect(() => {
     if (type === 'text') return;
@@ -234,8 +224,8 @@ const StoryEdit: React.FC<IProps> = ({
 
   return (
     <>
-      <div className="h-full flex flex-col items-center">
-        <div className="w-[976px] max-w-[calc(100%-48px)] h-full mt-14 mb-8 mx-6 h-100% bg-white shadow-lg rounded-lg p-4">
+      <div className="h-full flex flex-col items-center ">
+        <div className="min-w-0 w-[976px] max-w-[calc(100%-48px)] h-full mt-14 mb-8 mx-auto h-100% bg-white shadow-lg rounded-lg p-4">
           <div className="flex flex-col gap-2 h-full">
             <div className="text-md font-semibold">Xem trước</div>
             <div className="h-full bg-black border border-gray-200 rounded-lg">
@@ -244,7 +234,7 @@ const StoryEdit: React.FC<IProps> = ({
                   ref={containerRef}
                   className="h-[calc(100%-68px)] aspect-[1/1.7] w-auto relative"
                 >
-                  <div className="overflow-hidden w-full h-full rounded-lg border border-gray-200">
+                 <div className="overflow-hidden w-full h-full rounded-lg border border-gray-200">
                     <Form
                       form={formSubmit}
                       onFinish={() => {
@@ -266,25 +256,54 @@ const StoryEdit: React.FC<IProps> = ({
                           style={{ backgroundColor: dominantColor }}
                           pixelRatio={Math.max(2, window.devicePixelRatio || 1)}
                           onMouseDown={e => {
-                            const clickedOnEmpty =
-                              e.target === e.target.getStage();
-                            if (clickedOnEmpty) {
+                            const target = e.target;
+                            const clickedOnEmpty = target === target.getStage();
+                            const clickedOnBackground = target.name?.() === 'bg-rect';
+                            if (clickedOnEmpty || clickedOnBackground) {
                               setSelectedId(null);
                             }
                           }}
                           onTouchStart={e => {
-                            const clickedOnEmpty =
-                              e.target === e.target.getStage();
-                            if (clickedOnEmpty) {
+                            const target = e.target;
+                            const clickedOnEmpty = target === target.getStage();
+                            const clickedOnBackground = target.name?.() === 'bg-rect';
+                            if (clickedOnEmpty || clickedOnBackground) {
                               setSelectedId(null);
                             }
                           }}
                         >
                           <Layer>
-                            {image && (
+                            <Rect
+                              x={0}
+                              y={0}
+                              width={stageSize.width}
+                              height={stageSize.height}
+                              fill={dominantColor}
+                              name="bg-rect"
+                            />
+                            {image && imageSrc && (
                               <StoryEditImg
-                                src={URL.createObjectURL(image)}
+                                src={imageSrc}
                                 stageSize={stageSize}
+                                onReady={() => setImageReady(true)}
+                                onSelect={() => setSelectedId('image')}
+                                ref={imageNodeRef}
+                              />
+                            )}
+
+                            {selectedId === 'image' && imageNodeRef.current && (
+                              <Transformer
+                                ref={imageTransformerRef}
+                                nodes={[imageNodeRef.current]}
+                                rotateEnabled={false}
+                                enabledAnchors={['top-left','top-right','bottom-left','bottom-right','middle-left','middle-right','top-center','bottom-center']}
+                                boundBoxFunc={(oldBox, newBox) => {
+                                  const minSize = 40;
+                                  if (newBox.width < minSize || newBox.height < minSize) {
+                                    return oldBox;
+                                  }
+                                  return newBox;
+                                }}
                               />
                             )}
 
@@ -338,6 +357,11 @@ const StoryEdit: React.FC<IProps> = ({
                       bottom={2}
                       right={2}
                     />
+                  )}
+                  {isLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                      <Loading/>
+                    </div>
                   )}
                 </div>
                 <div className="text-md text-white">Chỉnh sửa hình ảnh</div>

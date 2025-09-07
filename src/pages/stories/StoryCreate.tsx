@@ -1,13 +1,18 @@
+import { callApiCreateStory } from '@social/apis/stories.api';
+import { convertErrorMessage } from '@social/common/convert';
+import { smartUpload } from '@social/common/uploads';
 import AvatarUser from '@social/components/common/AvatarUser';
 import ButtonGradient from '@social/components/common/ButtonGradient';
 import ModalPrivacy from '@social/components/modals/stories/ModalPrivacy';
 import StoryButtonCreate from '@social/components/stories/StoryButtonCreate';
 import StoryEdit from '@social/components/stories/StoryEdit';
 import { useAppSelector } from '@social/hooks/redux.hook';
-import { Button, Form, Typography } from 'antd';
+import type { IFormCreateStory } from '@social/types/stories.type';
+import { Button, Form, message, notification, Typography } from 'antd';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { LuImages } from 'react-icons/lu';
 import { TbSettings, TbTextSize } from 'react-icons/tb';
+import { useNavigate } from 'react-router-dom';
 
 const { Title, Paragraph } = Typography;
 
@@ -18,9 +23,12 @@ const StoryCreate = () => {
   const [type, setType] = useState<string>('');
   const [privacy, setPrivacy] = useState<string>('public');
   const [openSetting, setOpenSetting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [pendingSubmit, setPendingSubmit] = useState(false);
   const file = useRef<File>();
   const inputRef = useRef<HTMLInputElement>(null);
   const [form] = Form.useForm();
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -36,27 +44,65 @@ const StoryCreate = () => {
     }
   }, [image]);
 
-  const onCancel = () => {
+  const onCancel = useCallback(() => {
     setType('');
     setImage(undefined);
-  };
-
-  const handleSave = useCallback((value: File) => {
-    file.current = value;
   }, []);
 
   const closeTextEditor = useCallback(() => setIsText(false), []);
 
-  const onSubmit = () => {
-    const data = {
-      type: type,
-      file: file.current,
-      privacy,
-      content: form.getFieldValue('content'),
-      background: form.getFieldValue('background'),
-    };
-    console.log('data', data);
-  };
+  const onSubmit = useCallback(async () => {
+    try {
+      setIsLoading(true);
+
+      const payload: IFormCreateStory = {
+        type: type,
+        privacy,
+        content: form.getFieldValue('content'),
+        backgroundColor: form.getFieldValue('background'),
+      };
+
+      if(file.current) {
+        const resUpload = await smartUpload(file.current);
+        if(resUpload.data) {
+          payload.media = {
+            keyS3: resUpload.data.key,
+            type: file.current.type.split('/')[0],
+          };
+        }else {
+          throw new Error(resUpload.message);
+        }
+      }
+
+      const res = await callApiCreateStory(payload);
+      if(res.data) {
+        message.success('Tạo tin thành công');
+        form.resetFields();
+        file.current = undefined;
+        navigate(`/story/${res.data._id}`);
+      }else {
+        notification.error({
+          message: 'Tạo tin thất bại',
+          description: convertErrorMessage(res.message),
+        });
+      }
+    } catch (error : any) {
+      notification.error({
+        message: 'Tạo tin thất bại',
+        description: convertErrorMessage(error),
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [form, privacy, type, navigate]);
+
+  const handleSave = useCallback(async (value: File) => {
+    file.current = value;
+    if (pendingSubmit) {
+      setPendingSubmit(false);
+      void onSubmit();
+    }
+  }, [pendingSubmit, onSubmit]);
 
   return (
     <>
@@ -118,6 +164,7 @@ const StoryCreate = () => {
             <div className="flex h-[72px] justify-between items-center gap-2">
               <div className="flex flex-1/3 items-center">
                 <Button
+                  disabled={isLoading}
                   color="default"
                   variant="filled"
                   className="!w-full"
@@ -128,10 +175,15 @@ const StoryCreate = () => {
               </div>
               <div className="flex flex-2/3 items-center">
                 <ButtonGradient
+                  loading={isLoading}
                   className="!w-full"
                   onClick={() => {
-                    form.submit();
-                    onSubmit();
+                    if (type === 'image') {
+                      setPendingSubmit(true);
+                      form.submit();
+                    } else {
+                      onSubmit();
+                    }
                   }}
                 >
                   Chia sẻ lên tin
@@ -173,6 +225,7 @@ const StoryCreate = () => {
             image={image}
             isText={isText}
             type={type}
+            isLoading={isLoading}
             onCancel={closeTextEditor}
             handleSave={handleSave}
           />

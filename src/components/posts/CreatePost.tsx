@@ -7,6 +7,7 @@ import { FcAddImage, FcVideoCall } from 'react-icons/fc';
 import { Link } from 'react-router-dom';
 import ModalCreatePost from '../modals/posts/ModalCreatePost';
 import type { IPreviewMedia } from '@social/types/posts.type';
+import AvatarUser from '../common/AvatarUser';
 
 const CreatePost = () => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
@@ -45,11 +46,10 @@ const CreatePost = () => {
         <div className="flex flex-col gap-2">
           <div className="flex gap-4">
             <Link to={`/profile/${userInfo?._id}`}>
-              <img
-                className="w-10 rounded-full object-cover"
-                src={userInfo?.avatar || defaultAvatar}
-                alt="avatar"
-              />
+             <AvatarUser
+              avatar={userInfo?.avatar || defaultAvatar}
+              size={40}
+             />
             </Link>
 
             <div

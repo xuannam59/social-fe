@@ -39,10 +39,11 @@ const StoryEditableText: React.FC<IProps> = ({
           const node = e.target;
           onChange({ x: node.x(), y: node.y() });
         }}
+        onClick={onSelect}
+        onTap={onSelect}
       >
         <Text
           text={item.text}
-          onClick={onSelect}
           fill={
             typeof item.color === 'string'
               ? item.color
@@ -52,12 +53,27 @@ const StoryEditableText: React.FC<IProps> = ({
           y={0}
           fontSize={16}
           width={textWidth}
+          wrap="word"
+          listening={true}
           ref={textRef}
+          onTransform={() => {
+            const node = textRef.current;
+            if (!node) return;
+            const rawWidth = node.width() * node.scaleX();
+            const newWidth = Math.max(20, rawWidth);
+            node.width(newWidth);
+            node.scaleX(1);
+            setTextWidth(newWidth);
+            onChange({ width: newWidth });
+          }}
           onTransformEnd={() => {
             const node = textRef.current;
-            const newWidth = node.width() * node.scaleX();
-            setTextWidth(newWidth);
+            if (!node) return;
+            const rawWidth = node.width() * node.scaleX();
+            const newWidth = Math.max(20, rawWidth);
+            node.width(newWidth);
             node.scaleX(1);
+            setTextWidth(newWidth);
             onChange({ width: newWidth });
           }}
         />
@@ -82,10 +98,19 @@ const StoryEditableText: React.FC<IProps> = ({
         )}
       </Group>
 
-      {isSelected && (
+      {isSelected && textRef.current && (
         <Transformer
           ref={trRef}
+          nodes={[textRef.current]}
           enabledAnchors={['middle-left', 'middle-right']}
+          rotateEnabled={false}
+          boundBoxFunc={(oldBox, newBox) => {
+            const minWidth = 20;
+            if (newBox.width < minWidth) {
+              return oldBox;
+            }
+            return newBox;
+          }}
         />
       )}
     </>

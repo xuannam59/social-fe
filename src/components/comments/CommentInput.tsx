@@ -8,7 +8,6 @@ import type { IPreviewMedia } from '@social/types/posts.type';
 import { convertMentions, formatFile } from '@social/common/convert';
 import { useAppSelector } from '@social/hooks/redux.hook';
 import type { IFormComment } from '@social/types/comments.type';
-import { smartUpload } from '@social/common/uploads';
 
 interface IProps {
   onSubmit: (values: IFormComment) => void;

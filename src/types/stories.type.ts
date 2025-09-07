@@ -6,7 +6,7 @@ export interface IStory {
   privacy?: string;
   content?: string;
   backgroundColor?: string;
-  duration?: number;
+  duration: number;
   createdAt?: string;
   audio?: string;
   isViewed: boolean;
@@ -20,9 +20,21 @@ export interface IUserStory {
   stories: IStory[];
 }
 
+
+export interface ITextStory {
+  id: string;
+  text: string;
+  color: string;
+  x: number;
+  y: number;
+}
+
 export interface IFormCreateStory {
-  type: 'image' | 'video' | 'text';
-  file?: File;
+  type: string;
+  media?: {
+    keyS3: string;
+    type: string;
+  };
   privacy: string;
   content?: string;
   backgroundColor?: string;
