@@ -1,20 +1,22 @@
 export interface IStory {
   _id: string;
   type: 'image' | 'video' | 'text';
-  file: string;
-  user_id: string;
-  privacy?: string;
+  media: {
+    keyS3: string;
+    type: string;
+  };
+  authorId: string;
+  privacy: string;
   content?: string;
-  backgroundColor?: string;
+  backgroundColor: string;
   duration: number;
-  createdAt?: string;
-  audio?: string;
+  createdAt: string;
+  audio: string;
   isViewed: boolean;
 }
 
 export interface IUserStory {
   _id: string;
-  user_id: string;
   fullName: string;
   avatar: string;
   stories: IStory[];
@@ -41,6 +43,10 @@ export interface IFormCreateStory {
 }
 
 export interface IStoryState {
-  currentStory: IUserStory;
+  currentUserStory: IUserStory;
+  currentStory: IStory;
   userStories: IUserStory[];
+  totalStories: number;
+  page: number;
+  limit: number;
 }

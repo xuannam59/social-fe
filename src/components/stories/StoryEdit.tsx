@@ -245,7 +245,7 @@ const StoryEdit: React.FC<IProps> = ({
                       className="h-full w-full"
                       initialValues={{
                         content: '',
-                        background: '#3793b6',
+                        background: dominantColor,
                       }}
                     >
                       {type === 'image' && image ? (

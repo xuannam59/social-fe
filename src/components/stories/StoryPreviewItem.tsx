@@ -1,8 +1,9 @@
 import type { IUserStory } from '@social/types/stories.type';
 import { Typography } from 'antd';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import AvatarUser from '../common/AvatarUser';
+import { convertUrlString } from '@social/common/convert';
 
 interface IProps {
   userStory: IUserStory;
@@ -12,6 +13,46 @@ const { Paragraph } = Typography;
 
 const StoryPreviewItem: React.FC<IProps> = ({ userStory }) => {
   const story = userStory.stories[0];
+
+  const renderContent = useCallback(() => {
+    switch (story.type) {
+      case 'image':
+        return (<>
+          <img
+            src={convertUrlString(story.media.keyS3)}
+            alt="story"
+            className="w-full h-full object-cover group-hover/story:scale-105 transition-all duration-300"
+            style={{
+              backgroundColor: story.backgroundColor,
+            }}
+          />
+        </>); 
+      case 'video':
+        console.log(story);
+        return (<>
+          <video
+            src={convertUrlString(story.media.keyS3)}
+            preload="none"
+            className="w-full h-full object-contain object-center group-hover/story:scale-105 transition-all duration-300"
+            style={{
+              backgroundColor: story.backgroundColor,
+            }}
+          />
+        </>);
+      case 'text':
+        return (<>
+        <div className="w-full h-full flex items-center justify-center" 
+          style={{
+            backgroundColor: story.backgroundColor,
+          }}
+        >
+          <div className="text-[8px] font-normal text-center">
+            {story.content}
+          </div>
+        </div>
+        </>);
+    }
+  }, [story])
 
   return (
     <>
@@ -24,21 +65,7 @@ const StoryPreviewItem: React.FC<IProps> = ({ userStory }) => {
             <div
               className={`w-full border-b border-gray-200 relative bg-black h-[100%]`}
             >
-              {story.type === 'image' && (
-                <img
-                  src={story.file}
-                  alt="story"
-                  className="w-full h-full object-cover group-hover/story:scale-105 transition-all duration-300"
-                />
-              )}
-              {story.type === 'video' && (
-                <video
-                  src={story.file}
-                  preload="none"
-                  className="w-full h-full object-contain object-center group-hover/story:scale-105 transition-all duration-300"
-                />
-              )}
-
+              {renderContent()}
               <div className="absolute top-2 left-2">
                 <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
                   <AvatarUser avatar={userStory.avatar} size={34} />

@@ -4,6 +4,7 @@ import { TbChevronLeft, TbChevronRight, TbPlus } from 'react-icons/tb';
 import StoryPreviewItem from './StoryPreviewItem';
 import { Link } from 'react-router-dom';
 import defaultAvatar from '@social/images/default-avatar.webp';
+import { Image } from 'antd';
 
 const StoryPreviewList = () => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
@@ -28,67 +29,6 @@ const StoryPreviewList = () => {
       window.removeEventListener('resize', updateContainerWidth);
     };
   }, [updateContainerWidth]);
-
-  // const stories: IStory[] = useMemo(
-  //   () => [
-  //     {
-  //       _id: '1',
-  //       type: 'image',
-  //       file: defaultAvatar,
-  //       fullName: userInfo?.fullname || '',
-  //     },
-  //     {
-  //       _id: '2',
-  //       type: 'image',
-  //       file: 'https://i.pinimg.com/1200x/e6/34/d3/e634d384fb0c31d7245d70d6f70f830d.jpg',
-  //       fullName: userInfo?.fullname || '',
-  //       avatar: defaultAvatar,
-  //     },
-  //     {
-  //       _id: '6',
-  //       type: 'image',
-  //       file: 'https://i.pinimg.com/1200x/e6/34/d3/e634d384fb0c31d7245d70d6f70f830d.jpg',
-  //       fullName: userInfo?.fullname || '',
-  //       avatar: defaultAvatar,
-  //     },
-  //     {
-  //       _id: '7',
-  //       type: 'image',
-  //       file: 'https://i.pinimg.com/1200x/e6/34/d3/e634d384fb0c31d7245d70d6f70f830d.jpg',
-  //       fullName: userInfo?.fullname || '',
-  //       avatar: defaultAvatar,
-  //     },
-  //     {
-  //       _id: '8',
-  //       type: 'image',
-  //       file: 'https://i.pinimg.com/1200x/e6/34/d3/e634d384fb0c31d7245d70d6f70f830d.jpg',
-  //       fullName: userInfo?.fullname || '',
-  //       avatar: defaultAvatar,
-  //     },
-  //     {
-  //       _id: '9',
-  //       type: 'image',
-  //       file: 'https://i.pinimg.com/1200x/e6/34/d3/e634d384fb0c31d7245d70d6f70f830d.jpg',
-  //       fullName: userInfo?.fullname || '',
-  //       avatar: defaultAvatar,
-  //     },
-  //     {
-  //       _id: '10',
-  //       type: 'image',
-  //       file: 'https://i.pinimg.com/1200x/e6/34/d3/e634d384fb0c31d7245d70d6f70f830d.jpg',
-  //       fullName: userInfo?.fullname || '',
-  //       avatar: defaultAvatar,
-  //     },
-  //     {
-  //       _id: '11',
-  //       type: 'image',
-  //       file: 'https://i.pinimg.com/1200x/e6/34/d3/e634d384fb0c31d7245d70d6f70f830d.jpg',
-  //       fullName: userInfo?.fullname || '',
-  //       avatar: defaultAvatar,
-  //     },
-  //   ],
-  //   [userInfo]
-  // );
 
   // Tính toán vị trí translate tối đa có thể cuộn
   const maxTranslateX = useMemo(() => {
@@ -140,10 +80,14 @@ const StoryPreviewList = () => {
             <div className="flex flex-col h-full relative">
               <div className="w-full border-b border-gray-200 relative bg-black h-[75%]">
                 <div className="flex items-center justify-center h-full">
-                  <img
+                  <Image
                     src={userInfo?.avatar || defaultAvatar}
-                    alt="story"
-                    className="w-full h-full object-cover"
+                    alt="user avatar"
+                    width='100%'
+                    height='100%'
+                    className='object-cover'
+                    loading="lazy"
+                    preview={false}
                   />
                 </div>
               </div>
@@ -161,7 +105,7 @@ const StoryPreviewList = () => {
           </div>
         </Link>
         {userStories.map(userStory => (
-          <StoryPreviewItem key={userStory.user_id} userStory={userStory} />
+          <StoryPreviewItem key={userStory._id} userStory={userStory} />
         ))}
       </div>
 
