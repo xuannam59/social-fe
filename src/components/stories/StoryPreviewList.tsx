@@ -1,18 +1,25 @@
-import { useAppSelector } from '@social/hooks/redux.hook';
+import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { TbChevronLeft, TbChevronRight, TbPlus } from 'react-icons/tb';
 import StoryPreviewItem from './StoryPreviewItem';
 import { Link } from 'react-router-dom';
 import defaultAvatar from '@social/images/default-avatar.webp';
 import { Image } from 'antd';
+import { fetchStories } from '@social/redux/reducers/story.reducer';
 
 const StoryPreviewList = () => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
-  const userStories = useAppSelector(state => state.story.userStories);
-
+  const listUserStories = useAppSelector(state => state.story.listUserStories);
+  const dispatch = useAppDispatch();
   const [translateX, setTranslateX] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
+
+  useEffect(() => {
+    if(listUserStories.length === 0) {
+      dispatch(fetchStories());
+    }
+  }, [listUserStories]);    
 
   // Lấy container width khi component mount và resize
   const updateContainerWidth = useCallback(() => {
@@ -33,9 +40,9 @@ const StoryPreviewList = () => {
   // Tính toán vị trí translate tối đa có thể cuộn
   const maxTranslateX = useMemo(() => {
     if (containerWidth === 0) return 0;
-    const totalWidth = userStories.length * 125 + (userStories.length - 1) * 4; // 125px width + 4px gap
+    const totalWidth = listUserStories.length * 125 + (listUserStories.length - 1) * 4; // 125px width + 4px gap
     return Math.max(0, totalWidth - containerWidth);
-  }, [userStories.length, containerWidth]);
+  }, [listUserStories.length, containerWidth]);
 
   // Tính toán translateX hiện tại với giới hạn
   const currentTranslateX = useMemo(() => {
@@ -104,7 +111,7 @@ const StoryPreviewList = () => {
             </div>
           </div>
         </Link>
-        {userStories.map(userStory => (
+        {listUserStories.map(userStory => (
           <StoryPreviewItem key={userStory._id} userStory={userStory} />
         ))}
       </div>

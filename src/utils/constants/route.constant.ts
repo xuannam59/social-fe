@@ -5,7 +5,7 @@ export const ROUTES = {
   PROFILE: '/profile',
   STORY: {
     CREATE: '/story/create',
-    VIEW: '/story/:id',
+    VIEW: '/story',
   },
   AUTH: {
     LOGIN: '/login',

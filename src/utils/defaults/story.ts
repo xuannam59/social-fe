@@ -19,7 +19,7 @@ export const STORY_DEFAULT: IStory = {
 
 export const USER_STORY_DEFAULT: IUserStory = {
   _id: '',
-  fullName: '',
+  fullname: '',
   avatar: '',
   stories: [],
 };

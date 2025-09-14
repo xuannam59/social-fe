@@ -1,75 +1,82 @@
 import StoryPlayer from '@social/components/stories/StoryPlayer';
 import StoryUserItem from '@social/components/stories/StoryUserItem';
 import { ROUTES } from '@social/constants/route.constant';
-import defaultAvatar from '@social/images/default-avatar.webp';
+import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
 import { Typography } from 'antd';
-import { useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TbChevronLeft, TbChevronRight, TbPlus } from 'react-icons/tb';
 import { Link, useParams } from 'react-router-dom';
+import { doNextStory, doPreviousStory, fetchStories, setCurrentUserStory } from '@social/redux/reducers/story.reducer';
 
 const { Title } = Typography;
 
 const StoryView = () => {
-  const { id } = useParams();
+  const { userId } = useParams();
+  const dispatch = useAppDispatch();
+  const { currentStory, listUserStories } = useAppSelector(state => state.story);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const userStories: any[] = useMemo(
-    () => [
-      {
-        user_id: '1123123',
-        fullName: 'Nguyễn Văn A',
-        avatar: defaultAvatar,
-        stories: [
-          {
-            _id: '23',
-            type: 'image',
-            file: defaultAvatar,
-            fullName: 'Nguyễn Văn A',
-          },
-          {
-            _id: '2123123',
-            type: 'image',
-            file: 'https://i.pinimg.com/1200x/e6/34/d3/e634d384fb0c31d7245d70d6f70f830d.jpg',
-            fullName: 'Nguyễn Văn B',
-            avatar: defaultAvatar,
-          },
-          {
-            _id: '3123123',
-            type: 'image',
-            file: 'https://i.pinimg.com/1200x/e6/34/d3/e634d384fb0c31d7245d70d6f70f830d.jpg',
-            fullName: 'Nguyễn Văn B',
-            avatar: defaultAvatar,
-          },
-        ],
-      },
-      {
-        user_id: '217456',
-        fullName: 'Nguyễn Văn B',
-        avatar: defaultAvatar,
-        stories: [
-          {
-            _id: '3123123',
-            type: 'image',
-            file: defaultAvatar,
-            fullName: 'Nguyễn Văn A',
-          },
-        ],
-      },
-      {
-        user_id: '3345',
-        fullName: 'Nguyễn Văn C',
-        avatar: defaultAvatar,
-        stories: [
-          {
-            _id: '4123123',
-            type: 'image',
-            file: defaultAvatar,
-            fullName: 'Nguyễn Văn A',
-          },
-        ],
-      },
-    ],
-    []
-  );
+  const currentUser = useMemo(() => {
+    return listUserStories.find(userStory => userStory._id === userId);
+  }, [listUserStories, userId]);
+
+  const fetchUserStories = useCallback(async () => {
+    if (!userId) return;
+    try {
+      setIsLoading(true);
+      await dispatch(fetchStories(`userId=${userId}`)).unwrap();
+    } catch (error) {
+      console.error('Failed to fetch stories:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [dispatch, userId]);
+
+  useEffect(() => {
+    if (userId && listUserStories.length === 0) {
+      fetchUserStories();
+    }
+  }, [userId, fetchUserStories, listUserStories.length]);
+
+  useEffect(() => {
+    if (currentUser && !currentStory._id) {
+      dispatch(setCurrentUserStory(currentUser));
+    }
+  }, [currentUser, currentStory._id, dispatch]);
+
+  const handlePreviousStory = useCallback(() => {
+    dispatch(doPreviousStory());
+  }, [dispatch]);
+
+  const handleNextStory = useCallback(() => {
+    dispatch(doNextStory());
+  }, [dispatch]);
+
+  const navigationState = useMemo(() => {
+    const currentUserIndex = listUserStories.findIndex(u => u._id === userId);
+    const currentStoryIndex = currentUser?.stories.findIndex(s => s._id === currentStory._id) ?? -1;
+    
+    return {
+      canGoPrev: currentStoryIndex > 0 || currentUserIndex > 0,
+      canGoNext: (currentUser && currentStoryIndex < currentUser.stories.length - 1) || currentUserIndex < listUserStories.length - 1
+    };
+  }, [listUserStories, userId, currentUser, currentStory._id]);
+
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft' && navigationState.canGoPrev) {
+        handlePreviousStory();
+      } else if (e.key === 'ArrowRight' && navigationState.canGoNext) {
+        handleNextStory();
+      } else if (e.key === 'Escape') {
+        window.history.back();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [handlePreviousStory, handleNextStory, navigationState]);
+
 
   return (
     <>
@@ -112,8 +119,12 @@ const StoryView = () => {
               <Title level={5}>Tất cả tin</Title>
             </div>
             <div className="flex flex-col px-2">
-              {userStories.map(userStory => (
-                <StoryUserItem key={userStory.user_id} userStory={userStory} />
+              {listUserStories.map(userStory => (
+                <StoryUserItem 
+                  key={userStory._id} 
+                  userStory={userStory} 
+                  isLoading={isLoading}
+                />
               ))}
             </div>
           </div>
@@ -123,11 +134,11 @@ const StoryView = () => {
         <div className="flex flex-col h-full items-center">
           <div className="flex h-[calc(100%-3.5rem)] w-full items-center">
             <div
-              className="h-full w-[50%] relative group/left cursor-pointer"
-              onClick={() => {
-                console.log('left');
-              }}
-            >
+               className={`h-full w-[50%] relative group/left ${
+                 navigationState.canGoPrev ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
+               }`}
+               onClick={navigationState.canGoPrev && !isLoading ? handlePreviousStory : undefined}
+             >
               <div className="absolute right-10 top-1/2 group-hover/left:right-12 duration-300 transition-all">
                 <div className="w-12 h-12 bg-gray-400 rounded-full group-hover/left:bg-white duration-300 transition-all">
                   <div className="flex items-center justify-center h-full w-full">
@@ -137,14 +148,14 @@ const StoryView = () => {
               </div>
             </div>
             <div className="h-full aspect-[5/9] w-auto relative">
-              <StoryPlayer />
+              <StoryPlayer isLoading={isLoading} navigationState={navigationState} />
             </div>
             <div
-              className="h-full w-[50%] relative group/right cursor-pointer"
-              onClick={() => {
-                console.log('right');
-              }}
-            >
+               className={`h-full w-[50%] relative group/right ${
+                 navigationState.canGoNext ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
+               }`}
+               onClick={navigationState.canGoNext && !isLoading ? handleNextStory : undefined}
+             >
               <div className="absolute left-10 top-1/2 group-hover/right:left-12 duration-300 transition-all">
                 <div className="w-12 h-12 bg-gray-400 rounded-full group-hover/right:bg-white duration-300 transition-all">
                   <div className="flex items-center justify-center h-full w-full">

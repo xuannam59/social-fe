@@ -3,9 +3,13 @@ import type { IBackendRes, IBackendResPagination } from '@social/types/backend.t
 import type { IFormCreateStory, IUserStory } from '@social/types/stories.type';
 
 export const callApiCreateStory = async (data: IFormCreateStory) => {
-  return axios.post<IBackendRes<{ _id: string }>>('/api/v1/stories', data);
+  return axios.post<IBackendRes<IUserStory>>('/api/v1/stories', data);
 }
 
 export const callApiGetStories = async (query?: string) => {
   return axios.get<IBackendResPagination<IUserStory>>(`/api/v1/stories?${query ? query : ''}`);
+}
+
+export const callApiGetUserStories = async (userId: string) => {
+  return axios.get<IBackendRes<IUserStory>>(`/api/v1/stories/${userId}`);
 }

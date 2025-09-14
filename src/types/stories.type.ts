@@ -17,8 +17,9 @@ export interface IStory {
 
 export interface IUserStory {
   _id: string;
-  fullName: string;
+  fullname: string;
   avatar: string;
+  endStoryAt: string;
   stories: IStory[];
 }
 
@@ -45,7 +46,8 @@ export interface IFormCreateStory {
 export interface IStoryState {
   currentUserStory: IUserStory;
   currentStory: IStory;
-  userStories: IUserStory[];
+  listUserStories: IUserStory[];
+  paused: boolean;
   totalStories: number;
   page: number;
   limit: number;

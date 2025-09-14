@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import CreatePost from '../posts/CreatePost';
 import StoryPreviewList from '../stories/StoryPreviewList';
 import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
-import { fetchStories } from '@social/redux/reducers/story.reducer';
 import PostItem from '../posts/PostItem';
 import ModalViewPost from '../modals/posts/ModalViewPost';
 import {
@@ -17,8 +16,9 @@ const CenterContent = () => {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    dispatch(fetchPosts());
-    dispatch(fetchStories());
+    if(posts.length === 0) {
+      dispatch(fetchPosts());
+    }
   }, [dispatch]);
 
   const handleOpenModalViewPost = useCallback(

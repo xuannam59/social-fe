@@ -42,7 +42,7 @@ const StoryEdit: React.FC<IProps> = ({
   onCancel,
   handleSave,
 }) => {
-  const [dominantColor, setDominantColor] = useState<string>('#ffffff');
+  const [dominantColor, setDominantColor] = useState<string>('#CCCCCC');
   const containerRef = useRef<HTMLDivElement>(null);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const stageRef = useRef<KonvaStage>(null);
@@ -75,7 +75,7 @@ const StoryEdit: React.FC<IProps> = ({
         .then(color => setDominantColor(color))
         .catch(error => {
           console.error('Lỗi khi lấy màu từ ảnh:', error);
-          setDominantColor('#ffffff');
+          setDominantColor('#CCCCCC');
         });
     }
   }, [image, type]);
@@ -333,14 +333,16 @@ const StoryEdit: React.FC<IProps> = ({
                           </Layer>
                         </Stage>
                       ) : (
-                        <div className="bg-white h-full w-full relative">
+                        <div className="h-full w-full relative" 
+                          style={{ backgroundColor: dominantColor }}
+                        >
                           <div className="absolute inset-0 flex items-center justify-center">
                             <Form.Item name="content" className="w-[80%]">
                               <Input.TextArea
                                 ref={textAreaRef}
                                 autoSize={true}
                                 maxLength={80}
-                                className="!bg-white scrollbar-hide font-semibold !text-[16px] !border-none focus:!ring-0 text-center"
+                                className="!bg-transparent scrollbar-hide font-semibold !text-[16px] !border-none focus:!ring-0 text-center"
                                 placeholder="BẮT ĐẦU NHẬP"
                               />
                             </Form.Item>

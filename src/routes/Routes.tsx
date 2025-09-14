@@ -31,7 +31,7 @@ const AppRoutes = () => {
           </Route>
           <Route element={<StoryLayout />}>
             <Route path={ROUTES.STORY.CREATE} element={<StoryCreate />} />
-            <Route path={ROUTES.STORY.VIEW} element={<StoryView />} />
+            <Route path={`${ROUTES.STORY.VIEW}/:userId`} element={<StoryView />} />
           </Route>
         </Route>
         <Route path="*" element={<div>404</div>} />

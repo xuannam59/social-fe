@@ -6,7 +6,8 @@ import ButtonGradient from '@social/components/common/ButtonGradient';
 import ModalPrivacy from '@social/components/modals/stories/ModalPrivacy';
 import StoryButtonCreate from '@social/components/stories/StoryButtonCreate';
 import StoryEdit from '@social/components/stories/StoryEdit';
-import { useAppSelector } from '@social/hooks/redux.hook';
+import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
+import { doCreateStory } from '@social/redux/reducers/story.reducer';
 import type { IFormCreateStory } from '@social/types/stories.type';
 import { Button, Form, message, notification, Typography } from 'antd';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -29,7 +30,8 @@ const StoryCreate = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [form] = Form.useForm();
   const navigate = useNavigate();
-
+  const dispatch = useAppDispatch();
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -76,10 +78,11 @@ const StoryCreate = () => {
 
       const res = await callApiCreateStory(payload);
       if(res.data) {
+        dispatch(doCreateStory(res.data));
         message.success('Tạo tin thành công');
         form.resetFields();
         file.current = undefined;
-        navigate(`/story/${res.data._id}`);
+        navigate(`/`);
       }else {
         notification.error({
           message: 'Tạo tin thất bại',
