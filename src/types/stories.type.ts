@@ -10,6 +10,10 @@ export interface IStory {
   content?: string;
   backgroundColor: string;
   duration: number;
+  userLikes: {
+    userId: string;
+    type: number;
+  }[];
   createdAt: string;
   audio: string;
   isViewed: boolean;
@@ -22,7 +26,6 @@ export interface IUserStory {
   endStoryAt: string;
   stories: IStory[];
 }
-
 
 export interface ITextStory {
   id: string;

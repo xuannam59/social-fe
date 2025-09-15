@@ -6,16 +6,23 @@ import { Typography } from 'antd';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TbChevronLeft, TbChevronRight, TbPlus } from 'react-icons/tb';
 import { Link, useParams } from 'react-router-dom';
-import { doNextStory, doPreviousStory, fetchStories, setCurrentUserStory } from '@social/redux/reducers/story.reducer';
+import {
+  doNextStory,
+  doPreviousStory,
+  fetchStories,
+  setCurrentUserStory,
+} from '@social/redux/reducers/story.reducer';
+import StoryReply from '@social/components/stories/StoryReply';
 
 const { Title } = Typography;
 
 const StoryView = () => {
   const { userId } = useParams();
   const dispatch = useAppDispatch();
-  const { currentStory, listUserStories } = useAppSelector(state => state.story);
+  const { currentStory, listUserStories } = useAppSelector(
+    state => state.story
+  );
   const [isLoading, setIsLoading] = useState(false);
-
   const currentUser = useMemo(() => {
     return listUserStories.find(userStory => userStory._id === userId);
   }, [listUserStories, userId]);
@@ -54,29 +61,16 @@ const StoryView = () => {
 
   const navigationState = useMemo(() => {
     const currentUserIndex = listUserStories.findIndex(u => u._id === userId);
-    const currentStoryIndex = currentUser?.stories.findIndex(s => s._id === currentStory._id) ?? -1;
-    
+    const currentStoryIndex =
+      currentUser?.stories.findIndex(s => s._id === currentStory._id) ?? -1;
+
     return {
       canGoPrev: currentStoryIndex > 0 || currentUserIndex > 0,
-      canGoNext: (currentUser && currentStoryIndex < currentUser.stories.length - 1) || currentUserIndex < listUserStories.length - 1
+      canGoNext:
+        (currentUser && currentStoryIndex < currentUser.stories.length - 1) ||
+        currentUserIndex < listUserStories.length - 1,
     };
   }, [listUserStories, userId, currentUser, currentStory._id]);
-
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft' && navigationState.canGoPrev) {
-        handlePreviousStory();
-      } else if (e.key === 'ArrowRight' && navigationState.canGoNext) {
-        handleNextStory();
-      } else if (e.key === 'Escape') {
-        window.history.back();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [handlePreviousStory, handleNextStory, navigationState]);
-
 
   return (
     <>
@@ -120,9 +114,9 @@ const StoryView = () => {
             </div>
             <div className="flex flex-col px-2">
               {listUserStories.map(userStory => (
-                <StoryUserItem 
-                  key={userStory._id} 
-                  userStory={userStory} 
+                <StoryUserItem
+                  key={userStory._id}
+                  userStory={userStory}
                   isLoading={isLoading}
                 />
               ))}
@@ -134,13 +128,23 @@ const StoryView = () => {
         <div className="flex flex-col h-full items-center">
           <div className="flex h-[calc(100%-3.5rem)] w-full items-center">
             <div
-               className={`h-full w-[50%] relative group/left ${
-                 navigationState.canGoPrev ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
-               }`}
-               onClick={navigationState.canGoPrev && !isLoading ? handlePreviousStory : undefined}
-             >
-              <div className="absolute right-10 top-1/2 group-hover/left:right-12 duration-300 transition-all">
-                <div className="w-12 h-12 bg-gray-400 rounded-full group-hover/left:bg-white duration-300 transition-all">
+              className={`h-full w-[50%] relative group/left ${
+                navigationState.canGoPrev ? 'cursor-pointer' : 'opacity-50'
+              }`}
+              onClick={
+                navigationState.canGoPrev && !isLoading
+                  ? handlePreviousStory
+                  : undefined
+              }
+            >
+              <div
+                className={`absolute right-10 top-1/2 duration-300 transition-all
+                  ${navigationState.canGoPrev ? 'group-hover/left:right-12' : ''}`}
+              >
+                <div
+                  className={`w-12 h-12 bg-gray-400 rounded-full duration-300 transition-all 
+                    ${navigationState.canGoPrev ? 'group-hover/left:bg-white' : ''}`}
+                >
                   <div className="flex items-center justify-center h-full w-full">
                     <TbChevronLeft size={28} className="text-black/50" />
                   </div>
@@ -148,16 +152,29 @@ const StoryView = () => {
               </div>
             </div>
             <div className="h-full aspect-[5/9] w-auto relative">
-              <StoryPlayer isLoading={isLoading} navigationState={navigationState} />
+              <StoryPlayer
+                isLoading={isLoading}
+                navigationState={navigationState}
+              />
             </div>
             <div
-               className={`h-full w-[50%] relative group/right ${
-                 navigationState.canGoNext ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
-               }`}
-               onClick={navigationState.canGoNext && !isLoading ? handleNextStory : undefined}
-             >
-              <div className="absolute left-10 top-1/2 group-hover/right:left-12 duration-300 transition-all">
-                <div className="w-12 h-12 bg-gray-400 rounded-full group-hover/right:bg-white duration-300 transition-all">
+              className={`h-full w-[50%] relative group/right ${
+                navigationState.canGoNext ? 'cursor-pointer' : 'opacity-50'
+              }`}
+              onClick={
+                navigationState.canGoNext && !isLoading
+                  ? handleNextStory
+                  : undefined
+              }
+            >
+              <div
+                className={`absolute left-10 top-1/2 duration-300 transition-all
+                  ${navigationState.canGoNext ? 'group-hover/right:left-12' : ''}`}
+              >
+                <div
+                  className={`w-12 h-12 bg-gray-400 rounded-full duration-300 transition-all 
+                    ${navigationState.canGoNext ? 'group-hover/right:bg-white' : ''}`}
+                >
                   <div className="flex items-center justify-center h-full w-full">
                     <TbChevronRight size={28} className="text-black/50" />
                   </div>
@@ -165,13 +182,8 @@ const StoryView = () => {
               </div>
             </div>
           </div>
-          <div className="relative">
-            <div className="absolute h-12 w-[690px] top-1/2 left-1/2 -translate-x-1/2">
-              <div className="flex justify-center items-center h-full w-full bg-red-500">
-                <div className="text-white">x</div>
-                <div className="text-white">y</div>
-              </div>
-            </div>
+          <div className="w-full flex justify-center">
+            <StoryReply />
           </div>
         </div>
       </div>

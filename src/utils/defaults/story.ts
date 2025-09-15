@@ -12,6 +12,7 @@ export const STORY_DEFAULT: IStory = {
   privacy: '',
   backgroundColor: '',
   duration: 0,
+  userLikes: [],
   createdAt: '',
   audio: '',
   isViewed: false,
@@ -21,6 +22,6 @@ export const USER_STORY_DEFAULT: IUserStory = {
   _id: '',
   fullname: '',
   avatar: '',
+  endStoryAt: '',
   stories: [],
 };
-

@@ -5,7 +5,10 @@ import ProgressBar from '../common/ProgressBar';
 import { TbPlayerPlayFilled, TbPlayerPauseFilled } from 'react-icons/tb';
 import { Button, Typography } from 'antd';
 import AvatarUser from '../common/AvatarUser';
-import { doNextStory, doPauseStory } from '@social/redux/reducers/story.reducer';
+import {
+  doNextStory,
+  doPauseStory,
+} from '@social/redux/reducers/story.reducer';
 import LoadingStoryPlayer from '../loading/LoadingStoryPlayer';
 import { formatRelativeTime } from '@social/common/convert';
 
@@ -20,7 +23,9 @@ interface IProps {
 }
 
 const StoryPlayer: React.FC<IProps> = ({ isLoading, navigationState }) => {
-  const { currentStory, currentUserStory } = useAppSelector(state => state.story);
+  const { currentStory, currentUserStory } = useAppSelector(
+    state => state.story
+  );
   const paused = useAppSelector(state => state.story.paused);
   const dispatch = useAppDispatch();
   const currentIndex = useMemo(() => {
@@ -34,20 +39,24 @@ const StoryPlayer: React.FC<IProps> = ({ isLoading, navigationState }) => {
   const renderContent = useCallback(() => {
     switch (currentStory.type) {
       case 'image':
-        return <img 
-          src={convertUrlString(currentStory.media.keyS3)} 
-          alt="story" 
-          className="w-full h-full object-cover"
-          loading="lazy"
-        />;
+        return (
+          <img
+            src={convertUrlString(currentStory.media.keyS3)}
+            alt="story"
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+        );
       case 'video':
-        return <video 
-          src={convertUrlString(currentStory.media.keyS3)} 
-          className="w-full h-full object-contain"
-        />;
+        return (
+          <video
+            src={convertUrlString(currentStory.media.keyS3)}
+            className="w-full h-full object-contain"
+          />
+        );
       case 'text':
         return (
-          <div 
+          <div
             className="w-full h-full flex items-center justify-center"
             style={{ backgroundColor: currentStory.backgroundColor }}
           >
@@ -71,14 +80,17 @@ const StoryPlayer: React.FC<IProps> = ({ isLoading, navigationState }) => {
     });
   }, [currentIndex, currentUserStory.stories.length]);
 
-  const getStoryStatus = useCallback((index: number) => {
-    return storyStatuses[index] || 'upcoming';
-  }, [storyStatuses]);
+  const getStoryStatus = useCallback(
+    (index: number) => {
+      return storyStatuses[index] || 'upcoming';
+    },
+    [storyStatuses]
+  );
 
   const handleStoryComplete = useCallback(() => {
-    if(navigationState.canGoNext) {
+    if (navigationState.canGoNext) {
       dispatch(doNextStory());
-    }else {
+    } else {
       dispatch(doPauseStory(true));
     }
   }, [dispatch, navigationState.canGoNext]);
@@ -87,14 +99,19 @@ const StoryPlayer: React.FC<IProps> = ({ isLoading, navigationState }) => {
     dispatch(doPauseStory(!paused));
   }, [dispatch, paused]);
 
-  const userInfo = useMemo(() => ({
-    avatar: currentUserStory.avatar,
-    fullName: currentUserStory.fullname
-  }), [currentUserStory.avatar, currentUserStory.fullname]);
+  const userInfo = useMemo(
+    () => ({
+      avatar: currentUserStory.avatar,
+      fullName: currentUserStory.fullname,
+    }),
+    [currentUserStory.avatar, currentUserStory.fullname]
+  );
 
   return (
     <div className="absolute inset-0 bg-[#222429] my-5 rounded-lg overflow-hidden">
-      {isLoading ? <LoadingStoryPlayer /> : (
+      {isLoading ? (
+        <LoadingStoryPlayer />
+      ) : (
         <>
           <div className="absolute inset-0 m-3 h-fit">
             <div className="flex items-center gap-2 h-1">
@@ -108,25 +125,23 @@ const StoryPlayer: React.FC<IProps> = ({ isLoading, navigationState }) => {
                 />
               ))}
             </div>
-            
+
             <div className="mt-3 flex items-center justify-between">
               <div className="flex items-start gap-2">
                 <AvatarUser avatar={userInfo.avatar} size={40} />
                 <div className="flex items-center gap-2">
                   <Text className="!text-[16px] !font-medium !text-white">
-                      {userInfo.fullName}
+                    {userInfo.fullName}
                   </Text>
-                  <div className="text-sm text-white">
-                    {timeStory}
-                  </div>
+                  <div className="text-sm text-white">{timeStory}</div>
                 </div>
               </div>
-              <Button 
-                type="text" 
-                shape="circle" 
+              <Button
+                type="text"
+                shape="circle"
                 onClick={handleTogglePause}
                 className="hover:bg-white/10"
-                aria-label={paused ? "Phát story" : "Tạm dừng story"}
+                aria-label={paused ? 'Phát story' : 'Tạm dừng story'}
               >
                 {paused ? (
                   <TbPlayerPlayFilled size={20} className="text-white" />
