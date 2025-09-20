@@ -46,10 +46,13 @@ const HeaderUserInfo = () => {
                     <div
                       className="flex items-center justify-start gap-2 cursor-pointer hover:bg-gray-100 rounded-lg p-2"
                       onClick={() => {
-                        navigate(ROUTES.PROFILE);
+                        navigate(`/${userInfo._id}`);
                       }}
                     >
-                      <AvatarUser size={50} avatar={userInfo.avatar || defaultAvatar} />
+                      <AvatarUser
+                        size={50}
+                        avatar={userInfo.avatar || defaultAvatar}
+                      />
                       <div className="text-[16px] font-bold text-black">
                         {userInfo.fullname || 'User Unknown'}
                       </div>

@@ -84,7 +84,7 @@ const StoryView = () => {
           </div>
           <div className="flex items-center px-4 pb-5">
             <Link
-              to={ROUTES.PROFILE}
+              to={`/${userId}`}
               className="text-[#0064d1] hover:underline text-[15px]"
             >
               Kho lưu trứ

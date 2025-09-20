@@ -42,14 +42,11 @@ const CreatePost = () => {
 
   return (
     <>
-      <div className="w-full rounded-lg bg-white p-3">
+      <div className="w-full rounded-lg bg-white p-3 shadow-md">
         <div className="flex flex-col gap-2">
           <div className="flex gap-4">
-            <Link to={`/profile/${userInfo?._id}`}>
-             <AvatarUser
-              avatar={userInfo?.avatar || defaultAvatar}
-              size={40}
-             />
+            <Link to={`/${userInfo._id}`}>
+              <AvatarUser avatar={userInfo.avatar || defaultAvatar} size={40} />
             </Link>
 
             <div

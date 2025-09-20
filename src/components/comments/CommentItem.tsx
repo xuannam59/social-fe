@@ -14,10 +14,6 @@ import { smartUpload } from '@social/common/uploads';
 import { emojiReactions } from '@social/constants/emoji';
 import { COMMENT_DEFAULT } from '@social/defaults/post';
 import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
-import {
-  doAddComment,
-  doDeleteComment,
-} from '@social/redux/reducers/post.reducer';
 import type { IComment, IFormComment } from '@social/types/comments.type';
 import type { IEmojiReaction } from '@social/types/commons.type';
 import {
@@ -41,7 +37,8 @@ interface IProps {
   level: number;
   commentStatus?: 'success' | 'error' | 'pending';
   requestReplyOnParent?: (fullname: string, authorId: string) => void;
-  onDeleteComment?: (commentId: string) => void;
+  onDeleteComment: (commentId: string, countDeleted: number) => void;
+  onAddComment: (postId: string) => void;
 }
 const { Paragraph } = Typography;
 
@@ -51,6 +48,7 @@ const CommentItem: React.FC<IProps> = ({
   commentStatus = 'success',
   requestReplyOnParent,
   onDeleteComment,
+  onAddComment,
 }) => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
   const dispatch = useAppDispatch();
@@ -66,6 +64,8 @@ const CommentItem: React.FC<IProps> = ({
       : null
   );
   const [countLike, setCountLike] = useState(comment.likeCount);
+  const [replyCount, setReplyCount] = useState(comment.replyCount);
+  const [isOpenAllReply, setIsOpenAllReply] = useState(false);
   const [replyProcess, setReplyProcess] = useState<
     'success' | 'error' | 'pending'
   >('success');
@@ -74,7 +74,6 @@ const CommentItem: React.FC<IProps> = ({
   const [commentChildren, setCommentChildren] = useState<IComment[]>([]);
   const commentReply = useRef<IComment | null>(null);
   const commentInputRef = useRef<HTMLDivElement>(null);
-  const countReplyPresent = useRef(0);
   const [form] = Form.useForm();
   const author = comment.authorId;
   const defaultEmoji = emojiReactions[0];
@@ -89,6 +88,7 @@ const CommentItem: React.FC<IProps> = ({
       const existedIds = commentChildren.map(child => child._id);
       const getData = res.data.filter(child => !existedIds.includes(child._id));
       setCommentChildren(prev => [...prev, ...getData]);
+      setIsOpenAllReply(true);
     }
     setIsLoadingShowMore(false);
   }, [comment, level, commentChildren]);
@@ -216,11 +216,12 @@ const CommentItem: React.FC<IProps> = ({
               },
               ...prev,
             ]);
-            countReplyPresent.current++;
             commentReply.current = null;
+            setReplyCount(prev => prev + 1);
+            setIsOpenAllReply(true);
           }
           setReplyProcess('success');
-          dispatch(doAddComment({ postId: comment.postId }));
+          onAddComment(comment.postId);
         } else {
           message.error(convertErrorMessage(res.message));
           setReplyProcess('error');
@@ -230,7 +231,7 @@ const CommentItem: React.FC<IProps> = ({
         setReplyProcess('error');
       }
     },
-    [comment.postId, userInfo, dispatch]
+    [comment.postId, userInfo, onAddComment]
   );
 
   const renderReplyProcess = useCallback(() => {
@@ -307,14 +308,11 @@ const CommentItem: React.FC<IProps> = ({
       setIsLoadingDelete(true);
       const res = await callApiDeleteComment(comment._id);
       if (res.data) {
+        const data = res.data;
         message.success('Xóa bình luận thành công');
-        onDeleteComment?.(res.data.commentId);
-        dispatch(
-          doDeleteComment({
-            postId: res.data.postId,
-            countDeleted: res.data.countDeleted,
-          })
-        );
+        if (onDeleteComment) {
+          onDeleteComment(data.commentId, data.countDeleted);
+        }
       } else {
         notification.error({
           message: 'Xóa bình luận thất bại',
@@ -331,6 +329,15 @@ const CommentItem: React.FC<IProps> = ({
       setIsLoadingDelete(false);
     }
   }, [comment, onDeleteComment, dispatch]);
+
+  const onDeleteCommentChild = useCallback(
+    (commentId: string, countDeleted: number) => {
+      setCommentChildren(prev => prev.filter(child => child._id !== commentId));
+      setReplyCount(prev => Math.max(0, prev - countDeleted));
+      onDeleteComment(commentId, countDeleted);
+    },
+    [onDeleteComment]
+  );
   return (
     <>
       <div className={`flex items-start gap-2 `}>
@@ -381,20 +388,18 @@ const CommentItem: React.FC<IProps> = ({
             </div>
           </div>
           <div className="ml-2">
-            {comment.replyCount > 0 &&
-              level <= 2 &&
-              commentChildren.length === countReplyPresent.current && (
-                <div
-                  className="text-sm font-medium text-gray-500 mt-2 cursor-pointer flex items-center gap-1"
-                  onClick={getCommentChildren}
-                >
-                  <TbChevronDown size={16} />
-                  <span>Xem tất cả {comment.replyCount} phản hồi</span>
-                  {isLoadingShowMore && (
-                    <TbLoader2 size={16} className="animate-spin" />
-                  )}
-                </div>
-              )}
+            {replyCount > 0 && level <= 2 && !isOpenAllReply && (
+              <div
+                className="text-sm font-medium text-gray-500 mt-2 cursor-pointer flex items-center gap-1"
+                onClick={getCommentChildren}
+              >
+                <TbChevronDown size={16} />
+                <span>Xem tất cả {replyCount} phản hồi</span>
+                {isLoadingShowMore && (
+                  <TbLoader2 size={16} className="animate-spin" />
+                )}
+              </div>
+            )}
             {commentReply.current && (
               <div className="mt-2">
                 <CommentItem
@@ -402,6 +407,8 @@ const CommentItem: React.FC<IProps> = ({
                   level={level + 1}
                   commentStatus={replyProcess}
                   requestReplyOnParent={onClickReply}
+                  onDeleteComment={() => {}}
+                  onAddComment={() => {}}
                 />
               </div>
             )}
@@ -413,11 +420,8 @@ const CommentItem: React.FC<IProps> = ({
                     comment={child}
                     level={level + 1}
                     requestReplyOnParent={onClickReply}
-                    onDeleteComment={commentId =>
-                      setCommentChildren(prev =>
-                        prev.filter(child => child._id !== commentId)
-                      )
-                    }
+                    onDeleteComment={onDeleteCommentChild}
+                    onAddComment={onAddComment}
                   />
                 </div>
               ))}

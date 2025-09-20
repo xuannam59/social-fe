@@ -9,4 +9,10 @@
   --color-gray-light: #808080;
   --color-mention: #c2d6f7;
   --text-base: 15px;
+  --text-h1: 2rem;
+  --text-h2: 1.5rem;
+  --text-h3: 1.25rem;
+  --text-h4: 1rem;
+  --text-h5: 0.875rem;
+  --text-h6: 0.75rem;
 }

@@ -10,9 +10,9 @@ import EmptyState from '@social/components/common/EmptyState';
 import LoadingComment from '@social/components/loading/LoadingComment';
 import PostItem from '@social/components/posts/PostItem';
 import { COMMENT_DEFAULT } from '@social/defaults/post';
-import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
-import { doAddComment } from '@social/redux/reducers/post.reducer';
+import { useAppSelector } from '@social/hooks/redux.hook';
 import type { IComment, IFormComment } from '@social/types/comments.type';
+import type { IPost, IPostLike } from '@social/types/posts.type';
 import { Button, Form, message, Modal, Typography } from 'antd';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { TbX } from 'react-icons/tb';
@@ -20,15 +20,24 @@ import { v4 as uuidv4 } from 'uuid';
 
 interface IProps {
   open: boolean;
+  post: IPost;
   onClose: () => void;
+  onLikePost: (post: IPostLike) => void;
+  onAddComment: (postId: string) => void;
+  onDeleteComment: (postId: string, countDeleted: number) => void;
 }
 
 const { Title } = Typography;
 
-const ModalViewPost: React.FC<IProps> = ({ open, onClose }) => {
-  const currentPost = useAppSelector(state => state.post.currentPost);
+const ModalViewPost: React.FC<IProps> = ({
+  open,
+  onClose,
+  post,
+  onLikePost,
+  onAddComment,
+  onDeleteComment,
+}) => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
-  const dispatch = useAppDispatch();
   const parentId = useRef<string>('');
   const [comments, setComments] = useState<IComment[]>([]);
   const comment = useRef<IComment | null>(null);
@@ -44,18 +53,18 @@ const ModalViewPost: React.FC<IProps> = ({ open, onClose }) => {
 
   const getComments = useCallback(async () => {
     setIsLoadingComments(true);
-    const res = await callGetComments(currentPost._id);
+    const res = await callGetComments(post._id);
     if (res.data) {
       setComments(res.data);
     }
     setIsLoadingComments(false);
-  }, [currentPost._id]);
+  }, [post._id]);
 
   useEffect(() => {
-    if (currentPost._id) {
+    if (post._id) {
       getComments();
     }
-  }, [getComments, currentPost._id]);
+  }, [getComments, post._id]);
 
   const onSubmit = useCallback(
     async (values: IFormComment) => {
@@ -66,7 +75,7 @@ const ModalViewPost: React.FC<IProps> = ({ open, onClose }) => {
           content,
           media,
           mentions,
-          postId: currentPost._id,
+          postId: post._id,
           level,
           parentId: parentId.current,
         };
@@ -114,7 +123,7 @@ const ModalViewPost: React.FC<IProps> = ({ open, onClose }) => {
             ]);
             comment.current = null;
           }
-          dispatch(doAddComment({ postId: currentPost._id }));
+          onAddComment(post._id);
           setCommentProcess('success');
         } else {
           message.error(convertErrorMessage(res.message));
@@ -125,7 +134,15 @@ const ModalViewPost: React.FC<IProps> = ({ open, onClose }) => {
         setCommentProcess('error');
       }
     },
-    [currentPost._id, userInfo, dispatch]
+    [post._id, userInfo, onAddComment]
+  );
+
+  const handleDeleteComment = useCallback(
+    (commentId: string, countDeleted: number) => {
+      setComments(prev => prev.filter(comment => comment._id !== commentId));
+      onDeleteComment(post._id, countDeleted);
+    },
+    [post._id, onDeleteComment]
   );
 
   return (
@@ -148,7 +165,7 @@ const ModalViewPost: React.FC<IProps> = ({ open, onClose }) => {
           <div className="border-b border-gray-200 p-3 flex-shrink-0">
             <div className="flex items-center justify-between gap-2">
               <Title level={3} className="!m-0 flex-1 flex justify-center">
-                Bài viết của {currentPost.authorId.fullname}
+                Bài viết của {post.authorId.fullname}
               </Title>
               <Button type="text" shape="circle" onClick={onCancel}>
                 <TbX size={24} className="text-gray-500" />
@@ -157,9 +174,10 @@ const ModalViewPost: React.FC<IProps> = ({ open, onClose }) => {
           </div>
           <div className="flex flex-col overflow-y-auto">
             <PostItem
-              post={currentPost}
+              post={post}
               onClickComment={() => form.focusField('content')}
               buttonClose={false}
+              onLikePost={onLikePost}
             />
             <div className="px-3 mb-3">
               <div className="border-t border-gray-200 pt-2 flex flex-col gap-2 h-fit">
@@ -168,6 +186,8 @@ const ModalViewPost: React.FC<IProps> = ({ open, onClose }) => {
                     comment={comment.current}
                     level={1}
                     commentStatus={commentProcess}
+                    onDeleteComment={() => {}}
+                    onAddComment={() => {}}
                   />
                 )}
                 {isLoadingComments ? (
@@ -178,11 +198,8 @@ const ModalViewPost: React.FC<IProps> = ({ open, onClose }) => {
                       key={comment._id}
                       comment={comment}
                       level={1}
-                      onDeleteComment={commentId =>
-                        setComments(prev =>
-                          prev.filter(child => child._id !== commentId)
-                        )
-                      }
+                      onDeleteComment={handleDeleteComment}
+                      onAddComment={onAddComment}
                     />
                   ))
                 ) : (

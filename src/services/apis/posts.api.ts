@@ -10,8 +10,10 @@ export const callApiCreatePost = (data: IFormCreatePost) => {
   return axios.post<IBackendRes<{ _id: string }>>('/api/v1/posts', data);
 };
 
-export const callApiGetPost = () => {
-  return axios.get<IBackendRes<IPost[]>>(`/api/v1/posts`);
+export const callApiGetPost = (query?: string) => {
+  return axios.get<IBackendRes<IPost[]>>(
+    `/api/v1/posts${query ? `?${query}` : ''}`
+  );
 };
 
 export const callApiPostLike = (data: IPostLike) => {

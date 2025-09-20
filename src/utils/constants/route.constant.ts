@@ -2,11 +2,11 @@ export const ROUTES = {
   DEFAULT: '/',
   WATCH: '/watch',
   GROUPS: '/groups',
-  PROFILE: '/profile',
   STORY: {
     CREATE: '/story/create',
     VIEW: '/story',
   },
+  PROFILE: '/:userId',
   AUTH: {
     LOGIN: '/login',
     REGISTER: '/register',

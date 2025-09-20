@@ -16,10 +16,8 @@ const StoryPreviewList = () => {
   const [containerWidth, setContainerWidth] = useState(0);
 
   useEffect(() => {
-    if(listUserStories.length === 0) {
-      dispatch(fetchStories());
-    }
-  }, [listUserStories]);    
+    dispatch(fetchStories());
+  }, []);
 
   // Lấy container width khi component mount và resize
   const updateContainerWidth = useCallback(() => {
@@ -40,7 +38,8 @@ const StoryPreviewList = () => {
   // Tính toán vị trí translate tối đa có thể cuộn
   const maxTranslateX = useMemo(() => {
     if (containerWidth === 0) return 0;
-    const totalWidth = listUserStories.length * 125 + (listUserStories.length - 1) * 4; // 125px width + 4px gap
+    const totalWidth =
+      listUserStories.length * 125 + (listUserStories.length - 1) * 4; // 125px width + 4px gap
     return Math.max(0, totalWidth - containerWidth);
   }, [listUserStories.length, containerWidth]);
 
@@ -90,9 +89,9 @@ const StoryPreviewList = () => {
                   <Image
                     src={userInfo?.avatar || defaultAvatar}
                     alt="user avatar"
-                    width='100%'
-                    height='100%'
-                    className='object-cover'
+                    width="100%"
+                    height="100%"
+                    className="object-cover"
                     loading="lazy"
                     preview={false}
                   />

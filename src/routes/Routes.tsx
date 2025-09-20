@@ -10,6 +10,7 @@ import StoryCreate from '@social/pages/stories/StoryCreate';
 import StoryView from '@social/pages/stories/StoryView';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import RouterPrivate from './RouterPrivate';
+import ProfilePage from '@social/pages/profiles/ProfilePage';
 
 const AppRoutes = () => {
   return (
@@ -26,12 +27,16 @@ const AppRoutes = () => {
         <Route element={<RouterPrivate />}>
           <Route element={<DefaultLayout />}>
             <Route path={ROUTES.DEFAULT} element={<HomePages />} />
+            <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
             <Route path={ROUTES.WATCH} element={<div>helloworld</div>} />
             <Route path={ROUTES.GROUPS} element={<div>helloworld</div>} />
           </Route>
           <Route element={<StoryLayout />}>
             <Route path={ROUTES.STORY.CREATE} element={<StoryCreate />} />
-            <Route path={`${ROUTES.STORY.VIEW}/:userId`} element={<StoryView />} />
+            <Route
+              path={`${ROUTES.STORY.VIEW}/:userId`}
+              element={<StoryView />}
+            />
           </Route>
         </Route>
         <Route path="*" element={<div>404</div>} />

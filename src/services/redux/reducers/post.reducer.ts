@@ -1,28 +1,24 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { callApiGetPost } from '@social/apis/posts.api';
-import { POST_DEFAULT } from '@social/defaults/post';
 import type { IPostState } from '@social/types/posts.type';
 
 const initialState: IPostState = {
-  currentPost: POST_DEFAULT,
   listPosts: [],
+  scroll: 0,
 };
 
-export const fetchPosts = createAsyncThunk('posts/fetchPosts', async () => {
-  const res = await callApiGetPost();
-  return res.data;
-});
+export const fetchPosts = createAsyncThunk(
+  'posts/fetchPosts',
+  async (query?: string) => {
+    const res = await callApiGetPost(query);
+    return res.data;
+  }
+);
 
 const postSlice = createSlice({
   name: 'post',
   initialState,
   reducers: {
-    setCurrentPost: (state, action) => {
-      const post = state.listPosts.find(post => post._id === action.payload);
-      if (post) {
-        state.currentPost = post;
-      }
-    },
     setPosts: (state, action) => {
       state.listPosts = action.payload;
     },
@@ -48,16 +44,10 @@ const postSlice = createSlice({
             state.listPosts[index].likeCount - 1
           );
         }
-
-        if (state.currentPost._id === payload.postId) {
-          state.currentPost = { ...state.listPosts[index] };
-        }
       }
     },
     doAddComment: (state, action) => {
-      const payload = action.payload;
-      const postId = payload.postId;
-      state.currentPost.commentCount += 1;
+      const postId = action.payload.postId;
       state.listPosts = state.listPosts.map(post => {
         if (post._id === postId) {
           post.commentCount += 1;
@@ -66,17 +56,16 @@ const postSlice = createSlice({
       });
     },
     doDeleteComment: (state, action) => {
-      const payload = action.payload;
-      const countDeleted = payload.countDeleted;
-      const postId = payload.postId;
-      const afterCommentCount = state.currentPost.commentCount - countDeleted;
-      state.currentPost.commentCount = afterCommentCount;
-      state.listPosts = state.listPosts.map(post => {
-        if (post._id === postId) {
-          post.commentCount = afterCommentCount;
-        }
-        return post;
-      });
+      const { countDeleted, postId } = action.payload;
+      const currentPost = state.listPosts.find(post => post._id === postId);
+      if (currentPost) {
+        state.listPosts = state.listPosts.map(post => {
+          if (post._id === postId) {
+            post.commentCount = Math.max(0, post.commentCount - countDeleted);
+          }
+          return post;
+        });
+      }
     },
   },
   extraReducers: builder => {
@@ -86,11 +75,6 @@ const postSlice = createSlice({
   },
 });
 
-export const {
-  setPosts,
-  setCurrentPost,
-  doToggleLike,
-  doDeleteComment,
-  doAddComment,
-} = postSlice.actions;
+export const { setPosts, doToggleLike, doDeleteComment, doAddComment } =
+  postSlice.actions;
 export const postReducer = postSlice.reducer;

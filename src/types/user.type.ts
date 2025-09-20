@@ -4,6 +4,10 @@ export interface IUser {
   email: string;
   phoneNumber?: string;
   avatar: string;
+  cover: string;
+  phone: string;
+  followers: string[];
+  following: string[];
   role: string;
   isActive: boolean;
 }
