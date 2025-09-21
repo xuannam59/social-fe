@@ -2,6 +2,7 @@ import type { IUser, IUserTag } from './user.type';
 
 export interface IPostState {
   listPosts: IPost[];
+  tempPosts: IPost[];
   scroll: number;
 }
 
@@ -36,11 +37,13 @@ export interface IFormCreatePost {
   userTags?: IUserTag[];
   feeling?: string;
 }
+
 export interface IPostLike {
   postId: string;
   type: number | null;
   isLike: boolean;
 }
+
 export interface IPreviewMedia {
   id: string;
   url: string;

@@ -166,7 +166,12 @@ const PostItem: React.FC<IProps> = ({
             <div className="flex items-center gap-1 cursor-pointer">
               {post.likeCount > 0 && (
                 <>
-                  <span className="text-base">{userLiked?.emoji}</span>
+                  <span className="text-base relative">
+                    {emojiReactions[0].emoji}
+                    {userLiked && (
+                      <span className="text-base">{userLiked.emoji}</span>
+                    )}
+                  </span>
                   <span className="text-gray-500 text-base hover:underline">
                     {formatNumberAbbreviate(post.likeCount)}
                   </span>

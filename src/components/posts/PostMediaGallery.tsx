@@ -21,13 +21,13 @@ const PostMediaGallery: React.FC<IProps> = ({ medias }) => {
                 return (
                   <div
                     key={media.id}
-                    className="max-h-[400px] bg-black border border-gray-200  overflow-hidden"
+                    className="max-h-[400px] bg-black border border-gray-200 overflow-hidden "
                   >
-                    <div className="flex items-center justify-center w-full h-full">
+                    <div className="flex items-center justify-center ">
                       <img
                         src={media.url}
                         alt="media"
-                        className="w-full h-full object-cover"
+                        className="max-w-[500px] min-w-[378px]"
                         loading="lazy"
                       />
                     </div>

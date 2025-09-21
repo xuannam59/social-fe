@@ -13,7 +13,7 @@ import { renderComment } from '@social/common/render';
 import { smartUpload } from '@social/common/uploads';
 import { emojiReactions } from '@social/constants/emoji';
 import { COMMENT_DEFAULT } from '@social/defaults/post';
-import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
+import { useAppSelector } from '@social/hooks/redux.hook';
 import type { IComment, IFormComment } from '@social/types/comments.type';
 import type { IEmojiReaction } from '@social/types/commons.type';
 import {
@@ -51,7 +51,6 @@ const CommentItem: React.FC<IProps> = ({
   onAddComment,
 }) => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
-  const dispatch = useAppDispatch();
   const time = useMemo(
     () => formatRelativeTime(comment.createdAt),
     [comment.createdAt]
@@ -328,7 +327,7 @@ const CommentItem: React.FC<IProps> = ({
     } finally {
       setIsLoadingDelete(false);
     }
-  }, [comment, onDeleteComment, dispatch]);
+  }, [comment, onDeleteComment]);
 
   const onDeleteCommentChild = useCallback(
     (commentId: string, countDeleted: number) => {

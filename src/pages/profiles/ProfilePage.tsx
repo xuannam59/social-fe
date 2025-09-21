@@ -1,38 +1,37 @@
-import AvatarUser from '@social/components/common/AvatarUser';
-import { TbCameraFilled, TbMessageCircle, TbUserPlus } from 'react-icons/tb';
-import { Button, message, Tabs, Typography } from 'antd';
-import CreatePost from '@social/components/posts/CreatePost';
-import { useCallback, useEffect, useState } from 'react';
 import { callApiGetPost } from '@social/apis/posts.api';
-import type { IPost } from '@social/types/posts.type';
-import PostList from '@social/components/posts/PostList';
-import { useAppSelector } from '@social/hooks/redux.hook';
-import { useNavigate, useParams } from 'react-router-dom';
-import type { IUser } from '@social/types/user.type';
-import { USER_DEFAULT } from '@social/defaults/user.default';
 import { callApiGetUserInfo } from '@social/apis/user.api';
+import AvatarUser from '@social/components/common/AvatarUser';
+import CreatePost from '@social/components/posts/CreatePost';
+import PostList from '@social/components/posts/PostList';
+import ButtonAddFriend from '@social/components/profiles/ButtonAddFriend';
 import { ROUTES } from '@social/constants/route.constant';
+import { USER_DEFAULT } from '@social/defaults/user.default';
+import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
+import { setTempPosts } from '@social/redux/reducers/post.reducer';
+import type { IUser } from '@social/types/user.type';
+import { Button, message, Tabs, Typography } from 'antd';
+import { useCallback, useEffect, useState } from 'react';
+import { TbCameraFilled, TbMessageCircle } from 'react-icons/tb';
+import { useNavigate, useParams } from 'react-router-dom';
 
 const { Text, Paragraph } = Typography;
 
 const ProfilePage = () => {
   const { userId } = useParams();
   const userInfo = useAppSelector(state => state.auth.userInfo);
+  const dispatch = useAppDispatch();
   const [friendInfo, setFriendInfo] = useState<IUser>(USER_DEFAULT);
-  const [userPosts, setUserPosts] = useState<IPost[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
   const fetchUserPosts = useCallback(async () => {
     try {
-      setIsLoading(true);
-      const res = await callApiGetPost(`user=${userId}`);
+      const res = await callApiGetPost(`userId=${userId}`);
       if (res.data) {
-        setUserPosts(res.data);
+        dispatch(setTempPosts(res.data));
       }
     } catch (error) {
       console.error('Failed to fetch user posts:', error);
-    } finally {
-      setIsLoading(false);
     }
   }, [userId]);
 
@@ -66,15 +65,18 @@ const ProfilePage = () => {
   }, [userId]);
 
   useEffect(() => {
+    if (!userId) return;
+    setIsLoading(true);
     fetchUserPosts();
     if (userId !== userInfo._id) {
       fetchUserInfo();
     } else {
       setFriendInfo(userInfo);
     }
-  }, [fetchUserPosts]);
+    setIsLoading(false);
+  }, [fetchUserPosts, userId]);
 
-  const onChange = (key: string) => {
+  const onChangeTab = (key: string) => {
     console.log(key);
   };
 
@@ -137,14 +139,12 @@ const ProfilePage = () => {
                 </div>
 
                 <div className="flex gap-2 mt-4 flex-1 justify-end">
-                  {/* <ButtonGradient className="px-4">Chỉnh sửa</ButtonGradient> */}
-                  <Button>
-                    <TbUserPlus size={20} />
-                    Kết bạn
-                  </Button>
-                  <Button>
+                  {userId !== userInfo._id && userId && (
+                    <ButtonAddFriend userIdB={userId} />
+                  )}
+                  <Button type="primary">
                     <TbMessageCircle size={20} />
-                    Nhắn tin
+                    <span className="text-base font-semibold">Nhắn tin</span>
                   </Button>
                 </div>
               </div>
@@ -155,7 +155,7 @@ const ProfilePage = () => {
               <Tabs
                 defaultActiveKey="1"
                 items={items}
-                onChange={onChange}
+                onChange={onChangeTab}
                 tabBarStyle={{ margin: 0 }}
               />
             </div>

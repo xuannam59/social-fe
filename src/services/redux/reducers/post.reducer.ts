@@ -1,9 +1,14 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import {
+  createAsyncThunk,
+  createSlice,
+  type PayloadAction,
+} from '@reduxjs/toolkit';
 import { callApiGetPost } from '@social/apis/posts.api';
-import type { IPostState } from '@social/types/posts.type';
+import type { IPost, IPostState } from '@social/types/posts.type';
 
 const initialState: IPostState = {
   listPosts: [],
+  tempPosts: [],
   scroll: 0,
 };
 
@@ -21,6 +26,16 @@ const postSlice = createSlice({
   reducers: {
     setPosts: (state, action) => {
       state.listPosts = action.payload;
+    },
+    setTempPosts: (state, action: PayloadAction<IPost[]>) => {
+      state.tempPosts = state.listPosts;
+      state.listPosts = action.payload;
+    },
+    restorePosts: state => {
+      if (state.tempPosts.length > 0) {
+        state.listPosts = state.tempPosts;
+        state.tempPosts = [];
+      }
     },
     doToggleLike: (state, action) => {
       const payload = action.payload;
@@ -75,6 +90,12 @@ const postSlice = createSlice({
   },
 });
 
-export const { setPosts, doToggleLike, doDeleteComment, doAddComment } =
-  postSlice.actions;
+export const {
+  setPosts,
+  setTempPosts,
+  restorePosts,
+  doToggleLike,
+  doDeleteComment,
+  doAddComment,
+} = postSlice.actions;
 export const postReducer = postSlice.reducer;
