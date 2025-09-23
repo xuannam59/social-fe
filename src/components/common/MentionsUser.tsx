@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Mention,
   MentionsInput,
@@ -7,17 +7,11 @@ import {
 import defaultStyle from '@social/defaults/defaultStyle';
 import { Form } from 'antd';
 import AvatarUser from './AvatarUser';
-
-// Helper function để tạo slug từ string
-const createSlug = (str: string): string => {
-  return str
-    .toLowerCase()
-    .normalize('NFD') // Decompose accented characters
-    .replace(/[\u0300-\u036f]/g, '') // Remove accent marks
-    .replace(/[^a-z0-9\s]/g, '') // Remove special characters
-    .replace(/\s+/g, '') // Remove spaces
-    .trim();
-};
+import type { IMentionUser } from '@social/types/user.type';
+import { callApiFetchUserFriendList } from '@social/apis/user.api';
+import { debounce } from 'lodash';
+import { formatSlug } from '@social/common/convert';
+import Loading from '../loading/Loading';
 
 const MentionsInputComponent = MentionsInput as any;
 const MentionComponent = Mention as any;
@@ -29,57 +23,6 @@ interface IProps {
   loading: boolean;
 }
 
-const users = [
-  {
-    id: '123123123123',
-    display: 'Nguyễn Trung',
-    slug: createSlug('Nguyễn Trung'),
-    avatar: 'https://i.pravatar.cc/100?img=1',
-  },
-  {
-    id: '12312233123123',
-    display: 'Anh Tài Nguyễn Lưu',
-    slug: createSlug('Anh Tài Nguyễn Lưu'),
-    avatar: 'https://i.pravatar.cc/100?img=2',
-  },
-  {
-    id: '345345435345',
-    display: 'Hân Nguyễn',
-    slug: createSlug('Hân Nguyễn'),
-    avatar: 'https://i.pravatar.cc/100?img=3',
-  },
-  {
-    id: '345345435345344345',
-    display: 'Nguyễn M Đức Mạnh',
-    slug: createSlug('Nguyễn M Đức Mạnh'),
-    avatar: 'https://i.pravatar.cc/100?img=4',
-  },
-  {
-    id: '34534542342343534534345',
-    display: 'Thu Hương',
-    slug: createSlug('Thu Hương'),
-    avatar: 'https://i.pravatar.cc/100?img=5',
-  },
-  {
-    id: '345345432423423534534345',
-    display: 'Nguyễn Đức Cảnh',
-    slug: createSlug('Nguyễn Đức Cảnh'),
-    avatar: 'https://i.pravatar.cc/100?img=6',
-  },
-  {
-    id: '345345432423423533453654534345',
-    display: 'Vũ Huy Long',
-    slug: createSlug('Vũ Huy Long'),
-    avatar: 'https://i.pravatar.cc/100?img=7',
-  },
-  {
-    id: '123145345345432423423533453654534345',
-    display: 'Nguyễn Mạnh Bảo Long',
-    slug: createSlug('Nguyễn Mạnh Bảo Long'),
-    avatar: 'https://i.pravatar.cc/100?img=8',
-  },
-];
-
 const MentionsUser: React.FC<IProps> = ({
   inputRef,
   onPressEnter,
@@ -88,6 +31,61 @@ const MentionsUser: React.FC<IProps> = ({
 }) => {
   const mentionsRef = React.useRef<any>(null);
   const [domElement, setDomElement] = React.useState<HTMLElement | null>(null);
+
+  const [listUser, setListUser] = useState<IMentionUser[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchUserFriendList = useCallback(async () => {
+    try {
+      const res = await callApiFetchUserFriendList('limit=10');
+      if (res.data) {
+        const users: IMentionUser[] = res.data.friends.map(user => ({
+          id: user._id,
+          display: user.fullname,
+          avatar: user.avatar,
+        }));
+
+        setListUser(users);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUserFriendList();
+  }, [fetchUserFriendList]);
+
+  const debouncedFetch = useMemo(
+    () =>
+      debounce(async (query: string, callback) => {
+        try {
+          setIsLoading(true);
+          const slug = formatSlug(query);
+          const res = await callApiFetchUserFriendList(
+            `limit=10${slug ? `&search=${slug}` : ''}`
+          );
+          if (res.data) {
+            const users = res.data.friends.map(user => ({
+              id: user._id,
+              display: user.fullname,
+              avatar: user.avatar,
+            }));
+            callback(users);
+            return;
+          }
+        } catch (error) {
+          console.log(error);
+        } finally {
+          setIsLoading(false);
+        }
+      }, 200),
+    []
+  );
+
+  useEffect(() => {
+    return () => debouncedFetch.cancel();
+  }, [debouncedFetch]);
 
   React.useEffect(() => {
     if (mentionsRef.current) {
@@ -114,7 +112,7 @@ const MentionsUser: React.FC<IProps> = ({
 
       return () => clearTimeout(timer);
     }
-  }, [mentionsRef.current]);
+  }, [fieldName]);
 
   React.useImperativeHandle(
     inputRef,
@@ -145,26 +143,16 @@ const MentionsUser: React.FC<IProps> = ({
         };
       },
     }),
-    [domElement]
+    [domElement, fieldName]
   );
 
   const searchUsers = (query: string, callback: (data: any[]) => void) => {
     if (!query) {
-      callback(users);
+      callback(listUser);
       return;
     }
 
-    const searchSlug = createSlug(query);
-    const filteredUsers = users.filter(user => {
-      // Tìm kiếm trong cả display name và slug
-      const displayMatch = user.display
-        .toLowerCase()
-        .includes(query.toLowerCase());
-      const slugMatch = user.slug.includes(searchSlug);
-      return displayMatch || slugMatch;
-    });
-
-    callback(filteredUsers);
+    debouncedFetch(query, callback);
   };
 
   const renderSuggestion = (
@@ -174,26 +162,28 @@ const MentionsUser: React.FC<IProps> = ({
     _index: number,
     focused: boolean
   ) => {
-    const userData = users.find(user => user.id === suggestion.id);
+    const userData = listUser.find(user => user.id === suggestion.id);
 
     return (
-      <div
-        className={`flex items-center gap-3 px-4 py-3 cursor-pointer rounded-lg ${
-          focused && 'border border-sky-500'
-        }`}
-      >
-        <AvatarUser avatar={userData?.avatar || ''} size={36} />
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium text-gray-900 truncate">
-            {highlightedDisplay}
+      <>
+        <div
+          className={`flex items-center gap-3 px-4 py-3 cursor-pointer rounded-lg ${
+            focused && 'border border-sky-500'
+          }`}
+        >
+          <AvatarUser avatar={userData?.avatar} size={36} />
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-medium text-gray-900 truncate">
+              {highlightedDisplay}
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   };
 
   return (
-    <Form.Item name={fieldName} className="!m-0">
+    <Form.Item name={fieldName} className="!m-0" initialValue="">
       <MentionsInputComponent
         disabled={loading}
         ref={mentionsRef}

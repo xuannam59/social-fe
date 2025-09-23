@@ -26,6 +26,6 @@ export const callApiUnfriend = (userId: string) => {
   });
 };
 
-export const callApiGetFriends = (userId: string) => {
+export const callApiGetFriendStatus = (userId: string) => {
   return axios.get<IBackendRes<IFriend>>(`/api/v1/friends/${userId}`);
 };

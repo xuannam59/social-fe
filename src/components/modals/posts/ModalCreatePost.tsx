@@ -66,7 +66,7 @@ const ModalCreatePost: React.FC<IProps> = ({
         const data: IFormCreatePost = {
           content: values.content,
           privacy: values.privacy,
-          userTags,
+          userTags: userTags.map(user => user._id),
           feeling,
           medias: mediasUpload,
         };

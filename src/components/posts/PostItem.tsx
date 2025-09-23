@@ -24,7 +24,7 @@ import UserTagsDisplay from '../common/UserTagsDisplay';
 import PostButtonLike from './PostButtonLike';
 import PostMediaGallery from './PostMediaGallery';
 import { v4 as uuidv4 } from 'uuid';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const { Text } = Typography;
 
@@ -41,6 +41,7 @@ const PostItem: React.FC<IProps> = ({
   buttonClose = true,
   onLikePost,
 }) => {
+  const navigate = useNavigate();
   const time = formatRelativeTime(post.createdAt);
   const exactTime = formatFullDateTime(post.createdAt);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -77,7 +78,7 @@ const PostItem: React.FC<IProps> = ({
   return (
     <>
       <div className="w-full h-full flex flex-col">
-        <div className="flex w-full justify-between items-center pt-3 px-3 mb-3 flex-shrink-0">
+        <div className="flex w-full justify-between items-start pt-3 px-3 mb-3 flex-shrink-0">
           <div className="flex-1 flex items-start gap-1">
             <Link to={`/${post.authorId._id}`}>
               <AvatarUser
@@ -88,16 +89,20 @@ const PostItem: React.FC<IProps> = ({
             </Link>
             <div className="flex-1">
               <div className="w-full">
-                <Link to={`/${post.authorId._id}`}>
-                  <div className="font-semibold text-base inline-block">
-                    {post.authorId.fullname}
-                  </div>
-                </Link>
+                <div
+                  className="font-semibold text-base inline-block cursor-pointer hover:underline"
+                  onClick={() => {
+                    navigate(`/${post.authorId._id}`);
+                  }}
+                >
+                  {post.authorId.fullname}
+                </div>
                 <UserTagsDisplay
                   userTags={post.userTags}
                   feeling={post.feeling}
                   onClickFeeling={() => {}}
                   onClickUserTag={() => {}}
+                  type="post"
                 />
               </div>
               <div className="flex items-center gap-0.5">

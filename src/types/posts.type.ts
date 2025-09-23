@@ -34,7 +34,7 @@ export interface IFormCreatePost {
     keyS3: string;
     type: string;
   }>;
-  userTags?: IUserTag[];
+  userTags?: string[];
   feeling?: string;
 }
 

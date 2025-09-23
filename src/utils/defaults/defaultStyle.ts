@@ -60,10 +60,11 @@ export default {
   },
 
   suggestions: {
+    borderRadius: 12,
     list: {
       backgroundColor: 'white',
       border: '1px solid rgba(0,0,0,0.1)',
-      borderRadius: 12,
+      borderRadius: 8,
       fontSize: 14,
       boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
       maxHeight: 300,

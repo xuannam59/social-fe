@@ -1,6 +1,6 @@
 import {
   callApiAcceptFriend,
-  callApiGetFriends,
+  callApiGetFriendStatus,
   callApiRejectFriend,
   callApiRequestFriend,
   callApiUnfriend,
@@ -36,7 +36,7 @@ const ButtonAddFriend: React.FC<IProps> = ({ userIdB }) => {
 
   const getFriendStatus = useCallback(async () => {
     if (!userIdB || userIdB === userInfo._id) return;
-    const res = await callApiGetFriends(userIdB);
+    const res = await callApiGetFriendStatus(userIdB);
     if (res.data) {
       setFriendShip(res.data);
     }

@@ -13,7 +13,18 @@ export interface IUser {
 }
 
 export interface IUserTag {
-  id: string;
-  name: string;
+  _id: string;
+  fullname: string;
   avatar: string;
+}
+
+export interface IMentionUser {
+  id: string;
+  display: string;
+  avatar: string;
+}
+
+export interface IUserFriendList {
+  friends: IUser[];
+  total: number;
 }
