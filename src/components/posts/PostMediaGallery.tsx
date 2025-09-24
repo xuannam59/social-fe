@@ -33,6 +33,21 @@ const PostMediaGallery: React.FC<IProps> = ({ medias }) => {
                     </div>
                   </div>
                 );
+              } else {
+                return (
+                  <div
+                    key={media.id}
+                    className="max-h-[400px] bg-black border border-gray-200 overflow-hidden "
+                  >
+                    <div className="flex items-center justify-center ">
+                      <video
+                        src={media.url}
+                        className="w-full h-full object-cover"
+                        controls
+                      />
+                    </div>
+                  </div>
+                );
               }
             })}
           </div>

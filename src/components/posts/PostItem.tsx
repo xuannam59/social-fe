@@ -72,7 +72,7 @@ const PostItem: React.FC<IProps> = ({
       };
       onLikePost(payload);
     },
-    [post._id]
+    [post._id, onLikePost]
   );
 
   return (
@@ -172,10 +172,13 @@ const PostItem: React.FC<IProps> = ({
               {post.likeCount > 0 && (
                 <>
                   <span className="text-base relative">
-                    {emojiReactions[0].emoji}
-                    {userLiked && (
-                      <span className="text-base">{userLiked.emoji}</span>
-                    )}
+                    {((post.likeCount === 1 && !userLiked) ||
+                      (userLiked && post.likeCount > 1)) &&
+                      emojiReactions[0].emoji}
+                    {userLiked &&
+                      userLiked.emoji !== emojiReactions[0].emoji && (
+                        <span className="text-base">{userLiked.emoji}</span>
+                      )}
                   </span>
                   <span className="text-gray-500 text-base hover:underline">
                     {formatNumberAbbreviate(post.likeCount)}
