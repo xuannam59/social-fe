@@ -51,6 +51,39 @@ export const formatRelativeTime = (date: string) => {
   }
 };
 
+export const formatRelativeTimeV2 = (date: string) => {
+  const dateTime = dayjs(date);
+  const diffInSeconds = dayjs().diff(dateTime, 'second');
+  const diffInMinutes = dayjs().diff(dateTime, 'minute');
+  const diffInHours = dayjs().diff(dateTime, 'hour');
+  const diffInDays = dayjs().diff(dateTime, 'day');
+  const diffInMonths = dayjs().diff(dateTime, 'month');
+
+  if (diffInSeconds < 60) {
+    return 'Vừa xong';
+  }
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes} phút`;
+  }
+  if (diffInHours < 24) {
+    return `${diffInHours} giờ`;
+  }
+  if (diffInMonths > 3) {
+    return '';
+  }
+  if (diffInMonths >= 1) {
+    return `${diffInMonths} tháng`;
+  }
+  if (diffInDays > 1) {
+    return `${diffInDays} ngày`;
+  }
+  // Trường hợp đúng 1 ngày
+  if (diffInDays === 1) {
+    return '1 ngày';
+  }
+  return '';
+};
+
 export const formatFullDateTime = (
   date: string,
   showDayOfWeek = true,
@@ -105,7 +138,9 @@ export const convertUrlString = (key: string) => {
 };
 
 export const convertErrorMessage = (message: string | string[]) => {
-  return message && Array.isArray(message) ? JSON.stringify(message.join(', ')) : message;
+  return message && Array.isArray(message)
+    ? JSON.stringify(message.join(', '))
+    : message;
 };
 
 export const convertMentions = (content: string) => {

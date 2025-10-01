@@ -32,7 +32,7 @@ const ButtonAddFriend: React.FC<IProps> = ({ userIdB }) => {
     }
 
     return EFriendStatus.FRIENDS;
-  }, [friendShip, userIdB]);
+  }, [friendShip, userInfo._id]);
 
   const getFriendStatus = useCallback(async () => {
     if (!userIdB || userIdB === userInfo._id) return;
@@ -40,7 +40,7 @@ const ButtonAddFriend: React.FC<IProps> = ({ userIdB }) => {
     if (res.data) {
       setFriendShip(res.data);
     }
-  }, [userIdB]);
+  }, [userIdB, userInfo._id]);
 
   useEffect(() => {
     getFriendStatus();

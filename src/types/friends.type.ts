@@ -1,7 +1,9 @@
+import type { IUser } from './user.type';
+
 export interface IFriend {
   _id: string;
-  fromUserId: string;
-  toUserId: string;
+  fromUserId: string | IUser;
+  toUserId: string | IUser;
   users: string[];
   status: string;
   createdAt: string;

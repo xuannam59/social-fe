@@ -13,7 +13,7 @@ interface IProps {
   isRead: boolean;
 }
 
-const MessageItem: React.FC<IProps> = ({
+const ConversationItem: React.FC<IProps> = ({
   avatar,
   name,
   message,
@@ -62,4 +62,4 @@ const MessageItem: React.FC<IProps> = ({
   );
 };
 
-export default MessageItem;
+export default ConversationItem;

@@ -11,29 +11,27 @@ import type { IMentionUser } from '@social/types/user.type';
 import { callApiFetchUserFriendList } from '@social/apis/user.api';
 import { debounce } from 'lodash';
 import { formatSlug } from '@social/common/convert';
-import Loading from '../loading/Loading';
 
 const MentionsInputComponent = MentionsInput as any;
 const MentionComponent = Mention as any;
 
 interface IProps {
   inputRef: React.RefObject<any>;
-  onPressEnter: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   fieldName?: string;
   loading: boolean;
+  onPressEnter: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }
 
 const MentionsUser: React.FC<IProps> = ({
   inputRef,
-  onPressEnter,
   fieldName = 'content',
   loading = false,
+  onPressEnter,
 }) => {
   const mentionsRef = React.useRef<any>(null);
   const [domElement, setDomElement] = React.useState<HTMLElement | null>(null);
 
   const [listUser, setListUser] = useState<IMentionUser[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
 
   const fetchUserFriendList = useCallback(async () => {
     try {
@@ -60,7 +58,6 @@ const MentionsUser: React.FC<IProps> = ({
     () =>
       debounce(async (query: string, callback) => {
         try {
-          setIsLoading(true);
           const slug = formatSlug(query);
           const res = await callApiFetchUserFriendList(
             `limit=10${slug ? `&search=${slug}` : ''}`
@@ -76,8 +73,6 @@ const MentionsUser: React.FC<IProps> = ({
           }
         } catch (error) {
           console.log(error);
-        } finally {
-          setIsLoading(false);
         }
       }, 200),
     []

@@ -10,6 +10,10 @@ export interface IUser {
   following: string[];
   role: string;
   isActive: boolean;
+  isOnline: boolean;
+  lastActive: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface IUserTag {
@@ -27,4 +31,10 @@ export interface IMentionUser {
 export interface IUserFriendList {
   friends: IUser[];
   total: number;
+}
+
+export interface IUserConversation extends IUser {
+  conversationsId?: string;
+  isGroup: boolean;
+  isExist: boolean;
 }

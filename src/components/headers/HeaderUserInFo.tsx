@@ -6,7 +6,7 @@ import { Dropdown, Typography } from 'antd';
 import { TbLogout, TbSettings } from 'react-icons/tb';
 import { useNavigate } from 'react-router-dom';
 import AvatarUser from '../common/AvatarUser';
-import MessageDropdown from '../messages/MessageDropdown';
+import ConversationDropdown from '../conversations/ConversationDropdown';
 import NotificationDropdown from '../notifications/NotificationDropdown';
 import defaultAvatar from '@social/images/default-avatar.webp';
 
@@ -28,7 +28,7 @@ const HeaderUserInfo = () => {
   return (
     <>
       <div className="flex items-center justify-end h-full gap-2">
-        <MessageDropdown />
+        <ConversationDropdown />
 
         <NotificationDropdown />
         <Dropdown

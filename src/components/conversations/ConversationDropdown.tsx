@@ -4,16 +4,16 @@ import { TbMessageCircle } from 'react-icons/tb';
 import { Badge, Typography } from 'antd';
 import defaultAvatar from '@social/images/default-avatar.webp';
 import { useState } from 'react';
-import MessageItem from './MessageItem';
+import ConversationItem from './ConversationItem';
 import { Link } from 'react-router-dom';
 
 const { Title } = Typography;
 
-const MessageDropdown = () => {
+const ConversationDropdown = () => {
   const [_, setIsSearchFocused] = useState(false);
-  const [messageType, setMessageType] = useState('all');
+  const [conversationType, setConversationType] = useState('all');
 
-  const messageTypeList = [
+  const conversationTypeList = [
     {
       type: 'all',
       label: 'All',
@@ -31,7 +31,7 @@ const MessageDropdown = () => {
     },
   ];
 
-  const messageList = [
+  const conversationList = [
     {
       avatar: defaultAvatar,
       name: 'John Doe',
@@ -146,13 +146,15 @@ const MessageDropdown = () => {
                 />
               </div>
               <div className="grid grid-cols-12 gap-1 mt-4 px-2">
-                {messageTypeList.map(item => (
+                {conversationTypeList.map(item => (
                   <Button
                     key={item.type}
-                    color={messageType === item.type ? 'primary' : 'default'}
-                    variant={`${messageType === item.type ? 'filled' : 'text'}`}
+                    color={
+                      conversationType === item.type ? 'primary' : 'default'
+                    }
+                    variant={`${conversationType === item.type ? 'filled' : 'text'}`}
                     className={item.width}
-                    onClick={() => setMessageType(item.type)}
+                    onClick={() => setConversationType(item.type)}
                   >
                     {item.label}
                   </Button>
@@ -161,8 +163,8 @@ const MessageDropdown = () => {
 
               <div className="flex-1 min-h-0 mt-4 overflow-y-auto overflow-x-hidden overscroll-contain">
                 <div className="grid grid-cols-1 gap-4">
-                  {messageList.map((item, index) => (
-                    <MessageItem
+                  {conversationList.map((item, index) => (
+                    <ConversationItem
                       key={index}
                       avatar={item.avatar}
                       name={item.name}
@@ -194,4 +196,4 @@ const MessageDropdown = () => {
   );
 };
 
-export default MessageDropdown;
+export default ConversationDropdown;
