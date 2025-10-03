@@ -35,18 +35,19 @@ const FriendItemCard: React.FC<IProps> = ({ friend }) => {
       >
         <div className="relative">
           <AvatarUser avatar={friend.avatar} size={42} />
-          {friend.isOnline && (
+          {friend.isOnline ? (
             <div className="absolute bottom-0 right-1">
               <div className="w-3 h-3 bg-[#24832c] rounded-full border-2 border-white" />
             </div>
-          )}
-          <div className="absolute bottom-0 right-0 left-0">
-            <div className="w-full h-3 bg-[#87d068] flex items-center justify-center px-1 rounded-lg">
-              <span className="text-[10px] font-medium text-white truncate">
-                {formatRelativeTimeV2(friend.createdAt)}
-              </span>
+          ) : (
+            <div className="absolute bottom-0 right-0 left-0">
+              <div className="w-full h-3 bg-[#87d068] flex items-center justify-center px-1 rounded-lg">
+                <span className="text-[10px] font-medium text-white truncate">
+                  {formatRelativeTimeV2(friend.lastActive)}
+                </span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
         <span className="text-base">{friend.fullname}</span>
       </div>

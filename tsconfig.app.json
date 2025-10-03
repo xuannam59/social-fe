@@ -38,7 +38,8 @@
       "@social/hooks/*": ["src/hooks/*"],
       "@social/constants/*": ["src/utils/constants/*"],
       "@social/defaults/*": ["src/utils/defaults/*"],
-      "@social/common/*": ["src/utils/common/*"]
+      "@social/common/*": ["src/utils/common/*"],
+      "@social/providers/*": ["src/providers/*"]
     }
   },
   "include": ["src"]

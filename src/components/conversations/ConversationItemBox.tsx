@@ -9,6 +9,7 @@ import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
 import { doCloseConversation } from '@social/redux/reducers/conversations';
 import { formatRelativeTimeV2 } from '@social/common/convert';
 import { callApiGetConversationIdOrCreate } from '@social/apis/conversations.api';
+import { useSockets } from '@social/providers/SocketProvider';
 
 interface IProps {
   conversation: IConversation;
@@ -16,6 +17,7 @@ interface IProps {
 
 const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
   const userId = useAppSelector(state => state.auth.userInfo._id);
+  const { socket } = useSockets();
   const dispatch = useAppDispatch();
   const createInitialMessages = (): IMessage[] => {
     const base: IMessage[] = [
