@@ -5,7 +5,7 @@ import {
   doGetAccount,
   setIsLoading,
 } from '@social/redux/reducers/auth.reducer';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { Outlet, useSearchParams } from 'react-router-dom';
 import { SocketProvider } from '@social/providers/SocketProvider';
 
@@ -14,7 +14,7 @@ const RouterPrivate = () => {
   const count = useRef(0);
   const { isLoading } = useAppSelector(state => state.auth);
   const [queryParams, setQueryParams] = useSearchParams();
-  const accessToken = useMemo(() => localStorage.getItem('access_token'), []);
+  const userInfo = useAppSelector(state => state.auth.userInfo);
 
   const getAccount = useCallback(async () => {
     const accessToken = queryParams.get('access_token');
@@ -40,7 +40,7 @@ const RouterPrivate = () => {
       {isLoading ? (
         <LoadingPage />
       ) : (
-        <SocketProvider token={accessToken}>
+        <SocketProvider userInfo={userInfo}>
           <Outlet />
         </SocketProvider>
       )}

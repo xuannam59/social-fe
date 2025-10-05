@@ -8,6 +8,7 @@ import { callApiGetConversations } from '@social/apis/conversations.api';
 import type { IConversation } from '@social/types/conversations.type';
 
 const initialState: IConversationState = {
+  conversations: [],
   openConversations: [],
 };
 
@@ -49,9 +50,30 @@ const conversationSlice = createSlice({
         oc => oc._id !== conversationId
       );
     },
+    doSetIdConversation: (
+      state,
+      action: PayloadAction<{ _id: string; conversationId: string }>
+    ) => {
+      const payload = action.payload;
+      const conversationIndex = state.openConversations.findIndex(
+        oc => oc._id === payload._id
+      );
+      if (conversationIndex !== -1) {
+        state.openConversations[conversationIndex] = {
+          ...state.openConversations[conversationIndex],
+          _id: payload.conversationId,
+          isExist: true,
+        };
+      }
+    },
+  },
+  extraReducers: builder => {
+    builder.addCase(fetchConversations.fulfilled, (state, action) => {
+      state.conversations = action.payload;
+    });
   },
 });
 
-export const { doOpenConversation, doCloseConversation } =
+export const { doOpenConversation, doCloseConversation, doSetIdConversation } =
   conversationSlice.actions;
 export const conversationReducer = conversationSlice.reducer;

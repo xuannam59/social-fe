@@ -16,7 +16,7 @@ const FriendItemCard: React.FC<IProps> = ({ friend }) => {
 
   const handleOpenConversation = () => {
     const data: IConversation = {
-      _id: friend.conversationsId ? friend.conversationsId : friend._id,
+      _id: friend.conversationId ? friend.conversationId : friend._id,
       users: [userId, friend._id],
       isGroup: friend.isGroup,
       name: friend.fullname,

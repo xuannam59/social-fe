@@ -1,94 +1,35 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import AvatarUser from '../common/AvatarUser';
-import { Button, Form } from 'antd';
-import { TbSend, TbX } from 'react-icons/tb';
-import { Input } from 'antd';
-import type { IConversation } from '@social/types/conversations.type';
-import type { IMessage } from '@social/types/messages.type';
-import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
-import { doCloseConversation } from '@social/redux/reducers/conversations';
-import { formatRelativeTimeV2 } from '@social/common/convert';
 import { callApiGetConversationIdOrCreate } from '@social/apis/conversations.api';
+import { formatRelativeTimeV2 } from '@social/common/convert';
+import {
+  CHAT_MESSAGE,
+  CONVERSATION_MESSAGE,
+} from '@social/defaults/socket.default';
+import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
 import { useSockets } from '@social/providers/SocketProvider';
+import {
+  doCloseConversation,
+  doSetIdConversation,
+} from '@social/redux/reducers/conversations';
+import type { IConversation } from '@social/types/conversations.type';
+import type { IMessage, IMessageStatus } from '@social/types/messages.type';
+import { Button, Form, Input, message, notification } from 'antd';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { TbLoader2, TbRefresh, TbSend, TbX } from 'react-icons/tb';
+import AvatarUser from '../common/AvatarUser';
+import { callApiGetMessages } from '@social/apis/message.s.api';
+import Loading from '../loading/Loading';
 
 interface IProps {
   conversation: IConversation;
 }
 
 const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
-  const userId = useAppSelector(state => state.auth.userInfo._id);
+  const userInfo = useAppSelector(state => state.auth.userInfo);
   const { socket } = useSockets();
   const dispatch = useAppDispatch();
-  const createInitialMessages = (): IMessage[] => {
-    const base: IMessage[] = [
-      {
-        _id: 'm1',
-        sender: { _id: 'u_friend_1', fullname: 'Jane Doe', avatar: '' },
-        type: 'text',
-        content: 'Chào bạn! Bạn đã xem tính năng chat mới chưa?',
-        mentions: [],
-        userLiked: [],
-      },
-      {
-        _id: 'm2',
-        sender: { _id: userId, fullname: 'Tôi', avatar: '' },
-        type: 'text',
-        content: 'Mình đang test đây nè 😄',
-        mentions: [],
-        userLiked: [],
-      },
-      {
-        _id: 'm3',
-        sender: { _id: 'u_friend_1', fullname: 'Jane Doe', avatar: '' },
-        type: 'text',
-        content: 'Ok, gửi mình vài tin nhắn mẫu nhé!',
-        mentions: [],
-        userLiked: [],
-      },
-      {
-        _id: 'm4',
-        sender: { _id: userId, fullname: 'Tôi', avatar: '' },
-        type: 'text',
-        content: 'Tin nhắn của mình sẽ canh phải và màu khác nè.',
-        mentions: [],
-        userLiked: [],
-      },
-      {
-        _id: 'm5',
-        sender: { _id: 'u_friend_1', fullname: 'Jane Doe', avatar: '' },
-        type: 'text',
-        content: 'Tuyệt vời! Nhớ để danh sách cuộn từ dưới lên nhé.',
-        mentions: [],
-        userLiked: [],
-      },
-      {
-        _id: 'm6',
-        sender: { _id: userId, fullname: 'Tôi', avatar: '' },
-        type: 'text',
-        content: 'Đã set flex-col-reverse để luôn hiện cuối cùng ở dưới 👍',
-        mentions: [],
-        userLiked: [],
-      },
-    ];
-    const older: IMessage[] = Array.from({ length: 30 }).map((_, idx) => {
-      const isMine = idx % 2 === 0;
-      return {
-        _id: `m_old_${idx}`,
-        sender: isMine
-          ? { _id: userId, fullname: 'Tôi', avatar: '' }
-          : { _id: 'u_friend_1', fullname: 'Jane Doe', avatar: '' },
-        type: 'text',
-        content: isMine
-          ? `Tin nhắn mới #${idx + 1} từ tôi`
-          : `Tin nhắn cũ #${idx + 1} từ Jane`,
-        mentions: [],
-        userLiked: [],
-      };
-    });
-    return [...base, ...older];
-  };
   const isExist = useMemo(() => conversation.isExist, [conversation]);
   const [messages, setMessages] = useState<IMessage[]>([]);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [form] = Form.useForm();
 
   const getConversationId = useCallback(async () => {
@@ -96,31 +37,134 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
       if (isExist) return;
       const res = await callApiGetConversationIdOrCreate(conversation.users);
       if (res.data) {
-        console.log(res.data);
+        dispatch(
+          doSetIdConversation({
+            _id: conversation._id,
+            conversationId: res.data,
+          })
+        );
       }
     } catch (error) {
       console.log(error);
     }
-  }, [conversation, isExist]);
+  }, [conversation, isExist, dispatch]);
+
+  const getMessages = useCallback(async () => {
+    try {
+      setIsLoadingMessages(true);
+      const res = await callApiGetMessages(conversation._id);
+      if (res.data) {
+        setMessages(res.data);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoadingMessages(false);
+    }
+  }, [conversation._id]);
 
   useEffect(() => {
     getConversationId();
-  }, [getConversationId]);
+    getMessages();
+  }, [getConversationId, getMessages]);
 
-  const handleSendMessage = (values: any) => {
-    const content = values[conversation._id].trim();
-    if (!content) return;
-    const newMessage: IMessage = {
-      _id: `m_${Date.now()}`,
-      sender: { _id: userId, fullname: 'Tôi', avatar: '' },
-      type: 'text',
-      content,
-      mentions: [],
-      userLiked: [],
+  useEffect(() => {
+    if (socket && conversation._id) {
+      socket.emit(CONVERSATION_MESSAGE.JOIN, conversation._id);
+    }
+
+    return () => {
+      if (socket && conversation._id) {
+        socket.emit(CONVERSATION_MESSAGE.LEAVE, conversation._id);
+      }
     };
-    setMessages(prev => [newMessage, ...prev]);
-    form.resetFields();
-  };
+  }, [socket, conversation._id]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on(CHAT_MESSAGE.RECEIVE, (data: IMessage) => {
+      if (data.conversationId !== conversation._id) return;
+      if (userInfo._id === data.sender._id) {
+        setMessages(prev => {
+          return prev.map(message =>
+            message._id === data.tempId
+              ? { ...message, status: data.status, _id: data._id }
+              : message
+          );
+        });
+      } else {
+        setMessages(prev => [data, ...prev]);
+      }
+    });
+
+    socket.on(CHAT_MESSAGE.STATUS_MESSAGE, (data: IMessageStatus) => {
+      if (
+        data.conversationId !== conversation._id ||
+        data.senderId !== userInfo._id
+      )
+        return;
+      if (data.status === 'failed') {
+        setMessages(prev =>
+          prev.map(message =>
+            message._id === data.tempId
+              ? { ...message, status: data.status }
+              : message
+          )
+        );
+        notification.error({
+          message: 'Gửi tin nhắn thất bại',
+          description: data.message,
+          duration: 3,
+        });
+      }
+    });
+
+    return () => {
+      socket.off(CHAT_MESSAGE.RECEIVE);
+      socket.off(CHAT_MESSAGE.STATUS_MESSAGE);
+    };
+  }, [socket, userInfo, conversation._id]);
+
+  const handleSendMessage = useCallback(
+    (values: any) => {
+      const content = values[conversation._id].trim();
+      if (!content) return;
+      const newMessage: IMessage = {
+        _id: `m_${Date.now()}`,
+        sender: {
+          _id: userInfo._id,
+          fullname: userInfo.fullname,
+          avatar: userInfo.avatar,
+        },
+        type: 'text',
+        conversationId: conversation._id,
+        content,
+        status: 'pending',
+        mentions: [],
+        userLiked: [],
+      };
+      setMessages(prev => [newMessage, ...prev]);
+      socket.emit(CHAT_MESSAGE.SEND, newMessage);
+      form.resetFields();
+    },
+    [conversation._id, socket, userInfo, form]
+  );
+
+  const handleReSendMessage = useCallback(
+    (_id: string) => {
+      setMessages(prev =>
+        prev.map(message =>
+          message._id === _id ? { ...message, status: 'pending' } : message
+        )
+      );
+      const messageFailed = messages.find(message => message._id === _id);
+      if (messageFailed) {
+        socket.emit(CHAT_MESSAGE.SEND, messageFailed);
+      }
+    },
+    [socket, messages]
+  );
 
   const handleCloseConversation = () => {
     dispatch(doCloseConversation(conversation._id));
@@ -129,62 +173,103 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
     <>
       <div className="w-[328px] max-h-[455px] flex flex-col bg-white rounded-t-lg shadow-md overflow-visible">
         <div className="p-2 flex items-center shadow-sm">
-          <div className="flex flex-1 gap-2 items-center">
+          <div className="flex flex-1 gap-2 items-center min-w-0">
             <div className="shrink-0">
               <AvatarUser avatar={conversation.avatar} size={36} />
             </div>
-            <div className="flex flex-col gap-0">
-              <span className="text-base font-medium flex-1 line-clamp-1 leading-5">
+            <div className="flex flex-col gap-0 flex-1 min-w-0 overflow-hidden">
+              <span className="text-base font-medium line-clamp-1 leading-5">
                 {conversation.name}
               </span>
-              <span className="text-sm text-gray-500 truncate leading-4">
-                {conversation.lastActive
-                  ? formatRelativeTimeV2(conversation.lastActive)
-                  : 'Đang hoạt động'}
-              </span>
-            </div>
-          </div>
-          <Button type="text" shape="circle" onClick={handleCloseConversation}>
-            <TbX size={20} />
-          </Button>
-        </div>
-        <div className="flex flex-col min-h-0 h-[400px]">
-          <div className="flex flex-col-reverse overflow-y-auto p-3 gap-2 flex-1">
-            {messages.length > 0 ? (
-              messages.map(message => {
-                const isMine = message.sender._id === userId;
-                return (
-                  <div
-                    key={message._id}
-                    className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
-                  >
-                    {!isMine && (
-                      <div className="mr-2 self-end">
-                        <AvatarUser avatar={message.sender.avatar} size={28} />
-                      </div>
-                    )}
-                    <div
-                      className={`max-w-[70%] rounded-2xl px-3 py-2 text-sm leading-5 ${
-                        isMine
-                          ? 'bg-blue-500 text-white rounded-br-none'
-                          : 'bg-gray-100 text-gray-900 rounded-bl-none'
-                      }`}
-                    >
-                      {message.content}
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full">
-                <AvatarUser avatar={''} size={50} />
-                <span className="text-gray-500">{conversation.name}</span>
-                <span className="text-gray-500 text-sm">
-                  Chưa có tin nhắn, hãy bắt đầu trò chuyện
+              <div className="flex items-center min-w-0">
+                <span className="text-sm text-gray-500 truncate leading-4 block">
+                  {conversation.isOnline
+                    ? 'Đang hoạt động'
+                    : `Hoạt động ${formatRelativeTimeV2(conversation.lastActive)} trước`}
                 </span>
               </div>
-            )}
+            </div>
           </div>
+          <div className="shrink-0 ml-2">
+            <Button
+              type="text"
+              shape="circle"
+              onClick={handleCloseConversation}
+            >
+              <TbX size={20} />
+            </Button>
+          </div>
+        </div>
+        <div className="flex flex-col min-h-0 h-[400px]">
+          {isLoadingMessages ? (
+            <Loading />
+          ) : (
+            <div className="flex flex-col-reverse overflow-y-auto p-3 gap-2 flex-1">
+              {messages.length === 0 && (
+                <div className="flex flex-col items-center justify-center h-full">
+                  <AvatarUser avatar={''} size={50} />
+                  <span className="text-gray-500">{conversation.name}</span>
+                  <span className="text-gray-500 text-sm">
+                    Chưa có tin nhắn, hãy bắt đầu trò chuyện
+                  </span>
+                </div>
+              )}
+              {messages.map(message => {
+                const isMine = message.sender._id === userInfo._id;
+                const status = message.status;
+                return (
+                  <div key={message._id} className="flex flex-col">
+                    <div
+                      className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
+                    >
+                      {!isMine && (
+                        <div className="mr-2 self-end">
+                          <AvatarUser
+                            avatar={message.sender.avatar}
+                            size={28}
+                          />
+                        </div>
+                      )}
+                      <div
+                        className={`max-w-[70%] rounded-2xl px-3 py-2 text-sm leading-5 
+                        ${
+                          isMine
+                            ? 'bg-blue-500 text-white rounded-br-none'
+                            : 'bg-gray-100 text-gray-900 rounded-bl-none'
+                        }
+                      ${status === 'pending' ? 'opacity-80' : status === 'failed' ? 'border-2 border-red-500' : ''}
+                      `}
+                      >
+                        {message.content}
+                      </div>
+                    </div>
+                    {status === 'pending' && (
+                      <div className="flex items-center gap-2 self-end">
+                        <div className="text-xs text-gray-500">Đang gửi...</div>
+                        <TbLoader2
+                          size={12}
+                          className="animate-spin text-gray-500"
+                        />
+                      </div>
+                    )}
+                    {status === 'failed' && (
+                      <div className="flex items-center gap-2 self-end">
+                        <div className="text-xs text-red-500 self-end">
+                          Gửi thất bại
+                        </div>
+                        <span
+                          className="text-xs text-blue-500 cursor-pointer hover:underline"
+                          onClick={() => handleReSendMessage(message._id)}
+                        >
+                          Gửi lại
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
           <div className="p-2 border-t border-gray-100 flex items-start gap-2 shrink-0">
             <Form form={form} onFinish={handleSendMessage} className="flex-1">
               <Form.Item name={conversation._id} className="!m-0">

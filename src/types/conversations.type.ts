@@ -13,4 +13,5 @@ export interface IConversation {
 
 export interface IConversationState {
   openConversations: IConversation[];
+  conversations: IConversation[];
 }

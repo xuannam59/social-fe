@@ -34,7 +34,7 @@ export interface IUserFriendList {
 }
 
 export interface IUserConversation extends IUser {
-  conversationsId?: string;
+  conversationId?: string;
   isGroup: boolean;
   isExist: boolean;
 }
