@@ -17,12 +17,18 @@ import type {
   IMessageStatus,
   IMessageTyping,
 } from '@social/types/messages.type';
-import { Button, Form, Input, notification } from 'antd';
-import { debounce } from 'lodash';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { TbLoader2, TbSend, TbX } from 'react-icons/tb';
+import { Button, message, notification } from 'antd';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { TbLoader2, TbX } from 'react-icons/tb';
 import AvatarUser from '../common/AvatarUser';
 import Loading from '../loading/Loading';
+import ConversationInput from './ConversationInput';
 import ConversationTyping from './ConversationTyping';
 
 interface IProps {
@@ -35,9 +41,14 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
   const dispatch = useAppDispatch();
   const isExist = useMemo(() => conversation.isExist, [conversation]);
   const [messages, setMessages] = useState<IMessage[]>([]);
+  const [totalMessages, setTotalMessages] = useState(0);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [page, setPage] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [usersTyping, setUsersTyping] = useState<IMessageTyping[]>([]);
-  const [form] = Form.useForm();
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const topSentinelRef = useRef<HTMLDivElement | null>(null);
+  const [hasUserScrolled, setHasUserScrolled] = useState(false);
 
   const getConversationId = useCallback(async () => {
     try {
@@ -59,9 +70,20 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
   const getMessages = useCallback(async () => {
     try {
       setIsLoadingMessages(true);
-      const res = await callApiGetMessages(conversation._id);
+      const res = await callApiGetMessages(conversation._id, {
+        page: 1,
+      });
       if (res.data) {
-        setMessages(res.data);
+        setMessages(res.data.list);
+        setTotalMessages(res.data.meta.total);
+        setPage(1);
+        requestAnimationFrame(() => {
+          const c = scrollContainerRef.current;
+          if (c) {
+            c.scrollTop = 0;
+            setHasUserScrolled(false);
+          }
+        });
       }
     } catch (error) {
       console.log(error);
@@ -70,10 +92,82 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
     }
   }, [conversation._id]);
 
+  const loadMoreMessages = useCallback(async () => {
+    if (isLoadingMore) return;
+    if (messages.length >= totalMessages) return;
+    try {
+      setIsLoadingMore(true);
+      const container = scrollContainerRef.current;
+      const anchorMessageId = messages.length
+        ? messages[messages.length - 1]._id
+        : null;
+      const prevOffsetFromContainerTop = (() => {
+        if (!container || !anchorMessageId) return 0;
+        const el = container.querySelector(
+          `#msg_${anchorMessageId}`
+        ) as HTMLElement | null;
+        if (!el) return 0;
+        return (
+          el.getBoundingClientRect().top - container.getBoundingClientRect().top
+        );
+      })();
+      const nextPage = page + 1;
+      const res = await callApiGetMessages(conversation._id, {
+        page: nextPage,
+      });
+      if (res.data) {
+        const older = res.data.list;
+        setMessages(prev => [...prev, ...older]);
+        setPage(nextPage);
+        requestAnimationFrame(() => {
+          const c = scrollContainerRef.current;
+          if (!c) return;
+          if (!anchorMessageId) return;
+          const el = c.querySelector(
+            `#msg_${anchorMessageId}`
+          ) as HTMLElement | null;
+          if (!el) return;
+          const newOffsetFromContainerTop =
+            el.getBoundingClientRect().top - c.getBoundingClientRect().top;
+          const deltaOffset =
+            newOffsetFromContainerTop - prevOffsetFromContainerTop;
+          c.scrollTop = c.scrollTop + deltaOffset;
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [isLoadingMore, messages, totalMessages, page, conversation._id]);
+
   useEffect(() => {
     getConversationId();
     getMessages();
   }, [getConversationId, getMessages]);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    const sentinel = topSentinelRef.current;
+    if (!container || !sentinel) return;
+
+    const observer = new IntersectionObserver(
+      entries => {
+        const entry = entries[0];
+        if (entry.isIntersecting && hasUserScrolled) {
+          loadMoreMessages();
+        }
+      },
+      {
+        root: container,
+        rootMargin: '0px',
+        threshold: 1.0,
+      }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadMoreMessages, hasUserScrolled]);
 
   useEffect(() => {
     if (socket && conversation._id) {
@@ -94,9 +188,7 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
       if (userInfo._id === data.sender._id) {
         setMessages(prev => {
           return prev.map(message =>
-            message._id === data.tempId
-              ? { ...message, status: data.status, _id: data._id }
-              : message
+            message._id === data.tempId ? data : message
           );
         });
       } else {
@@ -148,40 +240,6 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
     };
   }, [socket, userInfo, conversation._id, usersTyping]);
 
-  const handleSendMessage = useCallback(
-    (values: any) => {
-      const content = values[conversation._id].trim();
-      if (!content) return;
-      const newMessage: IMessage = {
-        _id: `m_${Date.now()}`,
-        sender: {
-          _id: userInfo._id,
-          fullname: userInfo.fullname,
-          avatar: userInfo.avatar,
-        },
-        type: 'text',
-        conversationId: conversation._id,
-        content,
-        status: 'pending',
-        mentions: [],
-        userLiked: [],
-      };
-      setMessages(prev => [newMessage, ...prev]);
-      socket.emit(CHAT_MESSAGE.SEND, newMessage);
-      socket.emit(CHAT_MESSAGE.TYPING, {
-        conversationId: conversation._id,
-        sender: {
-          _id: userInfo._id,
-          fullname: userInfo.fullname,
-          avatar: userInfo.avatar,
-        },
-        status: 'stop_typing',
-      });
-      form.resetFields();
-    },
-    [conversation._id, socket, userInfo, form]
-  );
-
   const handleReSendMessage = useCallback(
     (_id: string) => {
       setMessages(prev =>
@@ -197,48 +255,14 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
     [socket, messages]
   );
 
-  const debouncedTyping = useMemo(
-    () =>
-      debounce((payload: IMessageTyping) => {
-        socket.emit(CHAT_MESSAGE.TYPING, payload);
-      }, 1500),
-    [socket]
-  );
-
-  useEffect(() => {
-    return () => debouncedTyping.cancel();
-  }, [debouncedTyping]);
-
-  const handleTyping = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const content = e.target.value;
-      const messageTyping: IMessageTyping = {
-        conversationId: conversation._id,
-        sender: {
-          _id: userInfo._id,
-          fullname: userInfo.fullname,
-          avatar: userInfo.avatar,
-        },
-        status: 'typing',
-      };
-
-      if (!content) {
-        socket.emit(CHAT_MESSAGE.TYPING, {
-          ...messageTyping,
-          status: 'stop_typing',
-        });
-        return;
-      }
-      socket.emit(CHAT_MESSAGE.TYPING, messageTyping);
-
-      debouncedTyping({ ...messageTyping, status: 'stop_typing' });
-    },
-    [debouncedTyping, userInfo, conversation._id, socket]
-  );
-
   const handleCloseConversation = () => {
     dispatch(doCloseConversation(conversation._id));
   };
+
+  const handleAddMessage = useCallback((message: IMessage) => {
+    setMessages(prev => [message, ...prev]);
+  }, []);
+
   return (
     <>
       <div className="w-[328px] max-h-[455px] flex flex-col bg-white rounded-t-lg shadow-md overflow-visible">
@@ -274,7 +298,15 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
           {isLoadingMessages ? (
             <Loading />
           ) : (
-            <div className="flex flex-col-reverse overflow-y-auto p-3 gap-2 flex-1">
+            <div
+              className="flex flex-col-reverse overflow-y-auto p-3 gap-2 flex-1"
+              ref={scrollContainerRef}
+              onScroll={() => {
+                if (!hasUserScrolled) {
+                  setHasUserScrolled(true);
+                }
+              }}
+            >
               <ConversationTyping usersTyping={usersTyping} />
               {messages.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full">
@@ -289,7 +321,11 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
                 const isMine = message.sender._id === userInfo._id;
                 const status = message.status;
                 return (
-                  <div key={message._id} className="flex flex-col">
+                  <div
+                    key={message._id}
+                    id={`msg_${message._id}`}
+                    className="flex flex-col"
+                  >
                     <div
                       className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
                     >
@@ -339,38 +375,21 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
                   </div>
                 );
               })}
+              <div ref={topSentinelRef} />
+              {isLoadingMore && (
+                <div className="flex items-center justify-center py-2">
+                  <TbLoader2 size={30} className="animate-spin text-gray-500" />
+                </div>
+              )}
             </div>
           )}
-          <div className="p-2 border-t border-gray-100 flex items-start gap-2 shrink-0">
-            <Form form={form} onFinish={handleSendMessage} className="flex-1">
-              <Form.Item name={conversation._id} className="!m-0">
-                <Input.TextArea
-                  placeholder="Nhập tin nhắn..."
-                  className="!border-none !ring-0 !shadow-none !bg-gray-100 !resize-none"
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      form.submit();
-                    }
-                  }}
-                  disabled={isLoadingMessages}
-                  onChange={handleTyping}
-                  autoSize={{ minRows: 1, maxRows: 5 }}
-                />
-              </Form.Item>
-            </Form>
-            <Button
-              type="text"
-              onClick={() => form.submit()}
-              shape="circle"
-              className="self-end"
-              disabled={isLoadingMessages}
-            >
-              <TbSend
-                size={20}
-                className={isLoadingMessages ? 'text-gray-500' : 'text-primary'}
-              />
-            </Button>
+          <div>
+            <ConversationInput
+              conversation={conversation}
+              isLoadingMessages={isLoadingMessages}
+              usersTyping={usersTyping}
+              onAddMessage={handleAddMessage}
+            />
           </div>
         </div>
       </div>
