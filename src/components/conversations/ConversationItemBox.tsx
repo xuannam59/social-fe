@@ -1,4 +1,5 @@
 import { callApiGetConversationIdOrCreate } from '@social/apis/conversations.api';
+import { callApiGetMessages } from '@social/apis/message.s.api';
 import { formatRelativeTimeV2 } from '@social/common/convert';
 import {
   CHAT_MESSAGE,
@@ -11,13 +12,18 @@ import {
   doSetIdConversation,
 } from '@social/redux/reducers/conversations';
 import type { IConversation } from '@social/types/conversations.type';
-import type { IMessage, IMessageStatus } from '@social/types/messages.type';
-import { Button, Form, Input, message, notification } from 'antd';
+import type {
+  IMessage,
+  IMessageStatus,
+  IMessageTyping,
+} from '@social/types/messages.type';
+import { Button, Form, Input, notification } from 'antd';
+import { debounce } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { TbLoader2, TbRefresh, TbSend, TbX } from 'react-icons/tb';
+import { TbLoader2, TbSend, TbX } from 'react-icons/tb';
 import AvatarUser from '../common/AvatarUser';
-import { callApiGetMessages } from '@social/apis/message.s.api';
 import Loading from '../loading/Loading';
+import ConversationTyping from './ConversationTyping';
 
 interface IProps {
   conversation: IConversation;
@@ -30,6 +36,7 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
   const isExist = useMemo(() => conversation.isExist, [conversation]);
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [usersTyping, setUsersTyping] = useState<IMessageTyping[]>([]);
   const [form] = Form.useForm();
 
   const getConversationId = useCallback(async () => {
@@ -82,8 +89,7 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
 
   useEffect(() => {
     if (!socket) return;
-
-    socket.on(CHAT_MESSAGE.RECEIVE, (data: IMessage) => {
+    socket.on(CHAT_MESSAGE.SEND, (data: IMessage) => {
       if (data.conversationId !== conversation._id) return;
       if (userInfo._id === data.sender._id) {
         setMessages(prev => {
@@ -120,11 +126,27 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
       }
     });
 
+    socket.on(CHAT_MESSAGE.TYPING, (payload: IMessageTyping) => {
+      if (payload.conversationId !== conversation._id) return;
+      if (payload.status === 'typing') {
+        const exist = usersTyping.find(
+          user => user.sender._id === payload.sender._id
+        );
+        if (exist) return;
+        setUsersTyping(prev => [...prev, payload]);
+      } else {
+        setUsersTyping(prev =>
+          prev.filter(user => user.sender._id !== payload.sender._id)
+        );
+      }
+    });
+
     return () => {
-      socket.off(CHAT_MESSAGE.RECEIVE);
+      socket.off(CHAT_MESSAGE.SEND);
       socket.off(CHAT_MESSAGE.STATUS_MESSAGE);
+      socket.off(CHAT_MESSAGE.TYPING);
     };
-  }, [socket, userInfo, conversation._id]);
+  }, [socket, userInfo, conversation._id, usersTyping]);
 
   const handleSendMessage = useCallback(
     (values: any) => {
@@ -146,6 +168,15 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
       };
       setMessages(prev => [newMessage, ...prev]);
       socket.emit(CHAT_MESSAGE.SEND, newMessage);
+      socket.emit(CHAT_MESSAGE.TYPING, {
+        conversationId: conversation._id,
+        sender: {
+          _id: userInfo._id,
+          fullname: userInfo.fullname,
+          avatar: userInfo.avatar,
+        },
+        status: 'stop_typing',
+      });
       form.resetFields();
     },
     [conversation._id, socket, userInfo, form]
@@ -164,6 +195,45 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
       }
     },
     [socket, messages]
+  );
+
+  const debouncedTyping = useMemo(
+    () =>
+      debounce((payload: IMessageTyping) => {
+        socket.emit(CHAT_MESSAGE.TYPING, payload);
+      }, 1500),
+    [socket]
+  );
+
+  useEffect(() => {
+    return () => debouncedTyping.cancel();
+  }, [debouncedTyping]);
+
+  const handleTyping = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const content = e.target.value;
+      const messageTyping: IMessageTyping = {
+        conversationId: conversation._id,
+        sender: {
+          _id: userInfo._id,
+          fullname: userInfo.fullname,
+          avatar: userInfo.avatar,
+        },
+        status: 'typing',
+      };
+
+      if (!content) {
+        socket.emit(CHAT_MESSAGE.TYPING, {
+          ...messageTyping,
+          status: 'stop_typing',
+        });
+        return;
+      }
+      socket.emit(CHAT_MESSAGE.TYPING, messageTyping);
+
+      debouncedTyping({ ...messageTyping, status: 'stop_typing' });
+    },
+    [debouncedTyping, userInfo, conversation._id, socket]
   );
 
   const handleCloseConversation = () => {
@@ -205,6 +275,7 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
             <Loading />
           ) : (
             <div className="flex flex-col-reverse overflow-y-auto p-3 gap-2 flex-1">
+              <ConversationTyping usersTyping={usersTyping} />
               {messages.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full">
                   <AvatarUser avatar={''} size={50} />
@@ -282,6 +353,8 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
                       form.submit();
                     }
                   }}
+                  disabled={isLoadingMessages}
+                  onChange={handleTyping}
                   autoSize={{ minRows: 1, maxRows: 5 }}
                 />
               </Form.Item>
@@ -291,8 +364,12 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
               onClick={() => form.submit()}
               shape="circle"
               className="self-end"
+              disabled={isLoadingMessages}
             >
-              <TbSend size={20} />
+              <TbSend
+                size={20}
+                className={isLoadingMessages ? 'text-gray-500' : 'text-primary'}
+              />
             </Button>
           </div>
         </div>
