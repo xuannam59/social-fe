@@ -5,15 +5,27 @@ import { emojiReactions } from '@social/constants/emoji';
 interface IProps {
   onActionLike: (type: number, isLike: boolean) => void;
   children: React.ReactNode;
+  trigger?: 'hover' | 'click';
+  likedType?: number;
 }
 
-const ButtonLike: React.FC<IProps> = ({ onActionLike, children }) => {
+const ButtonLike: React.FC<IProps> = ({
+  onActionLike,
+  children,
+  trigger = 'hover',
+  likedType,
+}) => {
   const [open, setOpen] = useState(false);
+
+  const handleActionLike = (type: number, isLike: boolean) => {
+    onActionLike(type, isLike);
+    setOpen(false);
+  };
 
   return (
     <Dropdown
-      trigger={['hover']}
-      placement="topLeft"
+      trigger={[trigger]}
+      placement="top"
       className="cursor-pointer"
       mouseEnterDelay={0.8}
       mouseLeaveDelay={0.2}
@@ -24,15 +36,24 @@ const ButtonLike: React.FC<IProps> = ({ onActionLike, children }) => {
           {emojiReactions.map(emoji => (
             <div
               key={emoji.id}
-              className="w-10 h-10 p-2 rounded-full cursor-pointer"
+              className={`w-10 h-10 rounded-full cursor-pointer`}
               onClick={() => {
-                onActionLike(emoji.value, true);
-                setOpen(false); // đóng ngay khi chọn emoji
+                if (likedType && likedType === emoji.value) {
+                  handleActionLike(emoji.value, false);
+                } else {
+                  handleActionLike(emoji.value, true);
+                }
               }}
             >
               <Tooltip title={emoji.label}>
-                <div className="flex items-center justify-center w-full h-full">
-                  <span className="text-3xl font-semibold hover:scale-150 transition-all duration-300">
+                <div
+                  className={`flex items-center justify-center w-full h-full
+                    ${likedType && likedType === emoji.value && 'bg-gray-300 rounded-lg'}
+                  `}
+                >
+                  <span
+                    className={`text-2xl font-semibold hover:scale-125 transition-all duration-300`}
+                  >
                     {emoji.emoji}
                   </span>
                 </div>

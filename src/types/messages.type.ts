@@ -12,13 +12,14 @@ export interface IMessage {
       end: number;
     };
   }[];
-  userLiked: {
+  userLikes: {
     userId: string;
     type: number;
   }[];
   status: 'pending' | 'success' | 'failed';
   revoke?: boolean;
   edited?: boolean;
+  timeEdited?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -35,4 +36,14 @@ export interface IMessageTyping {
   conversationId: string;
   sender: { _id: string; fullname: string; avatar: string };
   status: 'typing' | 'stop_typing';
+}
+
+export interface IMessageReaction {
+  conversationId: string;
+  messageId: string;
+  userId: string;
+  type: number;
+  isLike: boolean;
+  status: 'success' | 'failed';
+  message?: string;
 }

@@ -1,9 +1,9 @@
 import type { IMessageTyping } from '@social/types/messages.type';
 import React, { useMemo } from 'react';
-import AvatarUser from '../common/AvatarUser';
 import Lottie from 'lottie-react';
 import typingAnimation from '@social/animations/typing.json';
 import { useAppSelector } from '@social/hooks/redux.hook';
+import AvatarUser from '@social/components/common/AvatarUser';
 
 interface IProps {
   usersTyping: IMessageTyping[];

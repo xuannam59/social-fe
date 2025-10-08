@@ -17,7 +17,7 @@ import type {
   IMessageStatus,
   IMessageTyping,
 } from '@social/types/messages.type';
-import { Button, message, notification } from 'antd';
+import { Button, notification } from 'antd';
 import React, {
   useCallback,
   useEffect,
@@ -26,8 +26,9 @@ import React, {
   useState,
 } from 'react';
 import { TbLoader2, TbX } from 'react-icons/tb';
-import AvatarUser from '../common/AvatarUser';
-import Loading from '../loading/Loading';
+import AvatarUser from '../../common/AvatarUser';
+import Loading from '../../loading/Loading';
+import ConversationContent from './ConversationContent';
 import ConversationInput from './ConversationInput';
 import ConversationTyping from './ConversationTyping';
 
@@ -241,13 +242,15 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
   }, [socket, userInfo, conversation._id, usersTyping]);
 
   const handleReSendMessage = useCallback(
-    (_id: string) => {
+    (messageId: string) => {
       setMessages(prev =>
         prev.map(message =>
-          message._id === _id ? { ...message, status: 'pending' } : message
+          message._id === messageId
+            ? { ...message, status: 'pending' }
+            : message
         )
       );
-      const messageFailed = messages.find(message => message._id === _id);
+      const messageFailed = messages.find(message => message._id === messageId);
       if (messageFailed) {
         socket.emit(CHAT_MESSAGE.SEND, messageFailed);
       }
@@ -262,14 +265,18 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
   const handleAddMessage = useCallback((message: IMessage) => {
     setMessages(prev => [message, ...prev]);
   }, []);
-
   return (
     <>
       <div className="w-[328px] max-h-[455px] flex flex-col bg-white rounded-t-lg shadow-md overflow-visible">
         <div className="p-2 flex items-center shadow-sm">
           <div className="flex flex-1 gap-2 items-center min-w-0">
-            <div className="shrink-0">
+            <div className="shrink-0 relative">
               <AvatarUser avatar={conversation.avatar} size={36} />
+              {conversation.isOnline && (
+                <div className="absolute bottom-0 right-1">
+                  <div className="w-3 h-3 bg-[#24832c] rounded-full border-2 border-white" />
+                </div>
+              )}
             </div>
             <div className="flex flex-col gap-0 flex-1 min-w-0 overflow-hidden">
               <span className="text-base font-medium line-clamp-1 leading-5">
@@ -299,7 +306,7 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
             <Loading />
           ) : (
             <div
-              className="flex flex-col-reverse overflow-y-auto p-3 gap-2 flex-1"
+              className="flex flex-col-reverse overflow-y-auto p-3 gap-1 flex-1"
               ref={scrollContainerRef}
               onScroll={() => {
                 if (!hasUserScrolled) {
@@ -317,64 +324,13 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
                   </span>
                 </div>
               )}
-              {messages.map(message => {
-                const isMine = message.sender._id === userInfo._id;
-                const status = message.status;
-                return (
-                  <div
-                    key={message._id}
-                    id={`msg_${message._id}`}
-                    className="flex flex-col"
-                  >
-                    <div
-                      className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
-                    >
-                      {!isMine && (
-                        <div className="mr-2 self-end">
-                          <AvatarUser
-                            avatar={message.sender.avatar}
-                            size={28}
-                          />
-                        </div>
-                      )}
-                      <div
-                        className={`max-w-[70%] rounded-2xl px-3 py-2 text-sm leading-5 
-                        ${
-                          isMine
-                            ? 'bg-blue-500 text-white rounded-br-none'
-                            : 'bg-gray-100 text-gray-900 rounded-bl-none'
-                        }
-                      ${status === 'pending' ? 'opacity-80' : status === 'failed' ? 'border-2 border-red-500' : ''}
-                      `}
-                      >
-                        {message.content}
-                      </div>
-                    </div>
-                    {status === 'pending' && (
-                      <div className="flex items-center gap-2 self-end">
-                        <div className="text-xs text-gray-500">Đang gửi...</div>
-                        <TbLoader2
-                          size={12}
-                          className="animate-spin text-gray-500"
-                        />
-                      </div>
-                    )}
-                    {status === 'failed' && (
-                      <div className="flex items-center gap-2 self-end">
-                        <div className="text-xs text-red-500 self-end">
-                          Gửi thất bại
-                        </div>
-                        <span
-                          className="text-xs text-blue-500 cursor-pointer hover:underline"
-                          onClick={() => handleReSendMessage(message._id)}
-                        >
-                          Gửi lại
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+              {messages.map(message => (
+                <ConversationContent
+                  key={message._id}
+                  message={message}
+                  onReSendMessage={handleReSendMessage}
+                />
+              ))}
               <div ref={topSentinelRef} />
               {isLoadingMore && (
                 <div className="flex items-center justify-center py-2">

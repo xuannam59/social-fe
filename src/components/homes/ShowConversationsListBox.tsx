@@ -1,5 +1,5 @@
 import { useAppSelector } from '@social/hooks/redux.hook';
-import ConversationItemBox from '../conversations/ConversationItemBox';
+import ConversationItemBox from '../conversations/box/ConversationItemBox';
 
 const ShowConversationsListBox = () => {
   const openConversations = useAppSelector(
