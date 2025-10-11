@@ -15,12 +15,14 @@ interface IProps {
   message: IMessage;
   getMessageReply: (message: IMessage, type: 'reply' | 'edit') => void;
   onReSendMessage: (messageId: string) => void;
+  onScrollToMessage: (messageId: string) => void;
 }
 
 const ConversationContent: React.FC<IProps> = ({
   message,
   getMessageReply,
   onReSendMessage,
+  onScrollToMessage,
 }) => {
   const { socket } = useSockets();
   const userInfo = useAppSelector(state => state.auth.userInfo);
@@ -163,7 +165,10 @@ const ConversationContent: React.FC<IProps> = ({
               </div>
               {message.parentId && (
                 <div className={`${isMine && 'justify-end'} flex items-center`}>
-                  <div className="pb-5 rounded-2xl px-3 pt-2 bg-gray-300 opacity-50 w-fit">
+                  <div
+                    className="pb-5 rounded-2xl px-3 pt-2 bg-gray-300 opacity-50 w-fit cursor-pointer hover:bg-gray-400 transition-colors"
+                    onClick={() => onScrollToMessage(message.parentId!._id)}
+                  >
                     <span className="text-sm text-gray-500 leading-5 line-clamp-3 w-fit">
                       {message.parentId.content}
                     </span>

@@ -25,7 +25,6 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso';
 import { TbLoader2, TbX } from 'react-icons/tb';
 import AvatarUser from '../../common/AvatarUser';
 import Loading from '../../loading/Loading';
@@ -36,8 +35,6 @@ import ConversationTyping from './ConversationTyping';
 interface IProps {
   conversation: IConversation;
 }
-
-const START_INDEX = 100_000;
 
 const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
@@ -54,9 +51,10 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
   const [page, setPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [usersTyping, setUsersTyping] = useState<IMessageTyping[]>([]);
-  const virtuosoRef = useRef<VirtuosoHandle>(null);
-  const [atBottom, setAtBottom] = useState(true);
-  const [firstItemIndex, setFirstItemIndex] = useState(0);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const topSentinelRef = useRef<HTMLDivElement | null>(null);
+  const bottomSentinelRef = useRef<HTMLDivElement | null>(null);
+  const [hasUserScrolled, setHasUserScrolled] = useState(false);
 
   const getConversationId = useCallback(async () => {
     try {
@@ -82,19 +80,16 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
         page: 1,
       });
       if (res.data) {
-        const asc = res.data.list.reverse();
-        setMessages(asc);
+        setMessages(res.data.list);
         setTotalMessages(res.data.meta.total);
         setPage(1);
 
-        setFirstItemIndex(START_INDEX - asc.length);
-
         requestAnimationFrame(() => {
-          virtuosoRef.current?.scrollToIndex({
-            index: asc.length - 1,
-            align: 'end',
-            behavior: 'auto',
-          });
+          const c = scrollContainerRef.current;
+          if (c) {
+            c.scrollTop = 0;
+            setHasUserScrolled(false);
+          }
         });
       }
     } catch (error) {
@@ -111,23 +106,49 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
     try {
       setIsLoadingMore(true);
       const nextPage = page + 1;
+      const container = scrollContainerRef.current;
+      const anchorMessageId = messages.length
+        ? messages[messages.length - 1]._id
+        : null;
+      const prevOffsetFromContainerTop = (() => {
+        if (!container || !anchorMessageId) return 0;
+        const el = container.querySelector(
+          `#msg_${anchorMessageId}`
+        ) as HTMLElement | null;
+        if (!el) return 0;
+        return (
+          el.getBoundingClientRect().top - container.getBoundingClientRect().top
+        );
+      })();
+
       const res = await callApiGetMessages(conversation._id, {
         page: nextPage,
       });
       if (res.data) {
-        const olderAsc = [...res.data.list].reverse();
-        if (olderAsc.length > 0) {
-          setFirstItemIndex(prev => prev - olderAsc.length);
-          setMessages(prev => [...olderAsc, ...prev]);
-          setPage(nextPage);
-        }
+        const older = res.data.list;
+        setMessages(prev => [...prev, ...older]);
+        setPage(nextPage);
+        requestAnimationFrame(() => {
+          const c = scrollContainerRef.current;
+          if (!c) return;
+          if (!anchorMessageId) return;
+          const el = c.querySelector(
+            `#msg_${anchorMessageId}`
+          ) as HTMLElement | null;
+          if (!el) return;
+          const newOffsetFromContainerTop =
+            el.getBoundingClientRect().top - c.getBoundingClientRect().top;
+          const deltaOffset =
+            newOffsetFromContainerTop - prevOffsetFromContainerTop;
+          c.scrollTop = c.scrollTop + deltaOffset;
+        });
       }
     } catch (error) {
       console.log(error);
     } finally {
       setIsLoadingMore(false);
     }
-  }, [isLoadingMore, messages.length, totalMessages, page, conversation._id]);
+  }, [conversation._id, isLoadingMore, messages, totalMessages, page]);
 
   useEffect(() => {
     getConversationId();
@@ -135,18 +156,28 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
   }, [getConversationId, getMessages]);
 
   useEffect(() => {
-    if ((usersTyping.length > 0 || selectMessage) && atBottom) {
-      const timer = setTimeout(() => {
-        virtuosoRef.current?.scrollToIndex({
-          index: 'LAST',
-          align: 'end',
-          behavior: 'smooth',
-        });
-      }, 100);
+    const container = scrollContainerRef.current;
+    const sentinel = topSentinelRef.current;
+    console.log(container);
+    if (!container || !sentinel) return;
 
-      return () => clearTimeout(timer);
-    }
-  }, [usersTyping.length, atBottom, selectMessage]);
+    const observer = new IntersectionObserver(
+      entries => {
+        const entry = entries[0];
+        if (entry.isIntersecting && hasUserScrolled) {
+          loadMoreMessages();
+        }
+      },
+      {
+        root: container,
+        rootMargin: '0px',
+        threshold: 1.0,
+      }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadMoreMessages, hasUserScrolled]);
 
   useEffect(() => {
     if (socket && conversation._id) {
@@ -171,7 +202,7 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
           );
         });
       } else {
-        setMessages(prev => [...prev, data]);
+        setMessages(prev => [data, ...prev]);
       }
     });
 
@@ -213,7 +244,6 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
     });
 
     socket.on(CHAT_MESSAGE.EDIT, (data: IMessage) => {
-      console.log(data);
       if (data.conversationId !== conversation._id) return;
       if (data.sender._id === userInfo._id) return;
       setMessages(prev =>
@@ -261,25 +291,16 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
     dispatch(doCloseConversation(conversation._id));
   };
 
-  const handleAddMessage = useCallback(
-    (message: IMessage) => {
-      if (message.typeSend === 'edit') {
-        setMessages(prev =>
-          prev.map(msg => (msg._id === message._id ? message : msg))
-        );
-      } else {
-        setMessages(prev => [...prev, message]);
-      }
-      if (!atBottom) {
-        virtuosoRef.current?.scrollToIndex({
-          index: 'LAST',
-          align: 'end',
-          behavior: 'auto',
-        });
-      }
-    },
-    [atBottom]
-  );
+  const handleAddMessage = useCallback((message: IMessage) => {
+    setMessages(prev => [message, ...prev]);
+    requestAnimationFrame(() => {
+      if (!bottomSentinelRef.current) return;
+      scrollContainerRef.current?.scrollTo({
+        top: bottomSentinelRef.current.getBoundingClientRect().top,
+        behavior: 'smooth',
+      });
+    });
+  }, []);
 
   const handleEditMessage = useCallback((message: IMessage) => {
     setMessages(prev =>
@@ -293,6 +314,19 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
     },
     [setSelectMessage]
   );
+
+  const handleScrollToMessage = useCallback((messageId: string) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const messageElement = container.querySelector(`#msg_${messageId}`);
+    if (!messageElement) return;
+
+    messageElement.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    });
+  }, []);
 
   const handleRemoveSelectMessage = useCallback(() => {
     setSelectMessage(null);
@@ -346,44 +380,34 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
               </span>
             </div>
           ) : (
-            <div className="flex-1 relative">
-              <Virtuoso
-                ref={virtuosoRef}
-                style={{ height: '100%' }}
-                data={messages}
-                firstItemIndex={firstItemIndex}
-                startReached={loadMoreMessages}
-                followOutput={atBottom ? 'auto' : false}
-                atBottomStateChange={setAtBottom}
-                atBottomThreshold={120}
-                computeItemKey={(_index, message) => message._id}
-                itemContent={(_index, message) => (
-                  <div className="px-3 py-0.5">
-                    <ConversationContent
-                      message={message}
-                      getMessageReply={handleGetMessageReply}
-                      onReSendMessage={handleReSendMessage}
-                    />
-                  </div>
-                )}
-                components={{
-                  Header: () => (
-                    <div
-                      className={`flex items-center justify-center py-2 ${isLoadingMore ? 'block' : 'hidden'}`}
-                    >
-                      <TbLoader2
-                        size={30}
-                        className="animate-spin text-gray-500"
-                      />
-                    </div>
-                  ),
-                  Footer: () => (
-                    <div className="px-3 py-0.5">
-                      <ConversationTyping usersTyping={usersTyping} />
-                    </div>
-                  ),
-                }}
-              />
+            <div
+              className="flex flex-col-reverse overflow-y-auto px-3 gap-1 flex-1"
+              ref={scrollContainerRef}
+              onScroll={() => {
+                if (!hasUserScrolled) {
+                  setHasUserScrolled(true);
+                }
+              }}
+            >
+              <div ref={bottomSentinelRef} />
+              <ConversationTyping usersTyping={usersTyping} />
+              {messages.map(message => (
+                <>
+                  <ConversationContent
+                    message={message}
+                    getMessageReply={handleGetMessageReply}
+                    onReSendMessage={handleReSendMessage}
+                    onScrollToMessage={handleScrollToMessage}
+                  />
+                </>
+              ))}
+
+              {isLoadingMore && (
+                <div className="flex items-center justify-center py-2">
+                  <TbLoader2 size={30} className="animate-spin text-gray-500" />
+                </div>
+              )}
+              <div ref={topSentinelRef} />
             </div>
           )}
           <div>

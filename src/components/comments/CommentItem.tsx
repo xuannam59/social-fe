@@ -247,7 +247,7 @@ const CommentItem: React.FC<IProps> = ({
         return (
           <div className="flex gap-3 items-center ml-2">
             <div className="text-xs text-gray-500">{time}</div>
-            <ButtonLike onActionLike={onUserLiked}>
+            <ButtonLike onActionLike={onUserLiked} likedType={userLiked?.value}>
               {userLiked ? (
                 <div
                   className="text-xs hover:underline font-semibold cursor-pointer text-gray-500"

@@ -48,7 +48,7 @@ const ButtonLike: React.FC<IProps> = ({
               <Tooltip title={emoji.label}>
                 <div
                   className={`flex items-center justify-center w-full h-full
-                    ${likedType && likedType === emoji.value && 'bg-gray-300 rounded-lg'}
+                    ${likedType && likedType === emoji.value && 'bg-gray-300 rounded-full'}
                   `}
                 >
                   <span

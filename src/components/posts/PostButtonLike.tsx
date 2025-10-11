@@ -49,7 +49,7 @@ const PostButtonLike: React.FC<IProps> = ({
   };
   return (
     <>
-      <ButtonLike onActionLike={handleActionLike}>
+      <ButtonLike onActionLike={handleActionLike} likedType={userLiked?.value}>
         <div className=" flex-1 group/like hover:bg-gray-100 rounded-md cursor-pointer">
           <div className="flex items-center justify-center h-full w-full">
             {userLiked ? (
