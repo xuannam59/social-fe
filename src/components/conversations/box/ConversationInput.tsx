@@ -26,18 +26,23 @@ interface IProps {
   conversation: IConversation;
   isLoadingMessages: boolean;
   usersTyping: IMessageTyping[];
-  messageReply: IMessage | null;
+  selectMessage: {
+    message: IMessage;
+    type: 'reply' | 'edit';
+  } | null;
+  onEditMessage: (message: IMessage) => void;
   onAddMessage: (values: IMessage) => void;
-  onRemoveMessageReply: () => void;
+  onRemoveSelectMessage: () => void;
 }
 
 const ConversationInput: React.FC<IProps> = ({
   conversation,
   isLoadingMessages,
   usersTyping,
-  messageReply,
+  selectMessage,
+  onEditMessage,
   onAddMessage,
-  onRemoveMessageReply,
+  onRemoveSelectMessage,
 }) => {
   const { socket } = useSockets();
   const userInfo = useAppSelector(state => state.auth.userInfo);
@@ -48,10 +53,10 @@ const ConversationInput: React.FC<IProps> = ({
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [medias, setMedias] = useState<IPreviewMedia[]>([]);
 
-  const handleRemoveMessageReply = useCallback(() => {
-    onRemoveMessageReply();
+  const handleRemoveSelectMessage = useCallback(() => {
+    onRemoveSelectMessage();
     form.resetFields([`${conversation._id}_parentId`]);
-  }, [form, conversation._id, onRemoveMessageReply]);
+  }, [form, conversation._id, onRemoveSelectMessage]);
 
   const debouncedTyping = useMemo(
     () =>
@@ -66,11 +71,18 @@ const ConversationInput: React.FC<IProps> = ({
   }, [debouncedTyping]);
 
   useEffect(() => {
-    if (messageReply) {
-      form.setFieldValue(`${conversation._id}_parentId`, messageReply._id);
+    if (selectMessage) {
+      if (selectMessage.type === 'reply') {
+        form.setFieldValue(
+          `${conversation._id}_parentId`,
+          selectMessage.message._id
+        );
+      } else if (selectMessage.type === 'edit') {
+        form.setFieldValue(conversation._id, selectMessage.message.content);
+      }
       form.focusField(conversation._id);
     }
-  }, [messageReply, form, conversation._id]);
+  }, [form, conversation._id, selectMessage]);
 
   const handleTyping = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -176,14 +188,15 @@ const ConversationInput: React.FC<IProps> = ({
         status: 'pending',
         mentions: [],
         userLikes: [],
+        typeSend: 'send',
       };
 
-      if (parentId && messageReply) {
+      if (parentId && selectMessage && selectMessage.type === 'reply') {
         newMessage.parentId = {
           _id: parentId,
-          content: messageReply.content,
-          type: messageReply.type,
-          sender: messageReply.sender,
+          content: selectMessage.message.content,
+          type: selectMessage.message.type,
+          sender: selectMessage.message.sender,
         };
       }
 
@@ -199,7 +212,7 @@ const ConversationInput: React.FC<IProps> = ({
         status: 'stop_typing',
       });
       form.resetFields();
-      handleRemoveMessageReply();
+      handleRemoveSelectMessage();
     },
     [
       conversation._id,
@@ -207,30 +220,78 @@ const ConversationInput: React.FC<IProps> = ({
       userInfo,
       form,
       onAddMessage,
-      messageReply,
-      handleRemoveMessageReply,
+      selectMessage,
+      handleRemoveSelectMessage,
     ]
   );
+
+  const handleEditMessage = useCallback(() => {
+    if (selectMessage && selectMessage.type === 'edit') {
+      const content = form.getFieldValue(conversation._id).trim();
+      if (!content) return;
+      const newMessage: IMessage = {
+        ...selectMessage.message,
+        content,
+        edited: true,
+        typeSend: 'edit',
+      };
+      onEditMessage(newMessage);
+      socket.emit(CHAT_MESSAGE.EDIT, newMessage);
+      socket.emit(CHAT_MESSAGE.TYPING, {
+        conversationId: conversation._id,
+        sender: {
+          _id: userInfo._id,
+          fullname: userInfo.fullname,
+          avatar: userInfo.avatar,
+        },
+        status: 'stop_typing',
+      });
+      form.resetFields();
+      handleRemoveSelectMessage();
+    }
+  }, [
+    form,
+    conversation._id,
+    selectMessage,
+    socket,
+    onEditMessage,
+    handleRemoveSelectMessage,
+    userInfo,
+  ]);
+
+  const formSubmit = (values: any) => {
+    if (selectMessage && selectMessage.type === 'edit') {
+      handleEditMessage();
+      return;
+    }
+    handleSendMessage(values);
+  };
 
   return (
     <>
       <div className="flex flex-col gap-1 border-t border-gray-200 p-2">
-        {messageReply && (
+        {selectMessage && (
           <div className="flex flex-col px-2 relative">
             <div className="flex items-center justify-between">
-              <div className="text-base font-medium">
-                Đang trả lời cho {messageReply.sender.fullname}
-              </div>
+              {selectMessage.type === 'edit' ? (
+                <div className="text-base font-medium">
+                  Chỉnh sửa tin nhắn của bạn
+                </div>
+              ) : (
+                <div className="text-base font-medium">
+                  Trả lời cho {selectMessage.message.sender.fullname}
+                </div>
+              )}
               <div className="cursor-pointer rounded-full text-center">
                 <TbX
                   size={16}
                   className="text-gray-500 hover:text-gray-700"
-                  onClick={handleRemoveMessageReply}
+                  onClick={handleRemoveSelectMessage}
                 />
               </div>
             </div>
-            <div className="text-sm line-clamp-2 text-gray-500">
-              {messageReply.content}
+            <div className={`text-sm line-clamp-2 text-gray-500 `}>
+              {selectMessage.message.content}
             </div>
           </div>
         )}
@@ -254,7 +315,7 @@ const ConversationInput: React.FC<IProps> = ({
         <div className="flex items-start gap-2 shrink-0">
           <Form
             form={form}
-            onFinish={handleSendMessage}
+            onFinish={formSubmit}
             className="flex-1 flex items-center gap-1"
           >
             <Form.Item name={`${conversation._id}_parentId`} hidden>

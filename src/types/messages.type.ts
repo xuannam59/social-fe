@@ -22,6 +22,7 @@ export interface IMessage {
     userId: string;
     type: number;
   }[];
+  typeSend: 'send' | 'edit';
   status: 'pending' | 'success' | 'failed';
   revoke?: boolean;
   edited?: boolean;

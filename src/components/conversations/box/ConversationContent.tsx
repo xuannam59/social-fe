@@ -13,7 +13,7 @@ import { TbDotsVertical, TbLoader2, TbMoodSmile } from 'react-icons/tb';
 
 interface IProps {
   message: IMessage;
-  getMessageReply: (message: IMessage) => void;
+  getMessageReply: (message: IMessage, type: 'reply' | 'edit') => void;
   onReSendMessage: (messageId: string) => void;
 }
 
@@ -26,6 +26,7 @@ const ConversationContent: React.FC<IProps> = ({
   const userInfo = useAppSelector(state => state.auth.userInfo);
   const [usersLike, setUsersLike] = useState(message.userLikes);
   const [totalLikes, setTotalLikes] = useState(message.userLikes.length);
+  const [openDropdown, setOpenDropdown] = useState(false);
   const myLike = useMemo(() => {
     return usersLike.find(user => user.userId === userInfo._id);
   }, [usersLike, userInfo._id]);
@@ -126,10 +127,18 @@ const ConversationContent: React.FC<IProps> = ({
     });
   };
 
+  const handleRevokeMessage = () => {
+    socket.emit(CHAT_MESSAGE.REVOKE, {
+      conversationId: message.conversationId,
+      messageId: message._id,
+      userId: userInfo._id,
+    });
+  };
+
   return (
     <>
       <div id={`msg_${message._id}`} className="group/message">
-        {message.parentId && (
+        {(message.parentId || message.edited) && (
           <div
             className={`flex w-full ${isMine ? 'justify-end' : 'justify-start'} mt-3 -mb-5`}
           >
@@ -138,19 +147,29 @@ const ConversationContent: React.FC<IProps> = ({
               <div
                 className={`flex items-center gap-2 ${isMine ? 'justify-end' : 'justify-start'}`}
               >
-                <BsFillReplyFill size={16} className="text-gray-500" />
-                <span className="text-sm text-gray-500">
-                  {message.parentId.sender._id === userInfo._id
-                    ? message.parentId.sender.fullname
-                    : 'Bạn'}{' '}
-                  đã trả lời bạn
-                </span>
+                {message.parentId && (
+                  <>
+                    <BsFillReplyFill size={16} className="text-gray-500" />
+                    <span className="text-sm text-gray-500">
+                      Phản hồi tin nhắn
+                    </span>
+                  </>
+                )}
+                {message.edited && (
+                  <>
+                    <span className="text-sm text-blue-500">Đã chỉnh sửa</span>
+                  </>
+                )}
               </div>
-              <div className="pb-5 rounded-2xl px-3 pt-2 bg-gray-300 opacity-50 ">
-                <span className="text-sm text-gray-500 leading-5 line-clamp-3">
-                  {message.parentId.content}
-                </span>
-              </div>
+              {message.parentId && (
+                <div className={`${isMine && 'justify-end'} flex items-center`}>
+                  <div className="pb-5 rounded-2xl px-3 pt-2 bg-gray-300 opacity-50 w-fit">
+                    <span className="text-sm text-gray-500 leading-5 line-clamp-3 w-fit">
+                      {message.parentId.content}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -167,33 +186,47 @@ const ConversationContent: React.FC<IProps> = ({
                 trigger={['click']}
                 placement="top"
                 arrow={true}
+                open={openDropdown}
+                onOpenChange={visible => setOpenDropdown(visible)}
                 className="cursor-pointer"
                 popupRender={() => {
                   return (
                     <div className="bg-white rounded-lg shadow-lg p-2 border border-gray-200 w-[150px]">
                       <div className="grid grid-cols-1">
                         {isMine ? (
-                          <div className="col-span-1 rounded-md hover:bg-gray-100 p-2 cursor-pointer">
-                            <div className="text-base w-full font-medium">
-                              Thu hồi
+                          <>
+                            {ableEditMessage && (
+                              <div
+                                className="col-span-1 rounded-md hover:bg-gray-100 p-2 cursor-pointer"
+                                onClick={() => {
+                                  getMessageReply(message, 'edit');
+                                  setOpenDropdown(false);
+                                }}
+                              >
+                                <div className="text-base w-full font-medium">
+                                  Chỉnh sửa
+                                </div>
+                              </div>
+                            )}
+                            <div
+                              className="col-span-1 rounded-md hover:bg-gray-100 p-2 cursor-pointer"
+                              onClick={() => {
+                                handleRevokeMessage();
+                                setOpenDropdown(false);
+                              }}
+                            >
+                              <div className="text-base w-full font-medium">
+                                Thu hồi
+                              </div>
                             </div>
-                          </div>
+                          </>
                         ) : (
-                          <div className="col-span-1 rounded-md hover:bg-gray-100 p-2 cursor-pointer">
+                          <div
+                            className="col-span-1 rounded-md hover:bg-gray-100 p-2 cursor-pointer"
+                            onClick={() => setOpenDropdown(false)}
+                          >
                             <div className="text-base w-full font-medium">
                               Gỡ/ Xoá
-                            </div>
-                          </div>
-                        )}
-                        <div className="col-span-1 rounded-md hover:bg-gray-100 p-2 cursor-pointer">
-                          <div className="text-base w-full font-medium">
-                            Xem thêm
-                          </div>
-                        </div>
-                        {ableEditMessage && (
-                          <div className="col-span-1 rounded-md hover:bg-gray-100 p-2 cursor-pointer">
-                            <div className="text-base w-full font-medium">
-                              Chỉnh sửa
                             </div>
                           </div>
                         )}
@@ -209,7 +242,7 @@ const ConversationContent: React.FC<IProps> = ({
               <Tooltip title="Phàn hồi">
                 <div
                   className="flex items-center justify-center p-1 hover:bg-gray-100 rounded-full"
-                  onClick={() => getMessageReply(message)}
+                  onClick={() => getMessageReply(message, 'reply')}
                 >
                   <BsFillReplyFill size={20} className="text-gray-500" />
                 </div>

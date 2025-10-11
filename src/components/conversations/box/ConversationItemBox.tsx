@@ -45,7 +45,10 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
   const dispatch = useAppDispatch();
   const isExist = useMemo(() => conversation.isExist, [conversation]);
   const [messages, setMessages] = useState<IMessage[]>([]);
-  const [messageReply, setMessageReply] = useState<IMessage | null>(null);
+  const [selectMessage, setSelectMessage] = useState<{
+    message: IMessage;
+    type: 'reply' | 'edit';
+  } | null>(null);
   const [totalMessages, setTotalMessages] = useState(0);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [page, setPage] = useState(1);
@@ -132,7 +135,7 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
   }, [getConversationId, getMessages]);
 
   useEffect(() => {
-    if (usersTyping.length > 0 && atBottom) {
+    if ((usersTyping.length > 0 || selectMessage) && atBottom) {
       const timer = setTimeout(() => {
         virtuosoRef.current?.scrollToIndex({
           index: 'LAST',
@@ -143,7 +146,7 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
 
       return () => clearTimeout(timer);
     }
-  }, [usersTyping.length, atBottom]);
+  }, [usersTyping.length, atBottom, selectMessage]);
 
   useEffect(() => {
     if (socket && conversation._id) {
@@ -209,10 +212,31 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
       }
     });
 
+    socket.on(CHAT_MESSAGE.EDIT, (data: IMessage) => {
+      console.log(data);
+      if (data.conversationId !== conversation._id) return;
+      if (data.sender._id === userInfo._id) return;
+      setMessages(prev =>
+        prev.map(message =>
+          message._id === data._id
+            ? {
+                ...message,
+                content: data.content,
+                type: data.type,
+                edited: true,
+                timeEdited: data.timeEdited,
+                mentions: data.mentions,
+              }
+            : message
+        )
+      );
+    });
+
     return () => {
       socket.off(CHAT_MESSAGE.SEND);
       socket.off(CHAT_MESSAGE.STATUS_MESSAGE);
       socket.off(CHAT_MESSAGE.TYPING);
+      socket.off(CHAT_MESSAGE.EDIT);
     };
   }, [socket, userInfo, conversation._id, usersTyping]);
 
@@ -239,7 +263,13 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
 
   const handleAddMessage = useCallback(
     (message: IMessage) => {
-      setMessages(prev => [...prev, message]);
+      if (message.typeSend === 'edit') {
+        setMessages(prev =>
+          prev.map(msg => (msg._id === message._id ? message : msg))
+        );
+      } else {
+        setMessages(prev => [...prev, message]);
+      }
       if (!atBottom) {
         virtuosoRef.current?.scrollToIndex({
           index: 'LAST',
@@ -251,13 +281,22 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
     [atBottom]
   );
 
-  const handleGetMessageReply = useCallback((message: IMessage) => {
-    setMessageReply(message);
+  const handleEditMessage = useCallback((message: IMessage) => {
+    setMessages(prev =>
+      prev.map(msg => (msg._id === message._id ? message : msg))
+    );
   }, []);
 
-  const handleRemoveMessageReply = useCallback(() => {
-    setMessageReply(null);
-  }, []);
+  const handleGetMessageReply = useCallback(
+    (message: IMessage, type: 'reply' | 'edit') => {
+      setSelectMessage({ message, type });
+    },
+    [setSelectMessage]
+  );
+
+  const handleRemoveSelectMessage = useCallback(() => {
+    setSelectMessage(null);
+  }, [setSelectMessage]);
 
   return (
     <>
@@ -310,7 +349,7 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
             <div className="flex-1 relative">
               <Virtuoso
                 ref={virtuosoRef}
-                classID="h-full w-full"
+                style={{ height: '100%' }}
                 data={messages}
                 firstItemIndex={firstItemIndex}
                 startReached={loadMoreMessages}
@@ -352,9 +391,10 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
               conversation={conversation}
               isLoadingMessages={isLoadingMessages}
               usersTyping={usersTyping}
-              messageReply={messageReply}
+              selectMessage={selectMessage}
               onAddMessage={handleAddMessage}
-              onRemoveMessageReply={handleRemoveMessageReply}
+              onEditMessage={handleEditMessage}
+              onRemoveSelectMessage={handleRemoveSelectMessage}
             />
           </div>
         </div>
