@@ -26,14 +26,18 @@ interface IProps {
   conversation: IConversation;
   isLoadingMessages: boolean;
   usersTyping: IMessageTyping[];
+  messageReply: IMessage | null;
   onAddMessage: (values: IMessage) => void;
+  onRemoveMessageReply: () => void;
 }
 
 const ConversationInput: React.FC<IProps> = ({
   conversation,
   isLoadingMessages,
   usersTyping,
+  messageReply,
   onAddMessage,
+  onRemoveMessageReply,
 }) => {
   const { socket } = useSockets();
   const userInfo = useAppSelector(state => state.auth.userInfo);
@@ -44,39 +48,10 @@ const ConversationInput: React.FC<IProps> = ({
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [medias, setMedias] = useState<IPreviewMedia[]>([]);
 
-  const handleSendMessage = useCallback(
-    (values: any) => {
-      const content = values[conversation._id].trim();
-      if (!content) return;
-      const newMessage: IMessage = {
-        _id: `m_${Date.now()}`,
-        sender: {
-          _id: userInfo._id,
-          fullname: userInfo.fullname,
-          avatar: userInfo.avatar,
-        },
-        type: 'text',
-        conversationId: conversation._id,
-        content,
-        status: 'pending',
-        mentions: [],
-        userLikes: [],
-      };
-      onAddMessage(newMessage);
-      socket.emit(CHAT_MESSAGE.SEND, newMessage);
-      socket.emit(CHAT_MESSAGE.TYPING, {
-        conversationId: conversation._id,
-        sender: {
-          _id: userInfo._id,
-          fullname: userInfo.fullname,
-          avatar: userInfo.avatar,
-        },
-        status: 'stop_typing',
-      });
-      form.resetFields();
-    },
-    [conversation._id, socket, userInfo, form, onAddMessage]
-  );
+  const handleRemoveMessageReply = useCallback(() => {
+    onRemoveMessageReply();
+    form.resetFields([`${conversation._id}_parentId`]);
+  }, [form, conversation._id, onRemoveMessageReply]);
 
   const debouncedTyping = useMemo(
     () =>
@@ -89,6 +64,13 @@ const ConversationInput: React.FC<IProps> = ({
   useEffect(() => {
     return () => debouncedTyping.cancel();
   }, [debouncedTyping]);
+
+  useEffect(() => {
+    if (messageReply) {
+      form.setFieldValue(`${conversation._id}_parentId`, messageReply._id);
+      form.focusField(conversation._id);
+    }
+  }, [messageReply, form, conversation._id]);
 
   const handleTyping = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -128,6 +110,10 @@ const ConversationInput: React.FC<IProps> = ({
     const fileUrls = formatFile(files);
     setMedias(prev => [...prev, ...fileUrls]);
     event.target.value = '';
+  };
+
+  const handleRemoveMedia = (id: string) => {
+    setMedias(prev => prev.filter(m => m.id !== id));
   };
 
   const toggleEmojiPicker = useCallback(() => {
@@ -171,14 +157,84 @@ const ConversationInput: React.FC<IProps> = ({
     [form, conversation._id]
   );
 
-  const handleRemoveMedia = (id: string) => {
-    setMedias(prev => prev.filter(m => m.id !== id));
-  };
+  const handleSendMessage = useCallback(
+    (values: any) => {
+      const parentId = values[`${conversation._id}_parentId`];
+      const content = values[conversation._id].trim();
+      if (!content) return;
+
+      const newMessage: IMessage = {
+        _id: `m_${Date.now()}`,
+        sender: {
+          _id: userInfo._id,
+          fullname: userInfo.fullname,
+          avatar: userInfo.avatar,
+        },
+        type: 'text',
+        conversationId: conversation._id,
+        content,
+        status: 'pending',
+        mentions: [],
+        userLikes: [],
+      };
+
+      if (parentId && messageReply) {
+        newMessage.parentId = {
+          _id: parentId,
+          content: messageReply.content,
+          type: messageReply.type,
+          sender: messageReply.sender,
+        };
+      }
+
+      onAddMessage(newMessage);
+      socket.emit(CHAT_MESSAGE.SEND, newMessage);
+      socket.emit(CHAT_MESSAGE.TYPING, {
+        conversationId: conversation._id,
+        sender: {
+          _id: userInfo._id,
+          fullname: userInfo.fullname,
+          avatar: userInfo.avatar,
+        },
+        status: 'stop_typing',
+      });
+      form.resetFields();
+      handleRemoveMessageReply();
+    },
+    [
+      conversation._id,
+      socket,
+      userInfo,
+      form,
+      onAddMessage,
+      messageReply,
+      handleRemoveMessageReply,
+    ]
+  );
 
   return (
     <>
       <div className="flex flex-col gap-1 border-t border-gray-200 p-2">
-        <div className="flex items-center gap-2 ">
+        {messageReply && (
+          <div className="flex flex-col px-2 relative">
+            <div className="flex items-center justify-between">
+              <div className="text-base font-medium">
+                Đang trả lời cho {messageReply.sender.fullname}
+              </div>
+              <div className="cursor-pointer rounded-full text-center">
+                <TbX
+                  size={16}
+                  className="text-gray-500 hover:text-gray-700"
+                  onClick={handleRemoveMessageReply}
+                />
+              </div>
+            </div>
+            <div className="text-sm line-clamp-2 text-gray-500">
+              {messageReply.content}
+            </div>
+          </div>
+        )}
+        <div className="flex items-center gap-2">
           <Image.PreviewGroup>
             {medias.map(media => (
               <div key={media.id} className="max-h-18 max-w-18 relative">
@@ -201,6 +257,9 @@ const ConversationInput: React.FC<IProps> = ({
             onFinish={handleSendMessage}
             className="flex-1 flex items-center gap-1"
           >
+            <Form.Item name={`${conversation._id}_parentId`} hidden>
+              <Input />
+            </Form.Item>
             <div className={``}>
               <Button
                 type="text"

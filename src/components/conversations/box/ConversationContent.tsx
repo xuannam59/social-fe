@@ -13,16 +13,19 @@ import { TbDotsVertical, TbLoader2, TbMoodSmile } from 'react-icons/tb';
 
 interface IProps {
   message: IMessage;
+  getMessageReply: (message: IMessage) => void;
   onReSendMessage: (messageId: string) => void;
 }
 
 const ConversationContent: React.FC<IProps> = ({
   message,
+  getMessageReply,
   onReSendMessage,
 }) => {
   const { socket } = useSockets();
   const userInfo = useAppSelector(state => state.auth.userInfo);
   const [usersLike, setUsersLike] = useState(message.userLikes);
+  const [totalLikes, setTotalLikes] = useState(message.userLikes.length);
   const myLike = useMemo(() => {
     return usersLike.find(user => user.userId === userInfo._id);
   }, [usersLike, userInfo._id]);
@@ -44,8 +47,10 @@ const ConversationContent: React.FC<IProps> = ({
 
   useEffect(() => {
     if (!socket) return;
-    socket.on(CHAT_MESSAGE.REACTION, (data: IMessageReaction) => {
+
+    const handleReaction = (data: IMessageReaction) => {
       if (data.messageId !== message._id) return;
+
       if (data.status === 'failed') {
         if (data.userId === userInfo._id) {
           notification.error({
@@ -56,6 +61,7 @@ const ConversationContent: React.FC<IProps> = ({
         }
         return;
       }
+
       if (data.userId !== userInfo._id) {
         if (data.isLike) {
           setUsersLike(prev => {
@@ -65,6 +71,7 @@ const ConversationContent: React.FC<IProps> = ({
               newUsersLike[index].type = data.type;
             } else {
               newUsersLike.push(data);
+              setTotalLikes(prev => prev + 1);
             }
             return newUsersLike;
           });
@@ -72,14 +79,17 @@ const ConversationContent: React.FC<IProps> = ({
           setUsersLike(prev =>
             prev.filter(user => user.userId !== data.userId)
           );
+          setTotalLikes(prev => prev - 1);
         }
       }
-    });
+    };
+
+    socket.on(CHAT_MESSAGE.REACTION, handleReaction);
 
     return () => {
-      socket.off(CHAT_MESSAGE.REACTION);
+      socket.off(CHAT_MESSAGE.REACTION, handleReaction);
     };
-  }, [socket, userInfo._id, message._id]);
+  }, [socket, userInfo._id, message._id, message]);
 
   const typeLikes = useMemo(() => {
     const likeSet = new Set<number>();
@@ -98,14 +108,14 @@ const ConversationContent: React.FC<IProps> = ({
           newUsersLike[index].type = type;
         } else {
           newUsersLike.push({ userId: userInfo._id, type });
+          setTotalLikes(prev => prev + 1);
         }
         return newUsersLike;
       });
     } else {
       setUsersLike(prev => prev.filter(user => user.userId !== userInfo._id));
+      setTotalLikes(prev => prev - 1);
     }
-
-    console.log('usersLike', usersLike);
 
     socket.emit(CHAT_MESSAGE.REACTION, {
       conversationId: message.conversationId,
@@ -118,12 +128,37 @@ const ConversationContent: React.FC<IProps> = ({
 
   return (
     <>
-      <div id={`msg_${message._id}`} className="flex flex-col group/message">
+      <div id={`msg_${message._id}`} className="group/message">
+        {message.parentId && (
+          <div
+            className={`flex w-full ${isMine ? 'justify-end' : 'justify-start'} mt-3 -mb-5`}
+          >
+            {!isMine && <div className="w-9" />}
+            <div className="flex flex-col max-w-[80%] gap-1">
+              <div
+                className={`flex items-center gap-2 ${isMine ? 'justify-end' : 'justify-start'}`}
+              >
+                <BsFillReplyFill size={16} className="text-gray-500" />
+                <span className="text-sm text-gray-500">
+                  {message.parentId.sender._id === userInfo._id
+                    ? message.parentId.sender.fullname
+                    : 'Bạn'}{' '}
+                  đã trả lời bạn
+                </span>
+              </div>
+              <div className="pb-5 rounded-2xl px-3 pt-2 bg-gray-300 opacity-50 ">
+                <span className="text-sm text-gray-500 leading-5 line-clamp-3">
+                  {message.parentId.content}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
         <div
-          className={`flex ${isMine ? 'justify-end' : 'justify-start'} gap-1.5 items-center`}
+          className={`relative z-10 flex ${isMine ? 'justify-end' : 'justify-start'} gap-2 items-center`}
         >
           <div
-            className={`group-hover/message:block hidden ${isMine ? 'order-first' : 'order-last'}`}
+            className={`hidden group-hover/message:block ${isMine ? 'order-first' : 'order-last'}`}
           >
             <div
               className={`flex items-center ${!isMine && 'flex-row-reverse'}`}
@@ -172,7 +207,10 @@ const ConversationContent: React.FC<IProps> = ({
                 </div>
               </Dropdown>
               <Tooltip title="Phàn hồi">
-                <div className="flex items-center justify-center p-1 hover:bg-gray-200 rounded-full">
+                <div
+                  className="flex items-center justify-center p-1 hover:bg-gray-100 rounded-full"
+                  onClick={() => getMessageReply(message)}
+                >
                   <BsFillReplyFill size={20} className="text-gray-500" />
                 </div>
               </Tooltip>
@@ -181,7 +219,7 @@ const ConversationContent: React.FC<IProps> = ({
                 trigger="click"
                 likedType={myLike?.type}
               >
-                <div className="flex items-center justify-center p-1 hover:bg-gray-200 rounded-full">
+                <div className="flex items-center justify-center p-1 hover:bg-gray-100 rounded-full">
                   <TbMoodSmile size={20} className="text-gray-500" />
                 </div>
               </ButtonLike>
@@ -193,9 +231,13 @@ const ConversationContent: React.FC<IProps> = ({
               <AvatarUser avatar={message.sender.avatar} size={28} />
             </div>
           )}
-          <div className={`${isMine ? 'max-w-[70%]' : 'max-w-[60%]'}`}>
-            <div
-              className={`relative w-fit rounded-2xl px-3 py-2 text-sm leading-5 flex-shrink-0
+
+          <div
+            className={`${isMine ? 'max-w-[70%]' : 'max-w-[60%]'} flex-shrink-0`}
+          >
+            <div className="flex">
+              <div
+                className={`relative w-fit rounded-2xl px-3 py-2 text-base leading-5
                         ${
                           isMine
                             ? 'bg-primary text-white rounded-br-none'
@@ -203,21 +245,31 @@ const ConversationContent: React.FC<IProps> = ({
                         }
                       ${classStatus}
                       `}
-            >
-              {message.content}
+              >
+                {message.content}
+              </div>
             </div>
             {typeLikes.length > 0 && (
               <>
                 <div className="relative w-full h-2.5">
                   <div className="absolute bottom-0 right-0">
                     <div className="flex items-center gap-0.5 bg-white rounded-full p-0.5 shadow-md border border-gray-200">
-                      {typeLikes.slice(0, 2).map(type => (
-                        <div key={type} className="text-xs">
+                      {typeLikes.slice(0, 2).map((type, index) => (
+                        <div
+                          key={type}
+                          className={`text-xs relative ${index > 0 ? '-ml-2.5 z-1' : 'z-2'}`}
+                        >
                           {emojiReactions[type - 1].emoji}
                         </div>
                       ))}
                       {typeLikes.length > 2 && (
-                        <div className="text-xs">+{typeLikes.length - 2}</div>
+                        <div className="text-xs -ml-2 relative z-3">
+                          +{typeLikes.length - 2}
+                        </div>
+                      )}
+
+                      {totalLikes > 1 && (
+                        <div className="text-xs">{totalLikes}</div>
                       )}
                     </div>
                   </div>
@@ -227,13 +279,13 @@ const ConversationContent: React.FC<IProps> = ({
           </div>
         </div>
         {message.status === 'pending' && (
-          <div className="flex items-center gap-2 self-end">
+          <div className="flex items-center gap-2 justify-end">
             <div className="text-xs text-gray-500">Đang gửi...</div>
             <TbLoader2 size={12} className="animate-spin text-gray-500" />
           </div>
         )}
         {message.status === 'failed' && (
-          <div className="flex items-center gap-2 self-end">
+          <div className="flex items-center gap-2 justify-end">
             <div className="text-xs text-red-500 self-end">Gửi thất bại</div>
             <span
               className="text-xs text-blue-500 cursor-pointer hover:underline"

@@ -25,6 +25,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso';
 import { TbLoader2, TbX } from 'react-icons/tb';
 import AvatarUser from '../../common/AvatarUser';
 import Loading from '../../loading/Loading';
@@ -36,20 +37,23 @@ interface IProps {
   conversation: IConversation;
 }
 
+const START_INDEX = 100_000;
+
 const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
   const { socket } = useSockets();
   const dispatch = useAppDispatch();
   const isExist = useMemo(() => conversation.isExist, [conversation]);
   const [messages, setMessages] = useState<IMessage[]>([]);
+  const [messageReply, setMessageReply] = useState<IMessage | null>(null);
   const [totalMessages, setTotalMessages] = useState(0);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [page, setPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [usersTyping, setUsersTyping] = useState<IMessageTyping[]>([]);
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-  const topSentinelRef = useRef<HTMLDivElement | null>(null);
-  const [hasUserScrolled, setHasUserScrolled] = useState(false);
+  const virtuosoRef = useRef<VirtuosoHandle>(null);
+  const [atBottom, setAtBottom] = useState(true);
+  const [firstItemIndex, setFirstItemIndex] = useState(0);
 
   const getConversationId = useCallback(async () => {
     try {
@@ -75,15 +79,19 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
         page: 1,
       });
       if (res.data) {
-        setMessages(res.data.list);
+        const asc = res.data.list.reverse();
+        setMessages(asc);
         setTotalMessages(res.data.meta.total);
         setPage(1);
+
+        setFirstItemIndex(START_INDEX - asc.length);
+
         requestAnimationFrame(() => {
-          const c = scrollContainerRef.current;
-          if (c) {
-            c.scrollTop = 0;
-            setHasUserScrolled(false);
-          }
+          virtuosoRef.current?.scrollToIndex({
+            index: asc.length - 1,
+            align: 'end',
+            behavior: 'auto',
+          });
         });
       }
     } catch (error) {
@@ -96,51 +104,27 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
   const loadMoreMessages = useCallback(async () => {
     if (isLoadingMore) return;
     if (messages.length >= totalMessages) return;
+
     try {
       setIsLoadingMore(true);
-      const container = scrollContainerRef.current;
-      const anchorMessageId = messages.length
-        ? messages[messages.length - 1]._id
-        : null;
-      const prevOffsetFromContainerTop = (() => {
-        if (!container || !anchorMessageId) return 0;
-        const el = container.querySelector(
-          `#msg_${anchorMessageId}`
-        ) as HTMLElement | null;
-        if (!el) return 0;
-        return (
-          el.getBoundingClientRect().top - container.getBoundingClientRect().top
-        );
-      })();
       const nextPage = page + 1;
       const res = await callApiGetMessages(conversation._id, {
         page: nextPage,
       });
       if (res.data) {
-        const older = res.data.list;
-        setMessages(prev => [...prev, ...older]);
-        setPage(nextPage);
-        requestAnimationFrame(() => {
-          const c = scrollContainerRef.current;
-          if (!c) return;
-          if (!anchorMessageId) return;
-          const el = c.querySelector(
-            `#msg_${anchorMessageId}`
-          ) as HTMLElement | null;
-          if (!el) return;
-          const newOffsetFromContainerTop =
-            el.getBoundingClientRect().top - c.getBoundingClientRect().top;
-          const deltaOffset =
-            newOffsetFromContainerTop - prevOffsetFromContainerTop;
-          c.scrollTop = c.scrollTop + deltaOffset;
-        });
+        const olderAsc = [...res.data.list].reverse();
+        if (olderAsc.length > 0) {
+          setFirstItemIndex(prev => prev - olderAsc.length);
+          setMessages(prev => [...olderAsc, ...prev]);
+          setPage(nextPage);
+        }
       }
     } catch (error) {
       console.log(error);
     } finally {
       setIsLoadingMore(false);
     }
-  }, [isLoadingMore, messages, totalMessages, page, conversation._id]);
+  }, [isLoadingMore, messages.length, totalMessages, page, conversation._id]);
 
   useEffect(() => {
     getConversationId();
@@ -148,27 +132,18 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
   }, [getConversationId, getMessages]);
 
   useEffect(() => {
-    const container = scrollContainerRef.current;
-    const sentinel = topSentinelRef.current;
-    if (!container || !sentinel) return;
+    if (usersTyping.length > 0 && atBottom) {
+      const timer = setTimeout(() => {
+        virtuosoRef.current?.scrollToIndex({
+          index: 'LAST',
+          align: 'end',
+          behavior: 'smooth',
+        });
+      }, 100);
 
-    const observer = new IntersectionObserver(
-      entries => {
-        const entry = entries[0];
-        if (entry.isIntersecting && hasUserScrolled) {
-          loadMoreMessages();
-        }
-      },
-      {
-        root: container,
-        rootMargin: '0px',
-        threshold: 1.0,
-      }
-    );
-
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [loadMoreMessages, hasUserScrolled]);
+      return () => clearTimeout(timer);
+    }
+  }, [usersTyping.length, atBottom]);
 
   useEffect(() => {
     if (socket && conversation._id) {
@@ -193,7 +168,7 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
           );
         });
       } else {
-        setMessages(prev => [data, ...prev]);
+        setMessages(prev => [...prev, data]);
       }
     });
 
@@ -262,9 +237,28 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
     dispatch(doCloseConversation(conversation._id));
   };
 
-  const handleAddMessage = useCallback((message: IMessage) => {
-    setMessages(prev => [message, ...prev]);
+  const handleAddMessage = useCallback(
+    (message: IMessage) => {
+      setMessages(prev => [...prev, message]);
+      if (!atBottom) {
+        virtuosoRef.current?.scrollToIndex({
+          index: 'LAST',
+          align: 'end',
+          behavior: 'auto',
+        });
+      }
+    },
+    [atBottom]
+  );
+
+  const handleGetMessageReply = useCallback((message: IMessage) => {
+    setMessageReply(message);
   }, []);
+
+  const handleRemoveMessageReply = useCallback(() => {
+    setMessageReply(null);
+  }, []);
+
   return (
     <>
       <div className="w-[328px] max-h-[455px] flex flex-col bg-white rounded-t-lg shadow-md overflow-visible">
@@ -304,39 +298,53 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
         <div className="flex flex-col min-h-0 h-[400px]">
           {isLoadingMessages ? (
             <Loading />
+          ) : messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center flex-1">
+              <AvatarUser avatar={''} size={50} />
+              <span className="text-gray-500">{conversation.name}</span>
+              <span className="text-gray-500 text-sm">
+                Chưa có tin nhắn, hãy bắt đầu trò chuyện
+              </span>
+            </div>
           ) : (
-            <div
-              className="flex flex-col-reverse overflow-y-auto p-3 gap-1 flex-1"
-              ref={scrollContainerRef}
-              onScroll={() => {
-                if (!hasUserScrolled) {
-                  setHasUserScrolled(true);
-                }
-              }}
-            >
-              <ConversationTyping usersTyping={usersTyping} />
-              {messages.length === 0 && (
-                <div className="flex flex-col items-center justify-center h-full">
-                  <AvatarUser avatar={''} size={50} />
-                  <span className="text-gray-500">{conversation.name}</span>
-                  <span className="text-gray-500 text-sm">
-                    Chưa có tin nhắn, hãy bắt đầu trò chuyện
-                  </span>
-                </div>
-              )}
-              {messages.map(message => (
-                <ConversationContent
-                  key={message._id}
-                  message={message}
-                  onReSendMessage={handleReSendMessage}
-                />
-              ))}
-              <div ref={topSentinelRef} />
-              {isLoadingMore && (
-                <div className="flex items-center justify-center py-2">
-                  <TbLoader2 size={30} className="animate-spin text-gray-500" />
-                </div>
-              )}
+            <div className="flex-1 relative">
+              <Virtuoso
+                ref={virtuosoRef}
+                classID="h-full w-full"
+                data={messages}
+                firstItemIndex={firstItemIndex}
+                startReached={loadMoreMessages}
+                followOutput={atBottom ? 'auto' : false}
+                atBottomStateChange={setAtBottom}
+                atBottomThreshold={120}
+                computeItemKey={(_index, message) => message._id}
+                itemContent={(_index, message) => (
+                  <div className="px-3 py-0.5">
+                    <ConversationContent
+                      message={message}
+                      getMessageReply={handleGetMessageReply}
+                      onReSendMessage={handleReSendMessage}
+                    />
+                  </div>
+                )}
+                components={{
+                  Header: () => (
+                    <div
+                      className={`flex items-center justify-center py-2 ${isLoadingMore ? 'block' : 'hidden'}`}
+                    >
+                      <TbLoader2
+                        size={30}
+                        className="animate-spin text-gray-500"
+                      />
+                    </div>
+                  ),
+                  Footer: () => (
+                    <div className="px-3 py-0.5">
+                      <ConversationTyping usersTyping={usersTyping} />
+                    </div>
+                  ),
+                }}
+              />
             </div>
           )}
           <div>
@@ -344,7 +352,9 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
               conversation={conversation}
               isLoadingMessages={isLoadingMessages}
               usersTyping={usersTyping}
+              messageReply={messageReply}
               onAddMessage={handleAddMessage}
+              onRemoveMessageReply={handleRemoveMessageReply}
             />
           </div>
         </div>

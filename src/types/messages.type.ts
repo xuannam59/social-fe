@@ -5,6 +5,12 @@ export interface IMessage {
   type: string;
   conversationId: string;
   content: string;
+  parentId?: {
+    _id: string;
+    content: string;
+    type: string;
+    sender: { _id: string; fullname: string };
+  };
   mentions: {
     userId: string;
     position: {
