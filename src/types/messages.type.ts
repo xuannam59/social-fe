@@ -24,8 +24,8 @@ export interface IMessage {
   }[];
   typeSend: 'send' | 'edit';
   status: 'pending' | 'success' | 'failed';
-  revoke?: boolean;
-  edited?: boolean;
+  revoked: boolean;
+  edited: boolean;
   timeEdited?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -53,4 +53,11 @@ export interface IMessageReaction {
   isLike: boolean;
   status: 'success' | 'failed';
   message?: string;
+}
+
+export interface IMessageRevoke {
+  conversationId: string;
+  messageId: string;
+  userId: string;
+  content: string;
 }

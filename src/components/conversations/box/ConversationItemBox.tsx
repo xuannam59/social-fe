@@ -158,7 +158,6 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
   useEffect(() => {
     const container = scrollContainerRef.current;
     const sentinel = topSentinelRef.current;
-    console.log(container);
     if (!container || !sentinel) return;
 
     const observer = new IntersectionObserver(
@@ -392,14 +391,13 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
               <div ref={bottomSentinelRef} />
               <ConversationTyping usersTyping={usersTyping} />
               {messages.map(message => (
-                <>
-                  <ConversationContent
-                    message={message}
-                    getMessageReply={handleGetMessageReply}
-                    onReSendMessage={handleReSendMessage}
-                    onScrollToMessage={handleScrollToMessage}
-                  />
-                </>
+                <ConversationContent
+                  key={message._id}
+                  message={message}
+                  getMessageReply={handleGetMessageReply}
+                  onReSendMessage={handleReSendMessage}
+                  onScrollToMessage={handleScrollToMessage}
+                />
               ))}
 
               {isLoadingMore && (

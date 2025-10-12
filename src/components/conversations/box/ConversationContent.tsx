@@ -4,8 +4,12 @@ import { emojiReactions } from '@social/constants/emoji';
 import { CHAT_MESSAGE } from '@social/defaults/socket.default';
 import { useAppSelector } from '@social/hooks/redux.hook';
 import { useSockets } from '@social/providers/SocketProvider';
-import type { IMessage, IMessageReaction } from '@social/types/messages.type';
-import { Dropdown, notification, Tooltip } from 'antd';
+import type {
+  IMessage,
+  IMessageReaction,
+  IMessageRevoke,
+} from '@social/types/messages.type';
+import { Dropdown, Modal, notification, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import React, { useEffect, useMemo, useState } from 'react';
 import { BsFillReplyFill } from 'react-icons/bs';
@@ -27,8 +31,8 @@ const ConversationContent: React.FC<IProps> = ({
   const { socket } = useSockets();
   const userInfo = useAppSelector(state => state.auth.userInfo);
   const [usersLike, setUsersLike] = useState(message.userLikes);
-  const [totalLikes, setTotalLikes] = useState(message.userLikes.length);
   const [openDropdown, setOpenDropdown] = useState(false);
+  const [isRevoked, setIsRevoked] = useState(message.revoked);
   const myLike = useMemo(() => {
     return usersLike.find(user => user.userId === userInfo._id);
   }, [usersLike, userInfo._id]);
@@ -74,7 +78,6 @@ const ConversationContent: React.FC<IProps> = ({
               newUsersLike[index].type = data.type;
             } else {
               newUsersLike.push(data);
-              setTotalLikes(prev => prev + 1);
             }
             return newUsersLike;
           });
@@ -82,15 +85,23 @@ const ConversationContent: React.FC<IProps> = ({
           setUsersLike(prev =>
             prev.filter(user => user.userId !== data.userId)
           );
-          setTotalLikes(prev => prev - 1);
         }
       }
     };
 
+    const handleRevokeMessage = (data: IMessageRevoke) => {
+      console.log('data revoke message', data);
+      if (data.messageId !== message._id) return;
+      if (data.userId === userInfo._id) return;
+      setIsRevoked(true);
+    };
+
     socket.on(CHAT_MESSAGE.REACTION, handleReaction);
+    socket.on(CHAT_MESSAGE.REVOKE, handleRevokeMessage);
 
     return () => {
       socket.off(CHAT_MESSAGE.REACTION, handleReaction);
+      socket.off(CHAT_MESSAGE.REVOKE, handleRevokeMessage);
     };
   }, [socket, userInfo._id, message._id, message]);
 
@@ -111,13 +122,11 @@ const ConversationContent: React.FC<IProps> = ({
           newUsersLike[index].type = type;
         } else {
           newUsersLike.push({ userId: userInfo._id, type });
-          setTotalLikes(prev => prev + 1);
         }
         return newUsersLike;
       });
     } else {
       setUsersLike(prev => prev.filter(user => user.userId !== userInfo._id));
-      setTotalLikes(prev => prev - 1);
     }
 
     socket.emit(CHAT_MESSAGE.REACTION, {
@@ -130,9 +139,11 @@ const ConversationContent: React.FC<IProps> = ({
   };
 
   const handleRevokeMessage = () => {
+    setIsRevoked(true);
     socket.emit(CHAT_MESSAGE.REVOKE, {
       conversationId: message.conversationId,
       messageId: message._id,
+      content: message.content,
       userId: userInfo._id,
     });
   };
@@ -140,9 +151,9 @@ const ConversationContent: React.FC<IProps> = ({
   return (
     <>
       <div id={`msg_${message._id}`} className="group/message">
-        {(message.parentId || message.edited) && (
+        {(message.parentId || message.edited) && !isRevoked && (
           <div
-            className={`flex w-full ${isMine ? 'justify-end' : 'justify-start'} mt-3 -mb-5`}
+            className={`flex w-full ${isMine ? 'justify-end' : 'justify-start'} mt-3`}
           >
             {!isMine && <div className="w-9" />}
             <div className="flex flex-col max-w-[80%] gap-1">
@@ -164,7 +175,9 @@ const ConversationContent: React.FC<IProps> = ({
                 )}
               </div>
               {message.parentId && (
-                <div className={`${isMine && 'justify-end'} flex items-center`}>
+                <div
+                  className={`${isMine && 'justify-end'} flex items-center -mb-5`}
+                >
                   <div
                     className="pb-5 rounded-2xl px-3 pt-2 bg-gray-300 opacity-50 w-fit cursor-pointer hover:bg-gray-400 transition-colors"
                     onClick={() => onScrollToMessage(message.parentId!._id)}
@@ -198,9 +211,9 @@ const ConversationContent: React.FC<IProps> = ({
                   return (
                     <div className="bg-white rounded-lg shadow-lg p-2 border border-gray-200 w-[150px]">
                       <div className="grid grid-cols-1">
-                        {isMine ? (
+                        {isMine && (
                           <>
-                            {ableEditMessage && (
+                            {ableEditMessage && !isRevoked && (
                               <div
                                 className="col-span-1 rounded-md hover:bg-gray-100 p-2 cursor-pointer"
                                 onClick={() => {
@@ -214,9 +227,19 @@ const ConversationContent: React.FC<IProps> = ({
                               </div>
                             )}
                             <div
-                              className="col-span-1 rounded-md hover:bg-gray-100 p-2 cursor-pointer"
+                              className={`col-span-1 rounded-md hover:bg-gray-100 p-2 cursor-pointer ${isRevoked && 'hidden'}`}
                               onClick={() => {
-                                handleRevokeMessage();
+                                Modal.confirm({
+                                  title: 'Thu hồi tin nhắn',
+                                  centered: true,
+                                  okText: 'Thu hồi',
+                                  cancelText: 'Đóng',
+                                  content:
+                                    'Bạn có chắc chắn muốn thu hồi tin nhắn này không?',
+                                  onOk: () => {
+                                    handleRevokeMessage();
+                                  },
+                                });
                                 setOpenDropdown(false);
                               }}
                             >
@@ -225,7 +248,8 @@ const ConversationContent: React.FC<IProps> = ({
                               </div>
                             </div>
                           </>
-                        ) : (
+                        )}
+                        {(!isMine || (isMine && isRevoked)) && (
                           <div
                             className="col-span-1 rounded-md hover:bg-gray-100 p-2 cursor-pointer"
                             onClick={() => setOpenDropdown(false)}
@@ -244,7 +268,7 @@ const ConversationContent: React.FC<IProps> = ({
                   <TbDotsVertical size={18} className="text-gray-500" />
                 </div>
               </Dropdown>
-              <Tooltip title="Phàn hồi">
+              <Tooltip title="Phàn hồi" className={`${isRevoked && 'hidden'}`}>
                 <div
                   className="flex items-center justify-center p-1 hover:bg-gray-100 rounded-full"
                   onClick={() => getMessageReply(message, 'reply')}
@@ -252,15 +276,17 @@ const ConversationContent: React.FC<IProps> = ({
                   <BsFillReplyFill size={20} className="text-gray-500" />
                 </div>
               </Tooltip>
-              <ButtonLike
-                onActionLike={handleReactMessage}
-                trigger="click"
-                likedType={myLike?.type}
-              >
-                <div className="flex items-center justify-center p-1 hover:bg-gray-100 rounded-full">
-                  <TbMoodSmile size={20} className="text-gray-500" />
-                </div>
-              </ButtonLike>
+              <div className={`${isRevoked && 'hidden'}`}>
+                <ButtonLike
+                  onActionLike={handleReactMessage}
+                  trigger="click"
+                  likedType={myLike?.type}
+                >
+                  <div className="flex items-center justify-center p-1 hover:bg-gray-100 rounded-full">
+                    <TbMoodSmile size={20} className="text-gray-500" />
+                  </div>
+                </ButtonLike>
+              </div>
             </div>
           </div>
 
@@ -274,8 +300,18 @@ const ConversationContent: React.FC<IProps> = ({
             className={`${isMine ? 'max-w-[70%]' : 'max-w-[60%]'} flex-shrink-0`}
           >
             <div className="flex">
-              <div
-                className={`relative w-fit rounded-2xl px-3 py-2 text-base leading-5
+              {isRevoked ? (
+                <div className="w-fit rounded-2xl px-3 py-2 text-base leading-5 bg-transparent border border-gray-200 break-words">
+                  <span className="text-gray-500 italic">
+                    {message.sender._id === userInfo._id
+                      ? 'Bạn'
+                      : `${message.sender.fullname}`}{' '}
+                    đã thu hồi tin nhắn
+                  </span>
+                </div>
+              ) : (
+                <div
+                  className={`w-fit max-w-full rounded-2xl px-3 py-2 text-base leading-5 break-words
                         ${
                           isMine
                             ? 'bg-primary text-white rounded-br-none'
@@ -283,9 +319,10 @@ const ConversationContent: React.FC<IProps> = ({
                         }
                       ${classStatus}
                       `}
-              >
-                {message.content}
-              </div>
+                >
+                  {message.content}
+                </div>
+              )}
             </div>
             {typeLikes.length > 0 && (
               <>
@@ -306,8 +343,8 @@ const ConversationContent: React.FC<IProps> = ({
                         </div>
                       )}
 
-                      {totalLikes > 1 && (
-                        <div className="text-xs">{totalLikes}</div>
+                      {usersLike.length > 1 && (
+                        <div className="text-xs">{usersLike.length}</div>
                       )}
                     </div>
                   </div>
