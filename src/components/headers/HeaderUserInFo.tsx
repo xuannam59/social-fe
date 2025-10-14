@@ -9,6 +9,8 @@ import AvatarUser from '../common/AvatarUser';
 import ConversationDropdown from '../conversations/ConversationDropdown';
 import NotificationDropdown from '../notifications/NotificationDropdown';
 import defaultAvatar from '@social/images/default-avatar.webp';
+import { useEffect } from 'react';
+import { fetchUnSeenConversations } from '@social/redux/reducers/conversations';
 
 const { Text } = Typography;
 
@@ -24,6 +26,10 @@ const HeaderUserInfo = () => {
       window.location.href = ROUTES.AUTH.LOGIN;
     }
   };
+
+  useEffect(() => {
+    dispatch(fetchUnSeenConversations());
+  }, [dispatch]);
 
   return (
     <>

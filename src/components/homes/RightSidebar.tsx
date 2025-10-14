@@ -6,7 +6,6 @@ import { Button } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 import InviteFriendCard from '../friends/InviteFriendCard';
 import FriendItemCard from '../friends/FriendItemCard';
-import AvatarUser from '../common/AvatarUser';
 
 const RightSidebar = () => {
   const [invitationList, setInvitationList] = useState<IFriend[]>([]);

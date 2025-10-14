@@ -10,7 +10,7 @@ export const callApiCreateStory = async (data: IFormCreateStory) => {
 };
 
 export const callApiGetStories = async (query?: string) => {
-  return axios.get<IBackendResPagination<IUserStory>>(
+  return axios.get<IBackendResPagination<IUserStory[]>>(
     `/api/v1/stories?${query ? query : ''}`
   );
 };

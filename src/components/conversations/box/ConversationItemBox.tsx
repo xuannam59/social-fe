@@ -55,16 +55,19 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
   const topSentinelRef = useRef<HTMLDivElement | null>(null);
   const bottomSentinelRef = useRef<HTMLDivElement | null>(null);
   const [hasUserScrolled, setHasUserScrolled] = useState(false);
+  const conversationBoxRef = useRef<HTMLDivElement | null>(null);
 
   const getConversationId = useCallback(async () => {
     try {
       if (isExist) return;
-      const res = await callApiGetConversationIdOrCreate(conversation.users);
+      const res = await callApiGetConversationIdOrCreate(
+        conversation.users.map(user => user._id)
+      );
       if (res.data) {
         dispatch(
           doSetIdConversation({
             _id: conversation._id,
-            conversationId: res.data,
+            conversation: res.data,
           })
         );
       }
@@ -152,8 +155,36 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
 
   useEffect(() => {
     getConversationId();
-    getMessages();
-  }, [getConversationId, getMessages]);
+  }, [getConversationId]);
+
+  useEffect(() => {
+    if (isExist) {
+      getMessages();
+    }
+  }, [getMessages, isExist]);
+
+  // useEffect(() => {
+  //   const handleFocus = async () => {
+  //     // Gọi API cập nhật trạng thái read/seen khi click vào conversation box
+  //     if (conversation._id && messages.length > 0) {
+  //       try {
+  //         // await callApiSeenConversation([conversation._id]);
+  //         console.log('Đã mark conversation as seen:', conversation._id);
+  //       } catch (error) {
+  //         console.error('Lỗi khi mark conversation as seen:', error);
+  //       }
+  //     }
+  //   };
+
+  //   const conversationBox = conversationBoxRef.current;
+  //   if (conversationBox) {
+  //     conversationBox.addEventListener('click', handleFocus);
+
+  //     return () => {
+  //       conversationBox.removeEventListener('click', handleFocus);
+  //     };
+  //   }
+  // }, [conversation._id, messages.length]);
 
   useEffect(() => {
     const container = scrollContainerRef.current;
@@ -295,7 +326,7 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
     requestAnimationFrame(() => {
       if (!bottomSentinelRef.current) return;
       scrollContainerRef.current?.scrollTo({
-        top: bottomSentinelRef.current.getBoundingClientRect().top,
+        top: bottomSentinelRef.current.getBoundingClientRect().bottom,
         behavior: 'smooth',
       });
     });
@@ -333,7 +364,10 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
 
   return (
     <>
-      <div className="w-[328px] max-h-[455px] flex flex-col bg-white rounded-t-lg shadow-md overflow-visible">
+      <div
+        className="w-[328px] max-h-[455px] flex flex-col bg-white rounded-t-lg shadow-md overflow-visible"
+        ref={conversationBoxRef}
+      >
         <div className="p-2 flex items-center shadow-sm">
           <div className="flex flex-1 gap-2 items-center min-w-0">
             <div className="shrink-0 relative">

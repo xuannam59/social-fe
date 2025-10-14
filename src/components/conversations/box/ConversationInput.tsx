@@ -189,6 +189,8 @@ const ConversationInput: React.FC<IProps> = ({
         mentions: [],
         userLikes: [],
         typeSend: 'send',
+        revoked: false,
+        edited: false,
       };
 
       if (parentId && selectMessage && selectMessage.type === 'reply') {

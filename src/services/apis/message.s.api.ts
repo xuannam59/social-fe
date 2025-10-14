@@ -6,7 +6,7 @@ export const callApiGetMessages = (
   conversationId: string,
   params?: { page?: number; limit?: number }
 ) => {
-  return axios.get<IBackendResPagination<IMessage>>(
+  return axios.get<IBackendResPagination<IMessage[]>>(
     `/api/v1/messages/${conversationId}`,
     { params }
   );

@@ -11,19 +11,34 @@ interface IProps {
 }
 
 const FriendItemCard: React.FC<IProps> = ({ friend }) => {
-  const userId = useAppSelector(state => state.auth.userInfo._id);
+  const userInfo = useAppSelector(state => state.auth.userInfo);
   const dispatch = useAppDispatch();
 
   const handleOpenConversation = () => {
     const data: IConversation = {
       _id: friend.conversationId ? friend.conversationId : friend._id,
-      users: [userId, friend._id],
+      users: [
+        {
+          _id: userInfo._id,
+          fullname: userInfo.fullname,
+          avatar: userInfo.avatar,
+          isOnline: userInfo.isOnline,
+        },
+        {
+          _id: friend._id,
+          fullname: friend.fullname,
+          avatar: friend.avatar,
+          isOnline: friend.isOnline,
+        },
+      ],
       isGroup: friend.isGroup,
       name: friend.fullname,
       avatar: friend.avatar,
       isExist: friend.isExist,
       lastActive: friend.lastActive,
       isOnline: friend.isOnline,
+      usersState: [],
+      lastMessageAt: '',
     };
     dispatch(doOpenConversation(data));
   };

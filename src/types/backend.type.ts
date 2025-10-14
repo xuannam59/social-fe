@@ -7,7 +7,7 @@ export interface IBackendRes<T> {
 
 export interface IBackendResPagination<T> {
   data: {
-    list: T[];
+    list: T;
     meta: {
       page: number;
       limit: number;
