@@ -101,16 +101,53 @@ const conversationSlice = createSlice({
         };
       }
     },
-    doSetSeenConversation: state => {
-      state.unSeenConversations = [];
-      // caapj nhaapj data....
+    doSetUnSeenConversation: (state, action: PayloadAction<string>) => {
+      const conversationId = action.payload;
+      const unSeenSet = new Set(state.unSeenConversations);
+      unSeenSet.add(conversationId);
+      state.unSeenConversations = [...unSeenSet];
+    },
+    doUpdateConversationPosition: (
+      state,
+      action: PayloadAction<{ conversation: IConversation; userId: string }>
+    ) => {
+      const { conversation, userId } = action.payload;
+      const listConversations = state.listConversations;
+      const existingIndex = listConversations.findIndex(
+        c => c._id === conversation._id
+      );
+
+      if (existingIndex !== -1) {
+        const existing = listConversations[existingIndex];
+        listConversations.splice(existingIndex, 1);
+        listConversations.unshift({
+          ...existing,
+          lastMessage: conversation.lastMessage,
+          lastMessageAt: conversation.lastMessageAt,
+          usersState: conversation.usersState,
+        });
+      } else {
+        if (conversation.isGroup) {
+          listConversations.unshift(conversation);
+        } else {
+          const other = conversation.users.find(u => u._id !== userId);
+          const newConversation = {
+            ...conversation,
+            name: other?.fullname || 'Người dùng',
+            avatar: other?.avatar || '',
+          } as IConversation;
+          listConversations.unshift(newConversation);
+        }
+      }
+
+      state.listConversations = listConversations;
     },
   },
   extraReducers: builder => {
     builder.addCase(fetchUnSeenConversations.fulfilled, (state, action) => {
       state.unSeenConversations = action.payload;
     });
-    builder.addCase(seenConversation.fulfilled, (state, action) => {
+    builder.addCase(seenConversation.fulfilled, state => {
       state.unSeenConversations = [];
     });
   },
@@ -121,5 +158,7 @@ export const {
   doCloseConversation,
   doSetIdConversation,
   doSetConversations,
+  doSetUnSeenConversation,
+  doUpdateConversationPosition,
 } = conversationSlice.actions;
 export const conversationReducer = conversationSlice.reducer;

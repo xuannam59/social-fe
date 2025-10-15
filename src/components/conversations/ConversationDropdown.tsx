@@ -1,18 +1,21 @@
-import {
-  callApiGetConversations,
-  callApiSeenConversation,
-} from '@social/apis/conversations.api';
+import { callApiGetConversations } from '@social/apis/conversations.api';
+import { HEADER_MESSAGE } from '@social/defaults/socket.default';
 import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
+import { useSockets } from '@social/providers/SocketProvider';
 import {
   doSetConversations,
+  doSetUnSeenConversation,
+  doUpdateConversationPosition,
   seenConversation,
 } from '@social/redux/reducers/conversations';
 import { Badge, Button, Dropdown, notification, Typography } from 'antd';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { TbMessageCircle } from 'react-icons/tb';
 import InputSearch from '../common/InputSearch';
 import LoadingComment from '../loading/LoadingComment';
 import ConversationItem from './ConversationItem';
+import EmptyState from '../common/EmptyState';
+import type { IConversation } from '@social/types/conversations.type';
 
 const { Title } = Typography;
 
@@ -24,6 +27,8 @@ const ConversationDropdown = () => {
   const [_, setIsSearchFocused] = useState(false);
   const [conversationType, setConversationType] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
+  const { socket } = useSockets();
+  const { userInfo } = useAppSelector(state => state.auth);
   const dispatch = useAppDispatch();
   const conversationTypeList = [
     {
@@ -78,6 +83,26 @@ const ConversationDropdown = () => {
     [dispatch, listConversations, unSeenConversations]
   );
 
+  useEffect(() => {
+    if (!socket) return;
+    socket.on(
+      HEADER_MESSAGE.UN_SEEN_CONVERSATION,
+      (data: { conversation: IConversation; senderId: string }) => {
+        const { conversation, senderId } = data;
+        if (!conversation._id) return;
+        if (senderId !== userInfo._id) {
+          dispatch(doSetUnSeenConversation(conversation._id));
+        }
+        dispatch(
+          doUpdateConversationPosition({ conversation, userId: userInfo._id })
+        );
+      }
+    );
+    return () => {
+      socket.off(HEADER_MESSAGE.UN_SEEN_CONVERSATION);
+    };
+  }, [socket, dispatch, userInfo._id]);
+
   return (
     <>
       <Dropdown
@@ -121,7 +146,7 @@ const ConversationDropdown = () => {
               <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain px-2 py-3">
                 {isLoading ? (
                   <LoadingComment />
-                ) : (
+                ) : listConversations.length > 0 ? (
                   <div className="grid grid-cols-1">
                     {listConversations.map(item => (
                       <ConversationItem
@@ -130,6 +155,10 @@ const ConversationDropdown = () => {
                         onCloseDropdown={() => setOpenDropdown(false)}
                       />
                     ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <EmptyState />
                   </div>
                 )}
               </div>
