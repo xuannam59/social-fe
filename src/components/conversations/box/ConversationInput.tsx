@@ -25,7 +25,6 @@ const LazyEmojiPicker = lazy(() => import('emoji-picker-react'));
 interface IProps {
   conversation: IConversation;
   isLoadingMessages: boolean;
-  usersTyping: IMessageTyping[];
   selectMessage: {
     message: IMessage;
     type: 'reply' | 'edit';
@@ -38,7 +37,6 @@ interface IProps {
 const ConversationInput: React.FC<IProps> = ({
   conversation,
   isLoadingMessages,
-  usersTyping,
   selectMessage,
   onEditMessage,
   onAddMessage,
@@ -52,6 +50,7 @@ const ConversationInput: React.FC<IProps> = ({
   const inputNotEmpty = Form.useWatch(conversation._id, form);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [medias, setMedias] = useState<IPreviewMedia[]>([]);
+  const typingRef = useRef<boolean>(false);
 
   const handleRemoveSelectMessage = useCallback(() => {
     onRemoveSelectMessage();
@@ -62,6 +61,7 @@ const ConversationInput: React.FC<IProps> = ({
     () =>
       debounce((payload: IMessageTyping) => {
         socket.emit(CHAT_MESSAGE.TYPING, payload);
+        typingRef.current = false;
       }, 3000),
     [socket]
   );
@@ -102,19 +102,18 @@ const ConversationInput: React.FC<IProps> = ({
           ...messageTyping,
           status: 'stop_typing',
         });
+        typingRef.current = false;
         return;
       }
 
-      const exist = usersTyping.find(
-        user => user.sender._id === messageTyping.sender._id
-      );
-      if (!exist) {
+      if (!typingRef.current) {
         socket.emit(CHAT_MESSAGE.TYPING, messageTyping);
+        typingRef.current = true;
       }
 
       debouncedTyping({ ...messageTyping, status: 'stop_typing' });
     },
-    [debouncedTyping, userInfo, conversation._id, socket, usersTyping]
+    [debouncedTyping, userInfo, conversation._id, socket]
   );
 
   const handleMediaSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -275,15 +274,12 @@ const ConversationInput: React.FC<IProps> = ({
         {selectMessage && (
           <div className="flex flex-col px-2 relative">
             <div className="flex items-center justify-between">
-              {selectMessage.type === 'edit' ? (
-                <div className="text-base font-medium">
-                  Chỉnh sửa tin nhắn của bạn
-                </div>
-              ) : (
-                <div className="text-base font-medium">
-                  Trả lời cho {selectMessage.message.sender.fullname}
-                </div>
-              )}
+              <div className="text-base font-medium">
+                {selectMessage.type === 'edit'
+                  ? 'Chỉnh sửa tin nhắn của bạn'
+                  : 'Trả lời cho ' + selectMessage.message.sender.fullname}
+              </div>
+
               <div className="cursor-pointer rounded-full text-center">
                 <TbX
                   size={16}
@@ -328,6 +324,7 @@ const ConversationInput: React.FC<IProps> = ({
                 type="text"
                 shape="circle"
                 onClick={() => imageInputRef.current?.click()}
+                disabled={isLoadingMessages}
               >
                 <TbPhotoPlus size={20} />
               </Button>

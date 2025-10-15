@@ -12,11 +12,7 @@ import {
   doSetIdConversation,
 } from '@social/redux/reducers/conversations';
 import type { IConversation } from '@social/types/conversations.type';
-import type {
-  IMessage,
-  IMessageStatus,
-  IMessageTyping,
-} from '@social/types/messages.type';
+import type { IMessage, IMessageStatus } from '@social/types/messages.type';
 import { Button, notification } from 'antd';
 import React, {
   useCallback,
@@ -50,13 +46,13 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [page, setPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [usersTyping, setUsersTyping] = useState<IMessageTyping[]>([]);
+  // Typing state moved into ConversationTyping component
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const topSentinelRef = useRef<HTMLDivElement | null>(null);
   const bottomSentinelRef = useRef<HTMLDivElement | null>(null);
   const [hasUserScrolled, setHasUserScrolled] = useState(false);
   const conversationBoxRef = useRef<HTMLDivElement | null>(null);
-
+  console.log('conversation', conversation);
   const getConversationId = useCallback(async () => {
     try {
       if (isExist) return;
@@ -258,21 +254,6 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
       }
     });
 
-    socket.on(CHAT_MESSAGE.TYPING, (payload: IMessageTyping) => {
-      if (payload.conversationId !== conversation._id) return;
-      if (payload.status === 'typing') {
-        const exist = usersTyping.find(
-          user => user.sender._id === payload.sender._id
-        );
-        if (exist) return;
-        setUsersTyping(prev => [...prev, payload]);
-      } else {
-        setUsersTyping(prev =>
-          prev.filter(user => user.sender._id !== payload.sender._id)
-        );
-      }
-    });
-
     socket.on(CHAT_MESSAGE.EDIT, (data: IMessage) => {
       if (data.conversationId !== conversation._id) return;
       if (data.sender._id === userInfo._id) return;
@@ -295,10 +276,9 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
     return () => {
       socket.off(CHAT_MESSAGE.SEND);
       socket.off(CHAT_MESSAGE.STATUS_MESSAGE);
-      socket.off(CHAT_MESSAGE.TYPING);
       socket.off(CHAT_MESSAGE.EDIT);
     };
-  }, [socket, userInfo, conversation._id, usersTyping]);
+  }, [socket, userInfo, conversation]);
 
   const handleReSendMessage = useCallback(
     (messageId: string) => {
@@ -414,7 +394,7 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
             </div>
           ) : (
             <div
-              className="flex flex-col-reverse overflow-y-auto px-3 gap-1 flex-1"
+              className="flex flex-col-reverse overflow-y-auto px-3 gap-2 flex-1"
               ref={scrollContainerRef}
               onScroll={() => {
                 if (!hasUserScrolled) {
@@ -423,7 +403,7 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
               }}
             >
               <div ref={bottomSentinelRef} />
-              <ConversationTyping usersTyping={usersTyping} />
+              <ConversationTyping conversationId={conversation._id} />
               {messages.map(message => (
                 <ConversationContent
                   key={message._id}
@@ -446,7 +426,6 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
             <ConversationInput
               conversation={conversation}
               isLoadingMessages={isLoadingMessages}
-              usersTyping={usersTyping}
               selectMessage={selectMessage}
               onAddMessage={handleAddMessage}
               onEditMessage={handleEditMessage}

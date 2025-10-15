@@ -1,16 +1,46 @@
 import type { IMessageTyping } from '@social/types/messages.type';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Lottie from 'lottie-react';
 import typingAnimation from '@social/animations/typing.json';
 import { useAppSelector } from '@social/hooks/redux.hook';
 import AvatarUser from '@social/components/common/AvatarUser';
+import { useSockets } from '@social/providers/SocketProvider';
+import { CHAT_MESSAGE } from '@social/defaults/socket.default';
 
 interface IProps {
-  usersTyping: IMessageTyping[];
+  conversationId: string;
 }
 
-const ConversationTyping: React.FC<IProps> = ({ usersTyping }) => {
+const ConversationTyping: React.FC<IProps> = ({ conversationId }) => {
   const userId = useAppSelector(state => state.auth.userInfo._id);
+  const { socket } = useSockets();
+  const [usersTyping, setUsersTyping] = useState<IMessageTyping[]>([]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleTyping = (payload: IMessageTyping) => {
+      if (payload.conversationId !== conversationId) return;
+      if (payload.sender._id === userId) return;
+      if (payload.status === 'typing') {
+        setUsersTyping(prev => {
+          const exists = prev.some(u => u.sender._id === payload.sender._id);
+          if (exists) return prev;
+          return [...prev, payload];
+        });
+      } else {
+        setUsersTyping(prev =>
+          prev.filter(u => u.sender._id !== payload.sender._id)
+        );
+      }
+    };
+
+    socket.on(CHAT_MESSAGE.TYPING, handleTyping);
+    return () => {
+      socket.off(CHAT_MESSAGE.TYPING, handleTyping);
+    };
+  }, [socket, conversationId, userId]);
+
   const changedUsersTyping = useMemo(() => {
     return usersTyping.filter(user => user.sender._id !== userId);
   }, [usersTyping, userId]);
@@ -26,7 +56,7 @@ const ConversationTyping: React.FC<IProps> = ({ usersTyping }) => {
               <div className="relative z-10">
                 <AvatarUser
                   avatar={changedUsersTyping[0].sender.avatar}
-                  size={32}
+                  size={28}
                 />
               </div>
             )}

@@ -153,12 +153,12 @@ const ConversationContent: React.FC<IProps> = ({
       <div id={`msg_${message._id}`} className="group/message">
         {(message.parentId || message.edited) && !isRevoked && (
           <div
-            className={`flex w-full ${isMine ? 'justify-end' : 'justify-start'} mt-3`}
+            className={`flex w-full ${isMine ? 'justify-end' : 'justify-start'} mt-1`}
           >
             {!isMine && <div className="w-9" />}
-            <div className="flex flex-col max-w-[80%] gap-1">
+            <div className="flex flex-col max-w-[80%]">
               <div
-                className={`flex items-center gap-2 ${isMine ? 'justify-end' : 'justify-start'}`}
+                className={`flex items-center ${isMine ? 'justify-end' : 'justify-start'}`}
               >
                 {message.parentId && (
                   <>
@@ -170,7 +170,11 @@ const ConversationContent: React.FC<IProps> = ({
                 )}
                 {message.edited && (
                   <>
-                    <span className="text-sm text-blue-500">Đã chỉnh sửa</span>
+                    <div className="ml-2">
+                      <span className="text-sm text-blue-500">
+                        Đã chỉnh sửa
+                      </span>
+                    </div>
                   </>
                 )}
               </div>
@@ -195,7 +199,7 @@ const ConversationContent: React.FC<IProps> = ({
           className={`relative z-10 flex ${isMine ? 'justify-end' : 'justify-start'} gap-2 items-center`}
         >
           <div
-            className={`hidden group-hover/message:block ${isMine ? 'order-first' : 'order-last'}`}
+            className={`invisible group-hover/message:visible ${isMine ? 'order-first' : 'order-last'}`}
           >
             <div
               className={`flex items-center ${!isMine && 'flex-row-reverse'}`}
