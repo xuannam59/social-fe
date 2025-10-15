@@ -11,4 +11,5 @@ export interface IEmojiReaction {
   label: string;
   value: number;
   color: string;
+  reSource: any;
 }

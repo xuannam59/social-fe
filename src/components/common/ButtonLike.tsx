@@ -1,6 +1,7 @@
 import { Dropdown, Tooltip } from 'antd';
 import React, { useState } from 'react';
 import { emojiReactions } from '@social/constants/emoji';
+import Lottie from 'lottie-react';
 
 interface IProps {
   onActionLike: (type: number, isLike: boolean) => void;
@@ -52,9 +53,9 @@ const ButtonLike: React.FC<IProps> = ({
                   `}
                 >
                   <span
-                    className={`text-2xl font-semibold hover:scale-125 transition-all duration-300`}
+                    className={`hover:scale-125 transition-all duration-300 w-[80%]`}
                   >
-                    {emoji.emoji}
+                    <Lottie animationData={emoji.reSource} loop={true} />
                   </span>
                 </div>
               </Tooltip>

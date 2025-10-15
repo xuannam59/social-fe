@@ -171,13 +171,21 @@ const PostItem: React.FC<IProps> = ({
             <div className="flex items-center gap-1 cursor-pointer">
               {post.likeCount > 0 && (
                 <>
-                  <span className="text-base relative">
+                  <span className="flex items-center">
                     {((post.likeCount === 1 && !userLiked) ||
-                      (userLiked && post.likeCount > 1)) &&
-                      emojiReactions[0].emoji}
+                      (userLiked && post.likeCount > 1)) && (
+                      <div className="relative z-1">
+                        <span className="text-base">
+                          {emojiReactions[0].emoji}
+                        </span>
+                      </div>
+                    )}
                     {userLiked &&
-                      userLiked.emoji !== emojiReactions[0].emoji && (
-                        <span className="text-base">{userLiked.emoji}</span>
+                      (userLiked.emoji !== emojiReactions[0].emoji ||
+                        post.likeCount === 1) && (
+                        <div className="-ml-1">
+                          <span className="text-base">{userLiked.emoji}</span>
+                        </div>
                       )}
                   </span>
                   <span className="text-gray-500 text-base hover:underline">

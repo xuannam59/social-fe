@@ -11,6 +11,7 @@ import type {
 } from '@social/types/messages.type';
 import { Dropdown, Modal, notification, Tooltip } from 'antd';
 import dayjs from 'dayjs';
+import Lottie from 'lottie-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { BsFillReplyFill } from 'react-icons/bs';
 import { TbDotsVertical, TbLoader2, TbMoodSmile } from 'react-icons/tb';
@@ -336,9 +337,12 @@ const ConversationContent: React.FC<IProps> = ({
                       {typeLikes.slice(0, 2).map((type, index) => (
                         <div
                           key={type}
-                          className={`text-xs relative ${index > 0 ? '-ml-2.5 z-1' : 'z-2'}`}
+                          className={`w-4 h-4 relative ${index > 0 ? '-ml-1 z-1' : 'z-2'}`}
                         >
-                          {emojiReactions[type - 1].emoji}
+                          <Lottie
+                            animationData={emojiReactions[type - 1].reSource}
+                            loop={true}
+                          />
                         </div>
                       ))}
                       {typeLikes.length > 2 && (

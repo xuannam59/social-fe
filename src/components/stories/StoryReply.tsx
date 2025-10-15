@@ -9,6 +9,7 @@ import {
 import { Button, Form, Input, message, Tooltip, type InputRef } from 'antd';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { TbSend } from 'react-icons/tb';
+import Lottie from 'lottie-react';
 
 const StoryReply = () => {
   const { currentStory, paused } = useAppSelector(state => state.story);
@@ -50,6 +51,7 @@ const StoryReply = () => {
         const res = await callApiActionLike(currentStory._id, value);
         if (res.data) {
           dispatch(doLikeStory({ userId: userInfo._id, type: value }));
+          message.success('Thả cảm xúc thành công');
         } else {
           message.error(convertErrorMessage(res.message));
         }
@@ -58,7 +60,7 @@ const StoryReply = () => {
         message.error('Có lỗi xảy ra');
       }
     },
-    [currentStory, userInfo]
+    [currentStory, userInfo, dispatch]
   );
 
   const onFocus = () => {
@@ -140,7 +142,7 @@ const StoryReply = () => {
                 <Tooltip title={emoji.label}>
                   <div className="flex items-center justify-center w-full h-full">
                     <span
-                      className={`text-3xl font-semibold hover:scale-150 transition-all duration-300 
+                      className={`hover:scale-150 transition-all duration-300 w-10 h-10
                           ${
                             userLiked?.type === emoji.value
                               ? 'scale-125'
@@ -153,7 +155,7 @@ const StoryReply = () => {
                             : undefined,
                       }}
                     >
-                      {emoji.emoji}
+                      <Lottie animationData={emoji.reSource} loop={true} />
                     </span>
                   </div>
                 </Tooltip>

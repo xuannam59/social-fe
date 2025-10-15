@@ -78,7 +78,7 @@ const StoryPlayer: React.FC<IProps> = ({ isLoading, navigationState }) => {
         return 'upcoming';
       }
     });
-  }, [currentIndex, currentUserStory.stories.length]);
+  }, [currentIndex, currentUserStory.stories]);
 
   const getStoryStatus = useCallback(
     (index: number) => {

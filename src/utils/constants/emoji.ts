@@ -1,4 +1,63 @@
 import type { IEmojiItem, IEmojiReaction } from '@social/types/commons.type';
+import thumbUp from '@social/animations/emojis/Thumbs-up.json';
+import heart from '@social/animations/emojis/heart.json';
+import laughing from '@social/animations/emojis/laughing.json';
+import astonished from '@social/animations/emojis/astonished.json';
+import crying from '@social/animations/emojis/crying.json';
+import rage from '@social/animations/emojis/rage.json';
+
+export const emojiReactions: IEmojiReaction[] = [
+  {
+    id: 'emoji-like-1',
+    emoji: '👍',
+    label: 'Thích',
+    value: 1,
+    color: '#1877F2',
+    reSource: thumbUp,
+  },
+  {
+    id: 'emoji-love-2',
+    emoji: '❤️',
+    label: 'Yêu thích',
+    value: 2,
+    color: '#F02849',
+    reSource: heart,
+  },
+
+  {
+    id: 'emoji-haha-3',
+    emoji: '😆',
+    label: 'Haha',
+    value: 3,
+    color: '#F7B125',
+    reSource: laughing,
+  },
+  {
+    id: 'emoji-wow-4',
+    emoji: '😮',
+    label: 'Wow',
+    value: 4,
+    color: '#F7B125',
+    reSource: astonished,
+  },
+  {
+    id: 'emoji-sad-5',
+    emoji: '😭',
+    label: 'Buồn',
+    value: 5,
+    color: '#8B9DC3',
+    reSource: crying,
+  },
+
+  {
+    id: 'emoji-angry-6',
+    emoji: '😡',
+    label: 'Phẫn nộ',
+    value: 6,
+    color: '#E24C4B',
+    reSource: rage,
+  },
+];
 
 const emojiData: IEmojiItem[] = [
   {
@@ -414,53 +473,6 @@ const emojiData: IEmojiItem[] = [
     emoji: '😵‍💫',
     label: 'hoa mắt',
     slug: 'hoa-mat',
-  },
-];
-
-export const emojiReactions: IEmojiReaction[] = [
-  {
-    id: 'emoji-like-1',
-    emoji: '👍',
-    label: 'Thích',
-    value: 1,
-    color: '#1877F2',
-  },
-  {
-    id: 'emoji-love-2',
-    emoji: '❤️',
-    label: 'Yêu thích',
-    value: 2,
-    color: '#F02849',
-  },
-
-  {
-    id: 'emoji-haha-3',
-    emoji: '😆',
-    label: 'Haha',
-    value: 3,
-    color: '#F7B125',
-  },
-  {
-    id: 'emoji-wow-4',
-    emoji: '😮',
-    label: 'Wow',
-    value: 4,
-    color: '#F7B125',
-  },
-  {
-    id: 'emoji-sad-5',
-    emoji: '😭',
-    label: 'Buồn',
-    value: 5,
-    color: '#8B9DC3',
-  },
-
-  {
-    id: 'emoji-angry-6',
-    emoji: '😡',
-    label: 'Phẫn nộ',
-    value: 6,
-    color: '#E24C4B',
   },
 ];
 
