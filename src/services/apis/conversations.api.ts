@@ -27,3 +27,9 @@ export const callApiSeenConversation = (conversationIds: string[]) => {
     conversationIds,
   });
 };
+
+export const callApiReadConversation = (conversationId: string) => {
+  return axios.patch<IBackendRes<string>>(`/api/v1/messages/read`, {
+    conversationId,
+  });
+};

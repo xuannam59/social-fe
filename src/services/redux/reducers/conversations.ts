@@ -10,11 +10,13 @@ import {
   callApiSeenConversation,
 } from '@social/apis/conversations.api';
 import type { IConversation } from '@social/types/conversations.type';
+import { callApiConversationFriendList } from '@social/apis/user.api';
 
 const initialState: IConversationState = {
   listConversations: [],
   openConversations: [],
   unSeenConversations: [],
+  friendConversations: [],
   total: 0,
 };
 
@@ -30,6 +32,14 @@ export const fetchUnSeenConversations = createAsyncThunk(
   'conversation/fetchUnSeenConversations',
   async () => {
     const res = await callApiGetUnSeenConversations();
+    return res.data;
+  }
+);
+
+export const fetchFriendConversations = createAsyncThunk(
+  'conversation/fetchFriendConversations',
+  async () => {
+    const res = await callApiConversationFriendList();
     return res.data;
   }
 );
@@ -87,16 +97,14 @@ const conversationSlice = createSlice({
       const conversationIndex = state.openConversations.findIndex(
         oc => oc._id === _id
       );
+      state.friendConversations = state.friendConversations.map(fc =>
+        fc._id === _id ? { ...fc, _id: conversation._id, isExist: true } : fc
+      );
       if (conversationIndex !== -1) {
         state.openConversations[conversationIndex] = {
           ...state.openConversations[conversationIndex],
           _id: conversation._id,
-          users: conversation.users,
-          isGroup: conversation.isGroup,
-          name: conversation.name,
-          avatar: conversation.avatar,
           usersState: conversation.usersState,
-          lastMessageAt: conversation.lastMessageAt,
           isExist: true,
         };
       }
@@ -106,6 +114,33 @@ const conversationSlice = createSlice({
       const unSeenSet = new Set(state.unSeenConversations);
       unSeenSet.add(conversationId);
       state.unSeenConversations = [...unSeenSet];
+    },
+    doReadConversation: (
+      state,
+      action: PayloadAction<{ conversationId: string; userId: string }>
+    ) => {
+      const { conversationId, userId } = action.payload;
+      state.unSeenConversations = state.unSeenConversations.filter(
+        id => id !== conversationId
+      );
+      const conversationIndex = state.listConversations.findIndex(
+        c => c._id === conversationId
+      );
+      if (conversationIndex !== -1) {
+        const conversationDetail = state.listConversations[conversationIndex];
+        const usersState = conversationDetail.usersState.map(user =>
+          user.user === userId
+            ? {
+                user: userId,
+                readLastMessage: conversationDetail.lastMessage?._id || '',
+              }
+            : user
+        );
+        state.listConversations[conversationIndex] = {
+          ...conversationDetail,
+          usersState,
+        };
+      }
     },
     doUpdateConversationPosition: (
       state,
@@ -135,12 +170,30 @@ const conversationSlice = createSlice({
             ...conversation,
             name: other?.fullname || 'Người dùng',
             avatar: other?.avatar || '',
-          } as IConversation;
+          };
           listConversations.unshift(newConversation);
         }
       }
 
       state.listConversations = listConversations;
+      state.friendConversations = state.friendConversations.map(fc =>
+        fc.conversationId === conversation._id
+          ? {
+              ...fc,
+              lastMessage: conversation.lastMessage,
+              usersState: conversation.usersState,
+            }
+          : fc
+      );
+      state.openConversations = state.openConversations.map(oc =>
+        oc._id === conversation._id
+          ? {
+              ...oc,
+              lastMessage: conversation.lastMessage,
+              usersState: conversation.usersState,
+            }
+          : oc
+      );
     },
   },
   extraReducers: builder => {
@@ -149,6 +202,9 @@ const conversationSlice = createSlice({
     });
     builder.addCase(seenConversation.fulfilled, state => {
       state.unSeenConversations = [];
+    });
+    builder.addCase(fetchFriendConversations.fulfilled, (state, action) => {
+      state.friendConversations = action.payload;
     });
   },
 });
@@ -160,5 +216,6 @@ export const {
   doSetConversations,
   doSetUnSeenConversation,
   doUpdateConversationPosition,
+  doReadConversation,
 } = conversationSlice.actions;
 export const conversationReducer = conversationSlice.reducer;

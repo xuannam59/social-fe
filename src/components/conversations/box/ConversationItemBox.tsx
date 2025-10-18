@@ -1,4 +1,7 @@
-import { callApiGetConversationIdOrCreate } from '@social/apis/conversations.api';
+import {
+  callApiGetConversationIdOrCreate,
+  callApiReadConversation,
+} from '@social/apis/conversations.api';
 import { callApiGetMessages } from '@social/apis/message.s.api';
 import { formatRelativeTimeV2 } from '@social/common/convert';
 import {
@@ -9,10 +12,11 @@ import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
 import { useSockets } from '@social/providers/SocketProvider';
 import {
   doCloseConversation,
+  doReadConversation,
   doSetIdConversation,
 } from '@social/redux/reducers/conversations';
 import type { IConversation } from '@social/types/conversations.type';
-import type { IMessage, IMessageStatus } from '@social/types/messages.type';
+import type { IMessage, IMessageRead } from '@social/types/messages.type';
 import { Button, notification } from 'antd';
 import React, {
   useCallback,
@@ -46,13 +50,14 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [page, setPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  // Typing state moved into ConversationTyping component
+  const [usersState, setUsersState] = useState<IConversation['usersState']>(
+    conversation.usersState.filter(user => user.user !== userInfo._id)
+  );
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const topSentinelRef = useRef<HTMLDivElement | null>(null);
   const bottomSentinelRef = useRef<HTMLDivElement | null>(null);
   const [hasUserScrolled, setHasUserScrolled] = useState(false);
   const conversationBoxRef = useRef<HTMLDivElement | null>(null);
-  console.log('conversation', conversation);
   const getConversationId = useCallback(async () => {
     try {
       if (isExist) return;
@@ -72,6 +77,21 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
     }
   }, [conversation, isExist, dispatch]);
 
+  const handleReadConversation = useCallback(() => {
+    if (conversation._id && conversation.isExist) {
+      socket.emit(CHAT_MESSAGE.READ, {
+        conversationId: conversation._id,
+        userId: userInfo._id,
+      });
+      dispatch(
+        doReadConversation({
+          conversationId: conversation._id,
+          userId: userInfo._id,
+        })
+      );
+    }
+  }, [conversation._id, userInfo._id, socket, dispatch, conversation.isExist]);
+
   const getMessages = useCallback(async () => {
     try {
       setIsLoadingMessages(true);
@@ -79,7 +99,8 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
         page: 1,
       });
       if (res.data) {
-        setMessages(res.data.list);
+        const messages = res.data.list;
+        setMessages(messages);
         setTotalMessages(res.data.meta.total);
         setPage(1);
 
@@ -154,33 +175,25 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
   }, [getConversationId]);
 
   useEffect(() => {
+    handleReadConversation();
+  }, [handleReadConversation]);
+
+  useEffect(() => {
     if (isExist) {
       getMessages();
     }
   }, [getMessages, isExist]);
 
-  // useEffect(() => {
-  //   const handleFocus = async () => {
-  //     // Gọi API cập nhật trạng thái read/seen khi click vào conversation box
-  //     if (conversation._id && messages.length > 0) {
-  //       try {
-  //         // await callApiSeenConversation([conversation._id]);
-  //         console.log('Đã mark conversation as seen:', conversation._id);
-  //       } catch (error) {
-  //         console.error('Lỗi khi mark conversation as seen:', error);
-  //       }
-  //     }
-  //   };
+  useEffect(() => {
+    const conversationBox = conversationBoxRef.current;
+    if (conversationBox) {
+      conversationBox.addEventListener('click', handleReadConversation);
 
-  //   const conversationBox = conversationBoxRef.current;
-  //   if (conversationBox) {
-  //     conversationBox.addEventListener('click', handleFocus);
-
-  //     return () => {
-  //       conversationBox.removeEventListener('click', handleFocus);
-  //     };
-  //   }
-  // }, [conversation._id, messages.length]);
+      return () => {
+        conversationBox.removeEventListener('click', handleReadConversation);
+      };
+    }
+  }, [conversation._id, handleReadConversation]);
 
   useEffect(() => {
     const container = scrollContainerRef.current;
@@ -221,24 +234,8 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
     if (!socket) return;
     socket.on(CHAT_MESSAGE.SEND, (data: IMessage) => {
       if (data.conversationId !== conversation._id) return;
-      if (userInfo._id === data.sender._id) {
-        setMessages(prev => {
-          return prev.map(message =>
-            message._id === data.tempId ? data : message
-          );
-        });
-      } else {
-        setMessages(prev => [data, ...prev]);
-      }
-    });
-
-    socket.on(CHAT_MESSAGE.STATUS_MESSAGE, (data: IMessageStatus) => {
-      if (
-        data.conversationId !== conversation._id ||
-        data.senderId !== userInfo._id
-      )
-        return;
       if (data.status === 'failed') {
+        if (userInfo._id !== data.sender._id) return;
         setMessages(prev =>
           prev.map(message =>
             message._id === data.tempId
@@ -250,6 +247,23 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
           message: 'Gửi tin nhắn thất bại',
           description: data.message,
           duration: 3,
+        });
+        return;
+      }
+      if (userInfo._id === data.sender._id) {
+        setMessages(prev => {
+          return prev.map(message =>
+            message._id === data.tempId ? data : message
+          );
+        });
+      } else {
+        setMessages(prev => [data, ...prev]);
+        setUsersState(prev => {
+          return prev.map(user =>
+            user.user === data.sender._id
+              ? { ...user, readLastMessage: data._id }
+              : user
+          );
         });
       }
     });
@@ -273,12 +287,24 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
       );
     });
 
+    socket.on(CHAT_MESSAGE.READ, (data: IMessageRead) => {
+      if (data.conversationId !== conversation._id) return;
+      if (data.userId === userInfo._id) return;
+      setUsersState(prev =>
+        prev.map(user =>
+          user.user === data.userId
+            ? { ...user, readLastMessage: data.lastMessageId }
+            : user
+        )
+      );
+    });
+
     return () => {
       socket.off(CHAT_MESSAGE.SEND);
-      socket.off(CHAT_MESSAGE.STATUS_MESSAGE);
       socket.off(CHAT_MESSAGE.EDIT);
+      socket.off(CHAT_MESSAGE.READ);
     };
-  }, [socket, userInfo, conversation]);
+  }, [socket, userInfo, conversation, usersState]);
 
   const handleReSendMessage = useCallback(
     (messageId: string) => {
@@ -404,15 +430,40 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
             >
               <div ref={bottomSentinelRef} />
               <ConversationTyping conversationId={conversation._id} />
-              {messages.map(message => (
-                <ConversationContent
-                  key={message._id}
-                  message={message}
-                  getMessageReply={handleGetMessageReply}
-                  onReSendMessage={handleReSendMessage}
-                  onScrollToMessage={handleScrollToMessage}
-                />
-              ))}
+              {messages.map(message => {
+                const userReadMessage = usersState.filter(
+                  user => user.readLastMessage === message._id
+                );
+                const userInfoReadMessage = conversation.users.filter(user =>
+                  userReadMessage.some(userRead => userRead.user === user._id)
+                );
+                return (
+                  <div className="flex flex-col" key={message._id}>
+                    <ConversationContent
+                      message={message}
+                      getMessageReply={handleGetMessageReply}
+                      onReSendMessage={handleReSendMessage}
+                      onScrollToMessage={handleScrollToMessage}
+                    />
+                    {userInfoReadMessage.length > 0 && (
+                      <div className="flex justify-end items-center gap-1">
+                        {userInfoReadMessage.map(user => (
+                          <AvatarUser
+                            key={user._id}
+                            avatar={user.avatar}
+                            size={20}
+                          />
+                        ))}
+                        {userInfoReadMessage.length > 3 && (
+                          <span className="text-xs text-gray-500">
+                            +{userInfoReadMessage.length - 3}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
 
               {isLoadingMore && (
                 <div className="flex items-center justify-center py-2">

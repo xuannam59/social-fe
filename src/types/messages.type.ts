@@ -29,6 +29,7 @@ export interface IMessage {
   timeEdited?: string;
   createdAt?: string;
   updatedAt?: string;
+  message: string;
 }
 
 export interface IMessageStatus {
@@ -60,4 +61,10 @@ export interface IMessageRevoke {
   messageId: string;
   userId: string;
   content: string;
+}
+
+export interface IMessageRead {
+  conversationId: string;
+  userId: string;
+  lastMessageId: string;
 }

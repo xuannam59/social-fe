@@ -14,7 +14,7 @@ const FriendItemCard: React.FC<IProps> = ({ friend }) => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
   const dispatch = useAppDispatch();
 
-  const handleOpenConversation = () => {
+  const handleOpenConversation = async () => {
     const data: IConversation = {
       _id: friend.conversationId ? friend.conversationId : friend._id,
       users: [
@@ -37,7 +37,8 @@ const FriendItemCard: React.FC<IProps> = ({ friend }) => {
       isExist: friend.isExist,
       lastActive: friend.lastActive,
       isOnline: friend.isOnline,
-      usersState: [],
+      usersState: friend.usersState,
+      lastMessage: friend.lastMessage,
       lastMessageAt: '',
     };
     dispatch(doOpenConversation(data));

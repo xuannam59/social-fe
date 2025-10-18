@@ -6,10 +6,15 @@ import { Button } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 import InviteFriendCard from '../friends/InviteFriendCard';
 import FriendItemCard from '../friends/FriendItemCard';
+import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
+import { fetchFriendConversations } from '@social/redux/reducers/conversations';
 
 const RightSidebar = () => {
   const [invitationList, setInvitationList] = useState<IFriend[]>([]);
-  const [userFriendList, setUserFriendList] = useState<IUserConversation[]>([]);
+  const userFriendList = useAppSelector(
+    state => state.conversations.friendConversations
+  );
+  const dispatch = useAppDispatch();
   const fetchInvitationList = useCallback(async () => {
     try {
       const res = await callApiGetInvitationList();
@@ -21,21 +26,10 @@ const RightSidebar = () => {
     }
   }, []);
 
-  const fetchUserFriendList = useCallback(async () => {
-    try {
-      const res = await callApiConversationFriendList();
-      if (res.data) {
-        setUserFriendList(res.data);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  }, []);
-
   useEffect(() => {
     fetchInvitationList();
-    fetchUserFriendList();
-  }, [fetchInvitationList, fetchUserFriendList]);
+    dispatch(fetchFriendConversations());
+  }, [fetchInvitationList, dispatch]);
 
   return (
     <>

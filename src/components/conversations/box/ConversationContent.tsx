@@ -18,6 +18,7 @@ import { TbDotsVertical, TbLoader2, TbMoodSmile } from 'react-icons/tb';
 
 interface IProps {
   message: IMessage;
+
   getMessageReply: (message: IMessage, type: 'reply' | 'edit') => void;
   onReSendMessage: (messageId: string) => void;
   onScrollToMessage: (messageId: string) => void;
@@ -297,7 +298,7 @@ const ConversationContent: React.FC<IProps> = ({
 
           {!isMine && (
             <div className="self-end">
-              <AvatarUser avatar={message.sender.avatar} size={28} />
+              <AvatarUser avatar={message.sender.avatar} size={32} />
             </div>
           )}
 

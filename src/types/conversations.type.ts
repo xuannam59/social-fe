@@ -1,3 +1,5 @@
+import type { IUserConversation } from './user.type';
+
 export interface IConversation {
   _id: string;
   users: {
@@ -28,6 +30,7 @@ export interface IConversation {
 export interface IConversationState {
   openConversations: IConversation[];
   listConversations: IConversation[];
+  friendConversations: IUserConversation[];
   total: number;
   unSeenConversations: string[];
 }

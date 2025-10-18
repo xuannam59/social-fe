@@ -37,4 +37,14 @@ export interface IUserConversation extends IUser {
   conversationId?: string;
   isGroup: boolean;
   isExist: boolean;
+  usersState: {
+    user: string;
+    readLastMessage: string;
+  }[];
+  lastMessage?: {
+    _id: string;
+    content: string;
+    sender: string;
+    type: string;
+  };
 }
