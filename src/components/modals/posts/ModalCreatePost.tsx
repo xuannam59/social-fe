@@ -9,6 +9,8 @@ import { callApiCreatePost } from '@social/apis/posts.api';
 import { smartUpload } from '@social/common/uploads';
 import type { IPreviewMedia } from '@social/types/posts.type';
 import { convertErrorMessage } from '@social/common/convert';
+import { useSockets } from '@social/providers/SocketProvider';
+import { NOTIFICATION_MESSAGE } from '@social/defaults/socket.default';
 
 interface IProps {
   isOpen: boolean;
@@ -31,6 +33,7 @@ const ModalCreatePost: React.FC<IProps> = ({
   const [userTags, setUserTags] = useState<IUserTag[]>([]);
   const [feeling, setFeeling] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  const { socket } = useSockets();
   const handleCancel = useCallback(() => {
     onClose();
     setUserTags([]);
@@ -77,8 +80,16 @@ const ModalCreatePost: React.FC<IProps> = ({
             message: 'Tạo bài viết thất bại',
             description: convertErrorMessage(res.message),
           });
+          return;
         }
         message.success('Tạo bài viết thành công');
+        if (userTags.length > 0) {
+          socket.emit(NOTIFICATION_MESSAGE.POST_TAG, {
+            postId: res.data._id,
+            userTags: userTags,
+            message: values.content,
+          });
+        }
         handleCancel();
       } catch (error) {
         notification.error({
@@ -89,7 +100,7 @@ const ModalCreatePost: React.FC<IProps> = ({
         setIsLoading(false);
       }
     },
-    [userTags, feeling, medias, handleCancel]
+    [userTags, feeling, medias, handleCancel, socket]
   );
 
   const onAddUserTag = useCallback((user: IUserTag[]) => {

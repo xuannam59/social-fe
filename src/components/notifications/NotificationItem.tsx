@@ -1,44 +1,62 @@
 import { Avatar, Typography } from 'antd';
 import { TbPointFilled } from 'react-icons/tb';
 import defaultAvatar from '@social/images/default-avatar.webp';
+import type { INotificationResponse } from '@social/types/notifications.type';
+import {
+  convertNotificationMessage,
+  formatRelativeTimeV2,
+} from '@social/common/convert';
+import { useCallback } from 'react';
 
 interface IProps {
-  avatar: string;
-  name: string;
-  notification: string;
-  time: string;
-  isRead: boolean;
+  notification: INotificationResponse;
+  onCloseDropdown: () => void;
 }
 
 const { Paragraph } = Typography;
 
 const NotificationItem: React.FC<IProps> = ({
-  avatar,
-  name,
   notification,
-  time,
-  isRead,
+  onCloseDropdown,
 }) => {
+  const handleClick = useCallback(() => {
+    console.log(notification);
+    onCloseDropdown();
+  }, [onCloseDropdown, notification]);
   return (
     <>
-      <div className="max-w-full">
+      <div
+        className="max-w-full"
+        onClick={handleClick}
+        id={`n_${notification.notificationId}`}
+      >
         <div
           className="flex items-start gap-2 w-full min-w-0 
         max-w-full overflow-x-hidden cursor-pointer hover:bg-gray-100 rounded-lg p-2"
         >
-          <div>
-            <Avatar size={58} src={avatar || defaultAvatar} />
+          <div className="flex-shrink-0">
+            <Avatar
+              size={58}
+              src={notification.senders[0].avatar || defaultAvatar}
+            />
           </div>
           <div className="flex flex-col w-full min-w-0 gap-1">
-            <Paragraph ellipsis={{ rows: 3 }} className=" min-w-0 !m-0">
-              <strong>{`${name} `} </strong>
-              <span className="text-gray-500">{notification}</span>
-            </Paragraph>
+            <div className="text-base line-clamp-2 break-words">
+              <span className="font-medium text-base">
+                {notification.senders[0].fullname}
+              </span>
+              <span className="text-gray-500 text-base">
+                {convertNotificationMessage(
+                  notification.message,
+                  notification.type
+                )}
+              </span>
+            </div>
             <span className="text-sm text-blue-500 shrink-0 whitespace-nowrap !m-0">
-              {time}
+              {formatRelativeTimeV2(notification.latestAt)}
             </span>
           </div>
-          {isRead && (
+          {notification.isRead && (
             <div className="ml-1">
               <TbPointFilled size={30} className="text-sky-500" />
             </div>

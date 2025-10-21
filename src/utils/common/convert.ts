@@ -3,6 +3,10 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import calendar from 'dayjs/plugin/calendar';
 import { v4 as uuidv4 } from 'uuid';
+import {
+  EEntityType,
+  ENotificationType,
+} from '@social/types/notifications.type';
 dayjs.extend(relativeTime);
 dayjs.extend(calendar);
 
@@ -159,4 +163,26 @@ export const convertMentions = (content: string) => {
   }
 
   return mentions;
+};
+
+export const convertNotificationMessage = (
+  message: string,
+  type: ENotificationType
+) => {
+  switch (type) {
+    case ENotificationType.POST_TAG:
+      return ` đã gắn thẻ bài bạn vào bài viết của họ: ${message}`;
+    case ENotificationType.POST_LIKE:
+      return ` đã thích bài viết của bạn: ${message}`;
+    case ENotificationType.POST_COMMENT:
+      return ` đã bình luận bài viết của bạn: ${message}`;
+    case ENotificationType.POST_SHARE:
+      return ` đã chia sẻ bài viết của bạn: ${message}`;
+    case ENotificationType.COMMENT_MENTION:
+      return ` đã gắn thẻ bài bạn vào bài viết của họ: ${message}`;
+    case ENotificationType.COMMENT_LIKE:
+      return ` đã thích bình luận của bạn: ${message}`;
+    case ENotificationType.COMMENT_REPLY:
+      return ` đã trả lời bình luận của bạn: ${message}`;
+  }
 };
