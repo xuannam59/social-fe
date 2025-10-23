@@ -8,34 +8,35 @@ import CommentInput from '@social/components/comments/CommentInput';
 import CommentItem from '@social/components/comments/CommentItem';
 import EmptyState from '@social/components/common/EmptyState';
 import LoadingComment from '@social/components/loading/LoadingComment';
+import LoadingModalPost from '@social/components/loading/LoadingModalPost';
 import PostItem from '@social/components/posts/PostItem';
 import { COMMENT_DEFAULT } from '@social/defaults/post';
 import { useAppSelector } from '@social/hooks/redux.hook';
 import type { IComment, IFormComment } from '@social/types/comments.type';
 import type { IPost, IPostLike } from '@social/types/posts.type';
-import { Button, Form, message, Modal, Typography } from 'antd';
+import { Button, Form, message, Modal, Skeleton } from 'antd';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { TbX } from 'react-icons/tb';
 import { v4 as uuidv4 } from 'uuid';
 
 interface IProps {
-  open: boolean;
+  openModalViewPost: boolean;
   post: IPost;
   onClose: () => void;
   onLikePost: (post: IPostLike) => void;
   onAddComment: (postId: string) => void;
   onDeleteComment: (postId: string, countDeleted: number) => void;
+  isLoading?: boolean;
 }
 
-const { Title } = Typography;
-
 const ModalViewPost: React.FC<IProps> = ({
-  open,
-  onClose,
+  openModalViewPost,
   post,
+  onClose,
   onLikePost,
   onAddComment,
   onDeleteComment,
+  isLoading = false,
 }) => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
   const parentId = useRef<string>('');
@@ -148,7 +149,7 @@ const ModalViewPost: React.FC<IProps> = ({
   return (
     <>
       <Modal
-        open={open}
+        open={openModalViewPost}
         onCancel={onCancel}
         closable={false}
         footer={null}
@@ -161,57 +162,61 @@ const ModalViewPost: React.FC<IProps> = ({
           },
         }}
       >
-        <div className="h-fit max-h-[calc(100vh-3.5rem)] flex flex-col mt-2">
-          <div className="border-b border-gray-200 p-3 flex-shrink-0">
-            <div className="flex items-center justify-between gap-2">
-              <Title level={3} className="!m-0 flex-1 flex justify-center">
-                Bài viết của {post.authorId.fullname}
-              </Title>
-              <Button type="text" shape="circle" onClick={onCancel}>
-                <TbX size={24} className="text-gray-500" />
-              </Button>
-            </div>
-          </div>
-          <div className="flex flex-col overflow-y-auto">
-            <PostItem
-              post={post}
-              onClickComment={() => form.focusField('content')}
-              buttonClose={false}
-              onLikePost={onLikePost}
-            />
-            <div className="px-3 mb-3">
-              <div className="border-t border-gray-200 pt-2 flex flex-col gap-2 h-fit">
-                {comment.current && (
-                  <CommentItem
-                    comment={comment.current}
-                    level={1}
-                    commentStatus={commentProcess}
-                    onDeleteComment={() => {}}
-                    onAddComment={() => {}}
-                  />
-                )}
-                {isLoadingComments ? (
-                  <LoadingComment />
-                ) : comments.length > 0 ? (
-                  comments.map(comment => (
-                    <CommentItem
-                      key={comment._id}
-                      comment={comment}
-                      level={1}
-                      onDeleteComment={handleDeleteComment}
-                      onAddComment={onAddComment}
-                    />
-                  ))
-                ) : (
-                  <EmptyState />
-                )}
+        {isLoading ? (
+          <LoadingModalPost />
+        ) : (
+          <div className="h-fit max-h-[calc(100vh-3.5rem)] flex flex-col mt-2">
+            <div className="border-b border-gray-200 p-3 flex-shrink-0">
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex-1 flex justify-center text-h2 font-bold">
+                  Bài viết của {post.authorId.fullname}
+                </span>
+                <Button type="text" shape="circle" onClick={onCancel}>
+                  <TbX size={24} className="text-gray-500" />
+                </Button>
               </div>
             </div>
+            <div className="flex flex-col overflow-y-auto">
+              <PostItem
+                post={post}
+                onClickComment={() => form.focusField('content')}
+                buttonClose={false}
+                onLikePost={onLikePost}
+              />
+              <div className="px-3 mb-3">
+                <div className="border-t border-gray-200 pt-2 flex flex-col gap-2 h-fit">
+                  {comment.current && (
+                    <CommentItem
+                      comment={comment.current}
+                      level={1}
+                      commentStatus={commentProcess}
+                      onDeleteComment={() => {}}
+                      onAddComment={() => {}}
+                    />
+                  )}
+                  {isLoadingComments ? (
+                    <LoadingComment />
+                  ) : comments.length > 0 ? (
+                    comments.map(comment => (
+                      <CommentItem
+                        key={comment._id}
+                        comment={comment}
+                        level={1}
+                        onDeleteComment={handleDeleteComment}
+                        onAddComment={onAddComment}
+                      />
+                    ))
+                  ) : (
+                    <EmptyState />
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="border-t border-gray-200">
+              <CommentInput form={form} onSubmit={onSubmit} level={0} />
+            </div>
           </div>
-          <div className="border-t border-gray-200">
-            <CommentInput form={form} onSubmit={onSubmit} level={0} />
-          </div>
-        </div>
+        )}
       </Modal>
     </>
   );

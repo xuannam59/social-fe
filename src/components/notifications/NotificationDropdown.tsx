@@ -2,17 +2,17 @@ import {
   callApiGetNotifications,
   callApiGetUnSeenNotifications,
 } from '@social/apis/notifications.api';
+import { convertNotificationMessage } from '@social/common/convert';
 import { NOTIFICATION_MESSAGE } from '@social/defaults/socket.default';
 import { useSockets } from '@social/providers/SocketProvider';
 import type { INotificationResponse } from '@social/types/notifications.type';
-import { Badge, Button, Dropdown, notification, Spin, Typography } from 'antd';
+import { Badge, Dropdown, notification, Spin, Typography } from 'antd';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { TbBell } from 'react-icons/tb';
-import NotificationItem from './NotificationItem';
 import AvatarUser from '../common/AvatarUser';
 import EmptyState from '../common/EmptyState';
 import LoadingComment from '../loading/LoadingComment';
-import { convertNotificationMessage } from '@social/common/convert';
+import NotificationItem from './NotificationItem';
 
 const { Title } = Typography;
 
@@ -108,7 +108,22 @@ const NotificationDropdown = () => {
     if (!socket) return;
     socket.on(NOTIFICATION_MESSAGE.RESPONSE, (data: INotificationResponse) => {
       if (!data.notificationId) return;
-      setNotificationList(prev => [data, ...prev]);
+
+      setNotificationList(prev => {
+        const existingNotification = prev.findIndex(
+          item => item.entityId === data.entityId && item.type === data.type
+        );
+        if (existingNotification !== -1) {
+          const notificationDetail = prev[existingNotification];
+          prev.splice(existingNotification, 1);
+          const newNotification = {
+            ...notificationDetail,
+            senders: [data.senders[0], ...notificationDetail.senders],
+          };
+          return [newNotification, ...prev];
+        }
+        return [data, ...prev];
+      });
       setUnSeenNotifications(prev => {
         prev.add(data.notificationId);
         return prev;
@@ -178,31 +193,6 @@ const NotificationDropdown = () => {
     setOpenDropdown(false);
   }, []);
 
-  const handleOpenNotification = useCallback(() => {
-    notification.open({
-      message: '',
-      description: (
-        <>
-          <div className="flex items-start gap-2">
-            <div className="flex-shrink-0">
-              <AvatarUser avatar={''} size={58} />
-            </div>
-            <div className="flex flex-col w-full min-w-0 gap-1">
-              <div className="text-base line-clamp-3 break-words">
-                <span className="font-medium">John Doe </span>
-                <span className="text-gray-500">
-                  This is a notification message qwe qwe qwe sazd qw
-                  qweqweqweqweasdasdaseqweqwweqwewe sad
-                </span>
-              </div>
-            </div>
-          </div>
-        </>
-      ),
-      duration: 3,
-    });
-  }, []);
-
   return (
     <>
       <Dropdown
@@ -257,8 +247,6 @@ const NotificationDropdown = () => {
           </Badge>
         </div>
       </Dropdown>
-
-      <Button onClick={handleOpenNotification}>Open Notification</Button>
     </>
   );
 };

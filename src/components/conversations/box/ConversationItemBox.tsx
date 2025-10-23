@@ -14,7 +14,7 @@ import {
   doCloseConversation,
   doReadConversation,
   doSetIdConversation,
-} from '@social/redux/reducers/conversations';
+} from '@social/redux/reducers/conversations.reducer';
 import type { IConversation } from '@social/types/conversations.type';
 import type { IMessage, IMessageRead } from '@social/types/messages.type';
 import { Button, notification } from 'antd';

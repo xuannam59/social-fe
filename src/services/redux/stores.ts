@@ -2,7 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { authReducer } from './reducers/auth.reducer';
 import { storyReducer } from './reducers/story.reducer';
 import { postReducer } from './reducers/post.reducer';
-import { conversationReducer } from './reducers/conversations';
+import { conversationReducer } from './reducers/conversations.reducer';
 
 export const store = configureStore({
   reducer: {

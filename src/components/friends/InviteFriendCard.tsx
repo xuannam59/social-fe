@@ -10,16 +10,23 @@ import type { IFriend } from '@social/types/friends.type';
 import { useNavigate } from 'react-router-dom';
 interface IProps {
   invitation: IFriend;
+  onRemoveInvitation: (invitationId: string) => void;
 }
 
-const InviteFriendCard: React.FC<IProps> = ({ invitation }) => {
+const InviteFriendCard: React.FC<IProps> = ({
+  invitation,
+  onRemoveInvitation,
+}) => {
   const user = invitation.fromUserId as IUser;
   const navigate = useNavigate();
-  const acceptInvite = async () => {
+  const acceptInvite = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
     try {
       const res = await callApiAcceptFriend(user._id);
       if (res.data) {
         message.success('Lời mời đã được chấp nhận');
+        onRemoveInvitation(invitation._id);
       }
     } catch (error) {
       console.error('Failed to accept invite:', error);
@@ -27,24 +34,32 @@ const InviteFriendCard: React.FC<IProps> = ({ invitation }) => {
     }
   };
 
-  const rejectInvite = async () => {
+  const rejectInvite = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
     try {
       const res = await callApiRejectFriend(user._id);
       if (res.data) {
         message.success('Lời mời đã được từ chối');
+        onRemoveInvitation(invitation._id);
       }
     } catch (error) {
-      console.error('Failed to accept invite:', error);
+      console.error('Failed to reject invite:', error);
       message.error('Có lỗi xảy ra');
     }
   };
+
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/${user._id}`);
+  };
+
   return (
     <>
       <div
         className="flex items-center gap-3 cursor-pointer hover:bg-gray-200 rounded-lg p-2"
-        onClick={() => {
-          navigate(`/${user._id}`);
-        }}
+        onClick={handleClick}
       >
         <AvatarUser avatar={user.avatar} size={55} />
         <div className="flex-1 min-w-0">

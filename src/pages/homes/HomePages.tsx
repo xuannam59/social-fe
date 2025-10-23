@@ -10,7 +10,7 @@ const HomePages = () => {
           <LeftSidebar />
         </div>
         <div className="flex-1 flex justify-center h-[100vh]">
-          <div className="max-w-[680px]">
+          <div className="max-w-[680px] w-full">
             <CenterContent />
           </div>
         </div>

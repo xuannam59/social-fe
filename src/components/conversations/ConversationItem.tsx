@@ -4,7 +4,7 @@ import type { IConversation } from '@social/types/conversations.type';
 import React, { useCallback, useMemo } from 'react';
 import { TbPointFilled } from 'react-icons/tb';
 import AvatarUser from '../common/AvatarUser';
-import { doOpenConversation } from '@social/redux/reducers/conversations';
+import { doOpenConversation } from '@social/redux/reducers/conversations.reducer';
 
 interface IProps {
   conversation: IConversation;

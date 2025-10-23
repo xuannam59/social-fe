@@ -4,7 +4,7 @@ import AvatarUser from '../common/AvatarUser';
 import { formatRelativeTimeV2 } from '@social/common/convert';
 import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
 import type { IConversation } from '@social/types/conversations.type';
-import { doOpenConversation } from '@social/redux/reducers/conversations';
+import { doOpenConversation } from '@social/redux/reducers/conversations.reducer';
 
 interface IProps {
   friend: IUserConversation;

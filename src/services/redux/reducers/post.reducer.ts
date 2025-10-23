@@ -10,6 +10,7 @@ const initialState: IPostState = {
   listPosts: [],
   tempPosts: [],
   scroll: 0,
+  isLoadingPosts: true,
 };
 
 export const fetchPosts = createAsyncThunk(
@@ -86,6 +87,7 @@ const postSlice = createSlice({
   extraReducers: builder => {
     builder.addCase(fetchPosts.fulfilled, (state, action) => {
       state.listPosts = action.payload;
+      state.isLoadingPosts = false;
     });
   },
 });

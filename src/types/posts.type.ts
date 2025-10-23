@@ -4,6 +4,7 @@ export interface IPostState {
   listPosts: IPost[];
   tempPosts: IPost[];
   scroll: number;
+  isLoadingPosts: boolean;
 }
 
 export interface IPost {

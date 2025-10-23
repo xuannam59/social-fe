@@ -1,13 +1,11 @@
 import { callApiGetInvitationList } from '@social/apis/friend.api';
-import { callApiConversationFriendList } from '@social/apis/user.api';
+import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
+import { fetchFriendConversations } from '@social/redux/reducers/conversations.reducer';
 import type { IFriend } from '@social/types/friends.type';
-import type { IUserConversation } from '@social/types/user.type';
 import { Button } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
-import InviteFriendCard from '../friends/InviteFriendCard';
 import FriendItemCard from '../friends/FriendItemCard';
-import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
-import { fetchFriendConversations } from '@social/redux/reducers/conversations';
+import InviteFriendCard from '../friends/InviteFriendCard';
 
 const RightSidebar = () => {
   const [invitationList, setInvitationList] = useState<IFriend[]>([]);
@@ -31,6 +29,12 @@ const RightSidebar = () => {
     dispatch(fetchFriendConversations());
   }, [fetchInvitationList, dispatch]);
 
+  const handleRemoveInvitation = useCallback((invitationId: string) => {
+    setInvitationList(prev =>
+      prev.filter(invite => invite._id !== invitationId)
+    );
+  }, []);
+
   return (
     <>
       <div className="flex flex-1 flex-col justify-start items-stretch gap-3 overflow-y-auto w-full h-full">
@@ -44,7 +48,11 @@ const RightSidebar = () => {
             </div>
 
             {invitationList.map(invite => (
-              <InviteFriendCard invitation={invite} key={invite._id} />
+              <InviteFriendCard
+                invitation={invite}
+                key={invite._id}
+                onRemoveInvitation={handleRemoveInvitation}
+              />
             ))}
           </div>
         )}

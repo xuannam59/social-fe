@@ -10,7 +10,7 @@ import ConversationDropdown from '../conversations/ConversationDropdown';
 import NotificationDropdown from '../notifications/NotificationDropdown';
 import defaultAvatar from '@social/images/default-avatar.webp';
 import { useEffect } from 'react';
-import { fetchUnSeenConversations } from '@social/redux/reducers/conversations';
+import { fetchUnSeenConversations } from '@social/redux/reducers/conversations.reducer';
 
 const { Text } = Typography;
 

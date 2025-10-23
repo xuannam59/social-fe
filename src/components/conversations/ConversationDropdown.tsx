@@ -7,7 +7,7 @@ import {
   doSetUnSeenConversation,
   doUpdateConversationPosition,
   seenConversation,
-} from '@social/redux/reducers/conversations';
+} from '@social/redux/reducers/conversations.reducer';
 import { Badge, Button, Dropdown, notification, Typography } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 import { TbMessageCircle } from 'react-icons/tb';

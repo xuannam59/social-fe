@@ -1,7 +1,11 @@
 import { Avatar, Typography } from 'antd';
 import { TbPointFilled } from 'react-icons/tb';
 import defaultAvatar from '@social/images/default-avatar.webp';
-import type { INotificationResponse } from '@social/types/notifications.type';
+import {
+  EEntityType,
+  ENotificationType,
+  type INotificationResponse,
+} from '@social/types/notifications.type';
 import {
   convertNotificationMessage,
   formatRelativeTimeV2,
@@ -13,16 +17,23 @@ interface IProps {
   onCloseDropdown: () => void;
 }
 
-const { Paragraph } = Typography;
-
 const NotificationItem: React.FC<IProps> = ({
   notification,
   onCloseDropdown,
 }) => {
-  const handleClick = useCallback(() => {
-    console.log(notification);
-    onCloseDropdown();
-  }, [onCloseDropdown, notification]);
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      switch (notification.entityType) {
+        case EEntityType.POST:
+          break;
+      }
+
+      onCloseDropdown();
+    },
+    [notification, onCloseDropdown]
+  );
   return (
     <>
       <div
@@ -43,7 +54,15 @@ const NotificationItem: React.FC<IProps> = ({
           <div className="flex flex-col w-full min-w-0 gap-1">
             <div className="text-base line-clamp-2 break-words">
               <span className="font-medium text-base">
-                {notification.senders[0].fullname}
+                {notification.senders
+                  .slice(0, 1)
+                  .map(sender => sender.fullname)
+                  .join(', ')}
+                {notification.senders.length > 1 && (
+                  <span className="text-gray-500 text-base">
+                    và {notification.senders.length - 2} người khác
+                  </span>
+                )}
               </span>
               <span className="text-gray-500 text-base">
                 {convertNotificationMessage(

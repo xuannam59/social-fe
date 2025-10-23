@@ -12,9 +12,10 @@ import {
 } from '@social/redux/reducers/post.reducer';
 import type { VirtuosoHandle } from 'react-virtuoso';
 import { callApiGetPost } from '@social/apis/posts.api';
+import LoadingPostList from '../loading/LoadingPostList';
 
 const PostList = () => {
-  const listPosts = useAppSelector(state => state.post.listPosts);
+  const { listPosts, isLoadingPosts } = useAppSelector(state => state.post);
   const dispatch = useAppDispatch();
   const [openModalViewPost, setOpenModalViewPost] = useState(false);
   const [postSelected, setPostSelected] = useState<IPost>(POST_DEFAULT);
@@ -23,18 +24,15 @@ const PostList = () => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
 
-  const handleOpenModalViewPost = useCallback(
-    (post: IPost) => {
-      setPostSelected(post);
-      setOpenModalViewPost(true);
-    },
-    [dispatch]
-  );
+  const handleOpenModalViewPost = useCallback((post: IPost) => {
+    setPostSelected(post);
+    setOpenModalViewPost(true);
+  }, []);
 
   const handleCloseModalViewPost = useCallback(() => {
     setPostSelected(POST_DEFAULT);
     setOpenModalViewPost(false);
-  }, [dispatch]);
+  }, []);
 
   const likePost = useCallback(
     (post: IPostLike) => {
@@ -47,7 +45,7 @@ const PostList = () => {
       }));
       dispatch(doToggleLike(post));
     },
-    [setPostSelected]
+    [dispatch]
   );
 
   const handleAddComment = useCallback(
@@ -92,36 +90,35 @@ const PostList = () => {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [isLoadingMore, listPosts.length, page, dispatch]);
+  }, [isLoadingMore, page, dispatch]);
 
   return (
     <>
-      <div className="flex flex-col gap-2 w-full">
-        {listPosts.map(post => (
-          <div
-            className="w-full h-fit bg-white rounded-lg overflow-hidden shadow-md border border-gray-200"
-            key={post._id}
-          >
-            <PostItem
-              post={post}
-              onLikePost={likePost}
-              onClickComment={() => {
-                handleOpenModalViewPost(post);
-              }}
-            />
+      {isLoadingPosts ? (
+        <LoadingPostList />
+      ) : (
+        <>
+          <div className="flex flex-col gap-2 w-full">
+            {listPosts.map(post => (
+              <PostItem
+                key={post._id}
+                post={post}
+                onLikePost={likePost}
+                onClickComment={() => handleOpenModalViewPost(post)}
+              />
+            ))}
           </div>
-        ))}
-      </div>
-      {openModalViewPost && postSelected._id !== '' && (
-        <ModalViewPost
-          open={openModalViewPost}
-          onClose={handleCloseModalViewPost}
-          post={postSelected}
-          onLikePost={likePost}
-          onAddComment={handleAddComment}
-          onDeleteComment={handleDeleteComment}
-        />
+        </>
       )}
+
+      <ModalViewPost
+        openModalViewPost={openModalViewPost}
+        post={postSelected}
+        onClose={handleCloseModalViewPost}
+        onLikePost={likePost}
+        onAddComment={handleAddComment}
+        onDeleteComment={handleDeleteComment}
+      />
     </>
   );
 };
