@@ -16,6 +16,10 @@ export const callApiGetPost = (query?: string) => {
   );
 };
 
+export const callApiGetPostDetail = (postId: string) => {
+  return axios.get<IBackendRes<IPost>>(`/api/v1/posts/${postId}`);
+};
+
 export const callApiPostLike = (data: IPostLike) => {
   return axios.post<IBackendRes<{ type: number; isLike: boolean }>>(
     `/api/v1/posts/likes`,

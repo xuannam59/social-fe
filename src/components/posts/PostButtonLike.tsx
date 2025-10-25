@@ -7,6 +7,7 @@ import { message, Typography } from 'antd';
 import React from 'react';
 import { TbThumbUp } from 'react-icons/tb';
 import ButtonLike from '../common/ButtonLike';
+import Lottie from 'lottie-react';
 
 const { Text } = Typography;
 
@@ -59,7 +60,9 @@ const PostButtonLike: React.FC<IProps> = ({
                   handleActionLike(userLiked.value, false);
                 }}
               >
-                <span className="text-lg font-semibold">{userLiked.emoji}</span>
+                <span className="size-5">
+                  <Lottie animationData={userLiked.reSource} loop={false} />
+                </span>
                 <span
                   className={`text-sm font-semibold`}
                   style={{ color: userLiked.color }}

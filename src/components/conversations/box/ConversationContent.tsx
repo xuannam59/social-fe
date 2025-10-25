@@ -330,7 +330,7 @@ const ConversationContent: React.FC<IProps> = ({
                 </div>
               )}
             </div>
-            {typeLikes.length > 0 && (
+            {typeLikes.length > 0 && !isRevoked && (
               <>
                 <div className="relative w-full h-2.5">
                   <div className="absolute bottom-0 right-0">

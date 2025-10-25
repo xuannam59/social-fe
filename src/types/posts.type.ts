@@ -21,7 +21,11 @@ export interface IPost {
   commentCount: number;
   createdAt: string;
   updatedAt: string;
-  authorId: Pick<IUser, '_id' | 'fullname' | 'avatar'>;
+  authorId: {
+    _id: string;
+    fullname: string;
+    avatar: string;
+  };
   userLiked: {
     isLiked: boolean;
     type: number | null;

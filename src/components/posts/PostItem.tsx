@@ -25,6 +25,7 @@ import PostButtonLike from './PostButtonLike';
 import PostMediaGallery from './PostMediaGallery';
 import { v4 as uuidv4 } from 'uuid';
 import { Link, useNavigate } from 'react-router-dom';
+import Lottie from 'lottie-react';
 
 const { Text } = Typography;
 
@@ -77,7 +78,7 @@ const PostItem: React.FC<IProps> = ({
 
   return (
     <>
-      <div className="w-full h-fit bg-white rounded-lg overflow-hidden shadow-md border border-gray-200">
+      <div className="w-full h-fit bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 flex-shrink-0">
         <div className="flex flex-col">
           <div className="flex w-full justify-between items-start pt-3 px-3 mb-3 flex-shrink-0">
             <div className="flex-1 flex items-start gap-1">
@@ -175,17 +176,23 @@ const PostItem: React.FC<IProps> = ({
                     <span className="flex items-center">
                       {((post.likeCount === 1 && !userLiked) ||
                         (userLiked && post.likeCount > 1)) && (
-                        <div className="relative z-1">
-                          <span className="text-base">
-                            {emojiReactions[0].emoji}
-                          </span>
+                        <div className="relative z-1 p-0.5 bg-white rounded-full">
+                          <Lottie
+                            animationData={emojiReactions[0].reSource}
+                            loop={false}
+                            className="size-5"
+                          />
                         </div>
                       )}
                       {userLiked &&
                         (userLiked.emoji !== emojiReactions[0].emoji ||
                           post.likeCount === 1) && (
-                          <div className="-ml-1">
-                            <span className="text-base">{userLiked.emoji}</span>
+                          <div className="-ml-1 p-0.5 bg-white rounded-full">
+                            <Lottie
+                              animationData={userLiked.reSource}
+                              loop={false}
+                              className="size-5"
+                            />
                           </div>
                         )}
                     </span>

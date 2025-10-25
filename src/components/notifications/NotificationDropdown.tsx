@@ -13,6 +13,9 @@ import AvatarUser from '../common/AvatarUser';
 import EmptyState from '../common/EmptyState';
 import LoadingComment from '../loading/LoadingComment';
 import NotificationItem from './NotificationItem';
+import NotificationPost from './NotificationPost';
+import { POST_DEFAULT } from '@social/defaults/post';
+import type { IPost } from '@social/types/posts.type';
 
 const { Title } = Typography;
 
@@ -28,7 +31,9 @@ const NotificationDropdown = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [postDetail, setPostDetail] = useState<IPost>(POST_DEFAULT);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [openModalViewPost, setOpenModalViewPost] = useState(false);
   const { socket } = useSockets();
   const getUnSeenNotifications = useCallback(async () => {
     try {
@@ -193,6 +198,18 @@ const NotificationDropdown = () => {
     setOpenDropdown(false);
   }, []);
 
+  const handleSetPostDetail = useCallback(
+    (post: string, author: IPost['authorId']) => {
+      setPostDetail({ ...POST_DEFAULT, _id: post, authorId: author });
+      setOpenModalViewPost(true);
+    },
+    []
+  );
+
+  const handleCloseModalViewPost = useCallback(() => {
+    setPostDetail(POST_DEFAULT);
+    setOpenModalViewPost(false);
+  }, []);
   return (
     <>
       <Dropdown
@@ -223,6 +240,7 @@ const NotificationDropdown = () => {
                           key={item.notificationId}
                           notification={item}
                           onCloseDropdown={handleCloseDropdown}
+                          onSetPostDetail={handleSetPostDetail}
                         />
                       ))}
                       {loadingMore && (
@@ -247,6 +265,12 @@ const NotificationDropdown = () => {
           </Badge>
         </div>
       </Dropdown>
+
+      <NotificationPost
+        post={postDetail}
+        openModalViewPost={openModalViewPost}
+        closeModalViewPost={handleCloseModalViewPost}
+      />
     </>
   );
 };

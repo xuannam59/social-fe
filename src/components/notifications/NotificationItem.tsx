@@ -1,9 +1,8 @@
-import { Avatar, Typography } from 'antd';
+import { Avatar } from 'antd';
 import { TbPointFilled } from 'react-icons/tb';
 import defaultAvatar from '@social/images/default-avatar.webp';
 import {
   EEntityType,
-  ENotificationType,
   type INotificationResponse,
 } from '@social/types/notifications.type';
 import {
@@ -11,15 +10,19 @@ import {
   formatRelativeTimeV2,
 } from '@social/common/convert';
 import { useCallback } from 'react';
+import { useAppDispatch } from '@social/hooks/redux.hook';
+import type { IPost } from '@social/types/posts.type';
 
 interface IProps {
   notification: INotificationResponse;
   onCloseDropdown: () => void;
+  onSetPostDetail: (postId: string, author: IPost['authorId']) => void;
 }
 
 const NotificationItem: React.FC<IProps> = ({
   notification,
   onCloseDropdown,
+  onSetPostDetail,
 }) => {
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -27,12 +30,13 @@ const NotificationItem: React.FC<IProps> = ({
       e.stopPropagation();
       switch (notification.entityType) {
         case EEntityType.POST:
+          onSetPostDetail(notification.entityId, notification.senders[0]);
           break;
       }
 
       onCloseDropdown();
     },
-    [notification, onCloseDropdown]
+    [notification, onCloseDropdown, onSetPostDetail]
   );
   return (
     <>

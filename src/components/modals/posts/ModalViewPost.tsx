@@ -184,7 +184,7 @@ const ModalViewPost: React.FC<IProps> = ({
                 onLikePost={onLikePost}
               />
               <div className="px-3 mb-3">
-                <div className="border-t border-gray-200 pt-2 flex flex-col gap-2 h-fit">
+                <div className="border-t border-gray-200 pt-2 flex flex-col gap-2 h-fit max-h-[calc(100vh-200px)]">
                   {comment.current && (
                     <CommentItem
                       comment={comment.current}
