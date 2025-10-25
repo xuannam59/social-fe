@@ -6,9 +6,9 @@ const LoadingModalPost = () => {
       <div className="h-fit max-h-[calc(100vh-3.5rem)] flex flex-col mt-2">
         <div className="border-b border-gray-200 p-3 flex-shrink-0">
           <div className="flex items-center justify-between gap-2">
-            <span className="flex-1 flex justify-center text-h2 font-bold">
-              Bài viết của
-            </span>
+            <div className="flex-1 flex justify-center items-center">
+              <Skeleton.Node active style={{ width: 200, height: 20 }} />
+            </div>
             <Skeleton.Avatar active size={30} />
           </div>
         </div>

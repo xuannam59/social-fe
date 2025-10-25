@@ -222,7 +222,7 @@ const PostItem: React.FC<IProps> = ({
             <div className="flex border-t border-gray-200 pt-2">
               {/* TODO: Thích */}
               <PostButtonLike
-                postId={post._id}
+                post={post}
                 userLiked={userLiked}
                 onUserLiked={onUserLiked}
               />

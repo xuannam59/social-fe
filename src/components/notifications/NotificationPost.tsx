@@ -3,7 +3,6 @@ import ModalViewPost from '../modals/posts/ModalViewPost';
 import type { IPost, IPostLike } from '@social/types/posts.type';
 import { callApiGetPostDetail } from '@social/apis/posts.api';
 import { notification } from 'antd';
-import { POST_DEFAULT } from '@social/defaults/post';
 
 interface IProps {
   post: IPost;
@@ -24,7 +23,7 @@ const NotificationPost: React.FC<IProps> = ({
     try {
       const res = await callApiGetPostDetail(post._id);
       if (res.data) {
-        setPostDetail({ ...res.data, authorId: post.authorId });
+        setPostDetail(res.data);
       } else {
         notification.error({
           message: 'Lỗi',
@@ -36,7 +35,7 @@ const NotificationPost: React.FC<IProps> = ({
       console.error('Failed to get post detail:', error);
     }
     setIsLoading(false);
-  }, [post._id, closeModalViewPost, post.authorId]);
+  }, [post._id, closeModalViewPost]);
 
   const handleLikePost = useCallback((post: IPostLike) => {
     setPostDetail(prev => {

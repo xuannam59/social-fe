@@ -37,15 +37,12 @@ const NotificationDropdown = () => {
   const { socket } = useSockets();
   const getUnSeenNotifications = useCallback(async () => {
     try {
-      setIsLoading(true);
       const res = await callApiGetUnSeenNotifications();
       if (res.data) {
         setUnSeenNotifications(new Set(res.data));
       }
     } catch (error) {
       console.log(error);
-    } finally {
-      setIsLoading(false);
     }
   }, [setUnSeenNotifications]);
 
@@ -112,25 +109,19 @@ const NotificationDropdown = () => {
   useEffect(() => {
     if (!socket) return;
     socket.on(NOTIFICATION_MESSAGE.RESPONSE, (data: INotificationResponse) => {
-      if (!data.notificationId) return;
+      if (!data._id) return;
 
       setNotificationList(prev => {
         const existingNotification = prev.findIndex(
-          item => item.entityId === data.entityId && item.type === data.type
+          item => item._id === data._id
         );
         if (existingNotification !== -1) {
-          const notificationDetail = prev[existingNotification];
           prev.splice(existingNotification, 1);
-          const newNotification = {
-            ...notificationDetail,
-            senders: [data.senders[0], ...notificationDetail.senders],
-          };
-          return [newNotification, ...prev];
         }
         return [data, ...prev];
       });
       setUnSeenNotifications(prev => {
-        prev.add(data.notificationId);
+        prev.add(data._id);
         return prev;
       });
       if (!openDropdown) {
@@ -138,14 +129,14 @@ const NotificationDropdown = () => {
           message: '',
           description: (
             <>
-              <div className="flex items-start gap-2">
+              <div className="flex items-start gap-1.5">
                 <div className="flex-shrink-0">
-                  <AvatarUser avatar={data.senders[0].avatar} size={58} />
+                  <AvatarUser avatar={data.senderIds[0].avatar} size={58} />
                 </div>
-                <div className="flex flex-col w-full min-w-0 gap-1">
+                <div className="flex flex-col w-full min-w-0 gap-1 mr-5">
                   <div className="text-base line-clamp-3 break-words">
                     <span className="font-medium">
-                      {data.senders[0].fullname}{' '}
+                      {data.senderIds[0].fullname}{' '}
                     </span>
                     <span className="text-gray-500">
                       {convertNotificationMessage(data.message, data.type)}
@@ -155,7 +146,8 @@ const NotificationDropdown = () => {
               </div>
             </>
           ),
-          duration: 3,
+          duration: 2,
+          className: '!px-4 !py-3',
         });
       }
     });
@@ -170,6 +162,8 @@ const NotificationDropdown = () => {
     async (visible: boolean) => {
       setOpenDropdown(visible);
       if (visible && notificationList.length === 0) {
+        setIsLoading(true);
+
         try {
           const res = await callApiGetNotifications('page=1&limit=10');
           if (res.data) {
@@ -188,6 +182,8 @@ const NotificationDropdown = () => {
             message: 'Lỗi',
             description: 'Không tải được thông báo',
           });
+        } finally {
+          setIsLoading(false);
         }
       }
     },
@@ -198,18 +194,16 @@ const NotificationDropdown = () => {
     setOpenDropdown(false);
   }, []);
 
-  const handleSetPostDetail = useCallback(
-    (post: string, author: IPost['authorId']) => {
-      setPostDetail({ ...POST_DEFAULT, _id: post, authorId: author });
-      setOpenModalViewPost(true);
-    },
-    []
-  );
+  const handleSetPostDetail = useCallback((post: string) => {
+    setPostDetail({ ...POST_DEFAULT, _id: post });
+    setOpenModalViewPost(true);
+  }, []);
 
   const handleCloseModalViewPost = useCallback(() => {
     setPostDetail(POST_DEFAULT);
     setOpenModalViewPost(false);
   }, []);
+
   return (
     <>
       <Dropdown
@@ -220,14 +214,14 @@ const NotificationDropdown = () => {
         onOpenChange={handleOpenDropdown}
         popupRender={() => {
           return (
-            <div className="w-[380px] h-fit max-h-[calc(100vh-95px)] mb-10 pt-4 bg-white rounded-lg inset-shadow-2xs shadow-md">
+            <div className="w-[380px] h-fit max-h-[calc(100vh-95px)] overflow-y-auto mb-10 pt-4 bg-white rounded-lg inset-shadow-2xs shadow-md">
               <div className="flex flex-col overflow-hidden">
                 <div className="flex items-center justify-between px-4 border-b border-gray-200">
                   <Title level={3}>Thông báo</Title>
                 </div>
                 <div
                   ref={scrollContainerRef}
-                  className="flex-1 min-h-0 overflow-x-hidden overflow-y-auto p-2"
+                  className="flex-1 min-h-0 overflow-x-hidden p-2"
                 >
                   {isLoading ? (
                     <LoadingComment />
@@ -237,7 +231,7 @@ const NotificationDropdown = () => {
                     <div className="grid grid-cols-1 gap-4">
                       {notificationList.map(item => (
                         <NotificationItem
-                          key={item.notificationId}
+                          key={item._id}
                           notification={item}
                           onCloseDropdown={handleCloseDropdown}
                           onSetPostDetail={handleSetPostDetail}

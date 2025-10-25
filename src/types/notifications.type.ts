@@ -1,5 +1,6 @@
 export interface INotificationResponse {
-  senders: {
+  _id: string;
+  senderIds: {
     _id: string;
     fullname: string;
     avatar: string;
@@ -10,9 +11,8 @@ export interface INotificationResponse {
   type: ENotificationType;
   seen: boolean;
   isRead: boolean;
-  total: number;
-  notificationId: string;
-  latestAt: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface INotificationState {
