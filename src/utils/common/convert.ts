@@ -179,7 +179,7 @@ export const convertNotificationMessage = (
     case ENotificationType.POST_SHARE:
       return ` đã chia sẻ bài viết của bạn: ${message}`;
     case ENotificationType.COMMENT_MENTION:
-      return ` đã gắn thẻ bài bạn vào bài viết của họ: ${message}`;
+      return ` đã gắn nhắc tới bạn trong bình luận`;
     case ENotificationType.COMMENT_LIKE:
       return ` đã thích bình luận của bạn: ${message}`;
     case ENotificationType.COMMENT_REPLY:

@@ -12,7 +12,7 @@ export const callApiCreateComment = (data: IFormComment) => {
 
 export const callGetComments = (postId: string, query?: string) => {
   return axios.get<IBackendRes<IComment[]>>(
-    `/api/v1/comments/${postId}?${query}`
+    `/api/v1/comments/${postId}?${query ? query : ''}`
   );
 };
 

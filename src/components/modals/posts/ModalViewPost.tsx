@@ -11,13 +11,15 @@ import LoadingComment from '@social/components/loading/LoadingComment';
 import LoadingModalPost from '@social/components/loading/LoadingModalPost';
 import PostItem from '@social/components/posts/PostItem';
 import { COMMENT_DEFAULT } from '@social/defaults/post';
+import { NOTIFICATION_MESSAGE } from '@social/defaults/socket.default';
 import { useAppSelector } from '@social/hooks/redux.hook';
 import type { IComment, IFormComment } from '@social/types/comments.type';
 import type { IPost, IPostLike } from '@social/types/posts.type';
-import { Button, Form, message, Modal, Skeleton } from 'antd';
+import { Button, Form, message, Modal } from 'antd';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { TbX } from 'react-icons/tb';
 import { v4 as uuidv4 } from 'uuid';
+import { useSockets } from '@social/providers/SocketProvider';
 
 interface IProps {
   openModalViewPost: boolean;
@@ -39,6 +41,7 @@ const ModalViewPost: React.FC<IProps> = ({
   isLoading = false,
 }) => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
+  const { socket } = useSockets();
   const parentId = useRef<string>('');
   const [comments, setComments] = useState<IComment[]>([]);
   const comment = useRef<IComment | null>(null);
@@ -53,6 +56,7 @@ const ModalViewPost: React.FC<IProps> = ({
   };
 
   const getComments = useCallback(async () => {
+    if (!post._id) return;
     setIsLoadingComments(true);
     const res = await callGetComments(post._id);
     if (res.data) {
@@ -62,10 +66,8 @@ const ModalViewPost: React.FC<IProps> = ({
   }, [post._id]);
 
   useEffect(() => {
-    if (post._id) {
-      getComments();
-    }
-  }, [getComments, post._id]);
+    getComments();
+  }, [getComments]);
 
   const onSubmit = useCallback(
     async (values: IFormComment) => {
@@ -126,6 +128,13 @@ const ModalViewPost: React.FC<IProps> = ({
           }
           onAddComment(post._id);
           setCommentProcess('success');
+          socket.emit(NOTIFICATION_MESSAGE.POST_COMMENT, {
+            postId: post._id,
+            content,
+            postAuthorId: post.authorId._id,
+            commentId: res.data._id,
+            mentionsList: mentions.map(mention => mention.userId),
+          });
         } else {
           message.error(convertErrorMessage(res.message));
           setCommentProcess('error');
@@ -135,7 +144,7 @@ const ModalViewPost: React.FC<IProps> = ({
         setCommentProcess('error');
       }
     },
-    [post._id, userInfo, onAddComment]
+    [post._id, userInfo, onAddComment, socket, post.authorId._id]
   );
 
   const handleDeleteComment = useCallback(
@@ -165,7 +174,7 @@ const ModalViewPost: React.FC<IProps> = ({
         {isLoading ? (
           <LoadingModalPost />
         ) : (
-          <div className="h-fit max-h-[calc(100vh-3.5rem)] flex flex-col mt-2">
+          <div className="h-fit max-h-[70vh] flex flex-col mt-2">
             <div className="border-b border-gray-200 p-3 flex-shrink-0">
               <div className="flex items-center justify-between gap-2">
                 <span className="flex-1 flex justify-center text-h2 font-bold">
@@ -187,6 +196,7 @@ const ModalViewPost: React.FC<IProps> = ({
                 <div className="border-t border-gray-200 pt-2 flex flex-col gap-2 h-fit max-h-[calc(100vh-200px)]">
                   {comment.current && (
                     <CommentItem
+                      post={post}
                       comment={comment.current}
                       level={1}
                       commentStatus={commentProcess}
@@ -200,6 +210,7 @@ const ModalViewPost: React.FC<IProps> = ({
                     comments.map(comment => (
                       <CommentItem
                         key={comment._id}
+                        post={post}
                         comment={comment}
                         level={1}
                         onDeleteComment={handleDeleteComment}

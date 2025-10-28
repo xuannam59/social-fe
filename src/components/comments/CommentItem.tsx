@@ -31,8 +31,12 @@ import { v4 as uuidv4 } from 'uuid';
 import AvatarUser from '../common/AvatarUser';
 import ButtonLike from '../common/ButtonLike';
 import CommentInput from './CommentInput';
+import { useSockets } from '@social/providers/SocketProvider';
+import { NOTIFICATION_MESSAGE } from '@social/defaults/socket.default';
+import type { IPost } from '@social/types/posts.type';
 
 interface IProps {
+  post: IPost;
   comment: IComment;
   level: number;
   commentStatus?: 'success' | 'error' | 'pending';
@@ -43,6 +47,7 @@ interface IProps {
 const { Paragraph } = Typography;
 
 const CommentItem: React.FC<IProps> = ({
+  post,
   comment,
   level,
   commentStatus = 'success',
@@ -51,6 +56,7 @@ const CommentItem: React.FC<IProps> = ({
   onAddComment,
 }) => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
+  const { socket } = useSockets();
   const time = useMemo(
     () => formatRelativeTime(comment.createdAt),
     [comment.createdAt]
@@ -76,6 +82,8 @@ const CommentItem: React.FC<IProps> = ({
   const [form] = Form.useForm();
   const author = comment.authorId;
   const defaultEmoji = emojiReactions[0];
+
+  const handleNotification = () => {};
 
   const getCommentChildren = useCallback(async () => {
     setIsLoadingShowMore(true);
@@ -135,7 +143,11 @@ const CommentItem: React.FC<IProps> = ({
 
       setTimeout(() => {
         form.focusField(comment._id);
-        form.setFieldValue(comment._id, `@[${fullname}](${authorId}) `);
+        if (comment.authorId._id !== userInfo._id) {
+          form.setFieldValue(comment._id, `@[${fullname}](${authorId}) `);
+        } else {
+          form.setFieldValue(comment._id, '');
+        }
 
         if (commentInputRef.current) {
           commentInputRef.current.scrollIntoView({
@@ -221,6 +233,19 @@ const CommentItem: React.FC<IProps> = ({
           }
           setReplyProcess('success');
           onAddComment(comment.postId);
+          if (
+            comment.authorId._id !== userInfo._id ||
+            post.authorId._id !== userInfo._id
+          ) {
+            socket.emit(NOTIFICATION_MESSAGE.POST_COMMENT, {
+              postId: post._id,
+              content,
+              postAuthorId: post.authorId._id,
+              commentId: res.data._id,
+              commentAuthorId: comment.authorId._id,
+              mentionsList: mentions.map(mention => mention.userId),
+            });
+          }
         } else {
           message.error(convertErrorMessage(res.message));
           setReplyProcess('error');
@@ -230,7 +255,7 @@ const CommentItem: React.FC<IProps> = ({
         setReplyProcess('error');
       }
     },
-    [comment.postId, userInfo, onAddComment]
+    [comment, userInfo, onAddComment, socket, post]
   );
 
   const renderReplyProcess = useCallback(() => {
@@ -340,7 +365,9 @@ const CommentItem: React.FC<IProps> = ({
   return (
     <>
       <div className={`flex items-start gap-2 `}>
-        <AvatarUser size={30} avatar={comment.authorId.avatar} />
+        <div className="flex-shrink-0">
+          <AvatarUser size={40} avatar={comment.authorId.avatar} />
+        </div>
         <div className="w-full">
           <div className="w-full group/comment">
             <div className="w-fit max-w-[80%] ">
@@ -402,6 +429,7 @@ const CommentItem: React.FC<IProps> = ({
             {commentReply.current && (
               <div className="mt-2">
                 <CommentItem
+                  post={post}
                   comment={commentReply.current}
                   level={level + 1}
                   commentStatus={replyProcess}
@@ -416,6 +444,7 @@ const CommentItem: React.FC<IProps> = ({
               commentChildren.map(child => (
                 <div key={child._id} className="mt-2">
                   <CommentItem
+                    post={post}
                     comment={child}
                     level={level + 1}
                     requestReplyOnParent={onClickReply}

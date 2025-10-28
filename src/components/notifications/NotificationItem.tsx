@@ -9,7 +9,7 @@ import {
   convertNotificationMessage,
   formatRelativeTimeV2,
 } from '@social/common/convert';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 interface IProps {
   notification: INotificationResponse;
@@ -22,6 +22,9 @@ const NotificationItem: React.FC<IProps> = ({
   onCloseDropdown,
   onSetPostDetail,
 }) => {
+  const lasSenderInfo = useMemo(() => {
+    return notification.senderIds[notification.senderIds.length - 1];
+  }, [notification.senderIds]);
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       e.preventDefault();
@@ -43,45 +46,41 @@ const NotificationItem: React.FC<IProps> = ({
         onClick={handleClick}
         id={`n_${notification._id}`}
       >
-        <div
-          className="flex items-start gap-2 w-full min-w-0 
-        max-w-full overflow-x-hidden cursor-pointer hover:bg-gray-100 rounded-lg p-2"
-        >
-          <div className="flex-shrink-0">
-            <Avatar
-              size={58}
-              src={notification.senderIds[0].avatar || defaultAvatar}
-            />
-          </div>
-          <div className="flex flex-col w-full min-w-0 gap-1">
-            <div className="text-base line-clamp-2 break-words">
-              <span className="font-medium text-base">
-                {
-                  notification.senderIds[notification.senderIds.length - 1]
-                    .fullname
-                }
-                {notification.senderIds.length > 1 && (
-                  <span className="text-gray-500 text-base">
-                    và {notification.senderIds.length - 1} người khác
+        <div className="cursor-pointer hover:bg-gray-100 rounded-lg p-2">
+          <div className="flex items-start gap-2 w-full min-w-0 max-w-full overflow-x-hidden">
+            <div className="flex-shrink-0">
+              <Avatar size={58} src={lasSenderInfo.avatar || defaultAvatar} />
+            </div>
+            <div className="flex flex-col w-full min-w-0 gap-1">
+              <div className="flex items-center">
+                <div className="text-base line-clamp-2 break-words">
+                  <span className="font-medium text-base">
+                    {lasSenderInfo.fullname}
+                    {notification.senderIds.length > 1 && (
+                      <span className="text-gray-500 text-base">
+                        {` và `} {notification.senderIds.length - 1} người khác
+                      </span>
+                    )}
                   </span>
+                  <span className="text-gray-500 text-base">
+                    {convertNotificationMessage(
+                      notification.message,
+                      notification.type
+                    )}
+                  </span>
+                </div>
+
+                {!notification.isRead && (
+                  <div className="ml-1 h-full">
+                    <TbPointFilled size={25} className="text-sky-500" />
+                  </div>
                 )}
-              </span>
-              <span className="text-gray-500 text-base">
-                {convertNotificationMessage(
-                  notification.message,
-                  notification.type
-                )}
+              </div>
+              <span className="text-sm text-blue-500 shrink-0 whitespace-nowrap !m-0">
+                {formatRelativeTimeV2(notification.createdAt)}
               </span>
             </div>
-            <span className="text-sm text-blue-500 shrink-0 whitespace-nowrap !m-0">
-              {formatRelativeTimeV2(notification.createdAt)}
-            </span>
           </div>
-          {!notification.isRead && (
-            <div className="ml-1">
-              <TbPointFilled size={30} className="text-sky-500" />
-            </div>
-          )}
         </div>
       </div>
     </>

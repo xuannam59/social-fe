@@ -174,8 +174,7 @@ const PostItem: React.FC<IProps> = ({
                 {post.likeCount > 0 && (
                   <>
                     <span className="flex items-center">
-                      {((post.likeCount === 1 && !userLiked) ||
-                        (userLiked && post.likeCount > 1)) && (
+                      {(!userLiked || (userLiked && post.likeCount > 1)) && (
                         <div className="relative z-1 p-0.5 bg-white rounded-full">
                           <Lottie
                             animationData={emojiReactions[0].reSource}

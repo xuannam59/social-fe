@@ -6,9 +6,9 @@ import { convertNotificationMessage } from '@social/common/convert';
 import { NOTIFICATION_MESSAGE } from '@social/defaults/socket.default';
 import { useSockets } from '@social/providers/SocketProvider';
 import type { INotificationResponse } from '@social/types/notifications.type';
-import { Badge, Dropdown, notification, Spin, Typography } from 'antd';
+import { Badge, Button, Dropdown, notification, Spin, Typography } from 'antd';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { TbBell } from 'react-icons/tb';
+import { TbBell, TbX } from 'react-icons/tb';
 import AvatarUser from '../common/AvatarUser';
 import EmptyState from '../common/EmptyState';
 import LoadingComment from '../loading/LoadingComment';
@@ -111,42 +111,56 @@ const NotificationDropdown = () => {
     socket.on(NOTIFICATION_MESSAGE.RESPONSE, (data: INotificationResponse) => {
       if (!data._id) return;
 
-      setNotificationList(prev => {
-        const existingNotification = prev.findIndex(
-          item => item._id === data._id
-        );
-        if (existingNotification !== -1) {
-          prev.splice(existingNotification, 1);
-        }
-        return [data, ...prev];
-      });
+      if (notificationList.length > 0) {
+        setNotificationList(prev => {
+          const oldNotificationList = [...prev];
+          const existingNotification = oldNotificationList.findIndex(
+            item => item._id === data._id
+          );
+          if (existingNotification !== -1) {
+            oldNotificationList.splice(existingNotification, 1);
+          }
+          const newNotificationList = [data, ...oldNotificationList];
+          return newNotificationList;
+        });
+      }
       setUnSeenNotifications(prev => {
-        prev.add(data._id);
-        return prev;
+        const newUnSeenNotifications = new Set(prev);
+        newUnSeenNotifications.add(data._id);
+        return newUnSeenNotifications;
       });
       if (!openDropdown) {
+        const lastSender = data.senderIds[data.senderIds.length - 1];
         notification.open({
+          key: data._id,
           message: '',
           description: (
             <>
               <div className="flex items-start gap-1.5">
                 <div className="flex-shrink-0">
-                  <AvatarUser avatar={data.senderIds[0].avatar} size={58} />
+                  <AvatarUser avatar={lastSender.avatar} size={58} />
                 </div>
-                <div className="flex flex-col w-full min-w-0 gap-1 mr-5">
+                <div className="flex flex-col w-full min-w-0 gap-1">
                   <div className="text-base line-clamp-3 break-words">
-                    <span className="font-medium">
-                      {data.senderIds[0].fullname}{' '}
-                    </span>
+                    <span className="font-medium">{lastSender.fullname} </span>
                     <span className="text-gray-500">
                       {convertNotificationMessage(data.message, data.type)}
                     </span>
                   </div>
                 </div>
+                <div
+                  className="w-6 h-6 flex items-center justify-center cursor-pointer hover:bg-gray-200 rounded-full flex-shrink-0"
+                  onClick={() => {
+                    notification.destroy(data._id);
+                  }}
+                >
+                  <TbX size={16} className="text-gray-500" />
+                </div>
               </div>
             </>
           ),
-          duration: 2,
+          duration: 2.5,
+          closeIcon: null,
           className: '!px-4 !py-3',
         });
       }
@@ -156,7 +170,7 @@ const NotificationDropdown = () => {
         socket.off(NOTIFICATION_MESSAGE.RESPONSE);
       }
     };
-  }, [socket, openDropdown]);
+  }, [socket, openDropdown, notificationList]);
 
   const handleOpenDropdown = useCallback(
     async (visible: boolean) => {
@@ -228,7 +242,7 @@ const NotificationDropdown = () => {
                   ) : notificationList.length === 0 ? (
                     <EmptyState />
                   ) : (
-                    <div className="grid grid-cols-1 gap-4">
+                    <div className="grid grid-cols-1">
                       {notificationList.map(item => (
                         <NotificationItem
                           key={item._id}
