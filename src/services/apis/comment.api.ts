@@ -1,5 +1,8 @@
 import axios from '@social/configs/axios/axiosCustom';
-import type { IBackendRes } from '@social/types/backend.type';
+import type {
+  IBackendRes,
+  IBackendResPagination,
+} from '@social/types/backend.type';
 import type {
   IComment,
   ICommentLike,
@@ -11,7 +14,7 @@ export const callApiCreateComment = (data: IFormComment) => {
 };
 
 export const callGetComments = (postId: string, query?: string) => {
-  return axios.get<IBackendRes<IComment[]>>(
+  return axios.get<IBackendResPagination<IComment[]>>(
     `/api/v1/comments/${postId}?${query ? query : ''}`
   );
 };

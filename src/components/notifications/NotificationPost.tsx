@@ -3,6 +3,7 @@ import ModalViewPost from '../modals/posts/ModalViewPost';
 import type { IPost, IPostLike } from '@social/types/posts.type';
 import { callApiGetPostDetail } from '@social/apis/posts.api';
 import { notification } from 'antd';
+import { useAppSelector } from '@social/hooks/redux.hook';
 
 interface IProps {
   post: IPost;
@@ -15,6 +16,7 @@ const NotificationPost: React.FC<IProps> = ({
   openModalViewPost,
   closeModalViewPost,
 }) => {
+  const userInfo = useAppSelector(state => state.auth.userInfo);
   const [postDetail, setPostDetail] = useState<IPost>(post);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -37,42 +39,32 @@ const NotificationPost: React.FC<IProps> = ({
     setIsLoading(false);
   }, [post._id, closeModalViewPost]);
 
-  const handleLikePost = useCallback((post: IPostLike) => {
-    setPostDetail(prev => {
-      const userLiked = prev.userLiked;
-      if (post.isLike) {
-        if (userLiked.isLiked) {
-          return {
-            ...prev,
-            userLiked: {
-              isLiked: true,
-              type: post.type,
-            },
-          };
+  const handleLikePost = useCallback(
+    (type: number, isLike: boolean) => {
+      setPostDetail(prev => {
+        const newPost = { ...prev };
+        if (isLike) {
+          newPost.userLiked = { userId: userInfo._id, type };
+          const existingLikeIndex = newPost.userLikes.findIndex(
+            like => like.userId === userInfo._id
+          );
+          if (existingLikeIndex === -1) {
+            newPost.userLikes.push({ userId: userInfo._id, type });
+          }
         } else {
-          return {
-            ...prev,
-            likeCount: prev.likeCount + 1,
-            userLiked: {
-              isLiked: true,
-              type: post.type,
-            },
-          };
+          newPost.userLiked = null;
+          newPost.userLikes = newPost.userLikes.filter(
+            like => like.userId !== userInfo._id
+          );
         }
-      } else {
-        return {
-          ...prev,
-          likeCount: prev.likeCount - 1,
-          userLiked: {
-            isLiked: false,
-            type: null,
-          },
-        };
-      }
-    });
-  }, []);
 
-  const handleAddComment = useCallback((postId: string) => {
+        return newPost;
+      });
+    },
+    [userInfo._id]
+  );
+
+  const handleAddComment = useCallback(() => {
     setPostDetail(prev => ({
       ...prev,
       commentCount: prev.commentCount + 1,
@@ -85,15 +77,12 @@ const NotificationPost: React.FC<IProps> = ({
     }
   }, [getPostDetail, post._id]);
 
-  const handleDeleteComment = useCallback(
-    (postId: string, countDeleted: number) => {
-      setPostDetail(prev => ({
-        ...prev,
-        commentCount: prev.commentCount - countDeleted,
-      }));
-    },
-    []
-  );
+  const handleDeleteComment = useCallback((countDeleted: number) => {
+    setPostDetail(prev => ({
+      ...prev,
+      commentCount: prev.commentCount + countDeleted,
+    }));
+  }, []);
 
   return (
     <>

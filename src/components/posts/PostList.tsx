@@ -1,97 +1,32 @@
 import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
-import { useCallback, useRef, useState } from 'react';
-import PostItem from './PostItem';
-import { POST_DEFAULT } from '@social/defaults/post';
-import ModalViewPost from '../modals/posts/ModalViewPost';
-import type { IPost, IPostLike } from '@social/types/posts.type';
-import {
-  doAddComment,
-  doDeleteComment,
-  doToggleLike,
-  setPosts,
-} from '@social/redux/reducers/post.reducer';
-import type { VirtuosoHandle } from 'react-virtuoso';
-import { callApiGetPost } from '@social/apis/posts.api';
+import { doToggleLike, fetchPosts } from '@social/redux/reducers/post.reducer';
+import { useCallback, useEffect } from 'react';
 import LoadingPostList from '../loading/LoadingPostList';
+import PostItem from './PostItem';
 
 const PostList = () => {
   const { listPosts, isLoadingPosts } = useAppSelector(state => state.post);
+  const userInfo = useAppSelector(state => state.auth.userInfo);
   const dispatch = useAppDispatch();
-  const [openModalViewPost, setOpenModalViewPost] = useState(false);
-  const [postSelected, setPostSelected] = useState<IPost>(POST_DEFAULT);
-  const virtuosoRef = useRef<VirtuosoHandle>(null);
-  const [firstItemIndex, setFirstItemIndex] = useState(0);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [page, setPage] = useState(1);
 
-  const handleOpenModalViewPost = useCallback((post: IPost) => {
-    setPostSelected(post);
-    setOpenModalViewPost(true);
-  }, []);
+  useEffect(() => {
+    dispatch(fetchPosts('limit=10'));
+  }, [dispatch]);
 
-  const handleCloseModalViewPost = useCallback(() => {
-    setPostSelected(POST_DEFAULT);
-    setOpenModalViewPost(false);
-  }, []);
-
-  const likePost = useCallback(
-    (post: IPostLike) => {
-      setPostSelected(prev => ({
-        ...prev,
-        userLiked: {
-          isLiked: post.isLike,
-          type: post.type,
-        },
-      }));
-      dispatch(doToggleLike(post));
+  const updateLikePost = useCallback(
+    (index: number, type: number, isLike: boolean) => {
+      const userLiked = { userId: userInfo._id, type };
+      dispatch(doToggleLike({ index, userLiked, isLike }));
     },
-    [dispatch]
+    [userInfo._id, dispatch]
   );
 
-  const handleAddComment = useCallback(
-    (postId: string) => {
-      setPostSelected(prev => ({
-        ...prev,
-        commentCount: prev.commentCount + 1,
-      }));
-      dispatch(doAddComment({ postId }));
+  const updateCommentPost = useCallback(
+    (index: number, countDeleted: number) => {
+      console.log(index, countDeleted);
     },
-    [setPostSelected, dispatch]
+    []
   );
-
-  const handleDeleteComment = useCallback(
-    (postId: string, countDeleted: number) => {
-      setPostSelected(prev => ({
-        ...prev,
-        commentCount: prev.commentCount - countDeleted,
-      }));
-      dispatch(doDeleteComment({ postId, countDeleted }));
-    },
-    [setPostSelected, dispatch]
-  );
-
-  const loadMorePosts = useCallback(async () => {
-    if (isLoadingMore) return;
-
-    try {
-      setIsLoadingMore(true);
-      const nextPage = page + 1;
-      const res = await callApiGetPost(`page=${nextPage}`);
-      if (res.data) {
-        const olderAsc = [...res.data].reverse();
-        if (olderAsc.length > 0) {
-          setFirstItemIndex(prev => prev - olderAsc.length);
-          setPage(nextPage);
-          dispatch(setPosts(olderAsc));
-        }
-      }
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsLoadingMore(false);
-    }
-  }, [isLoadingMore, page, dispatch]);
-
   return (
     <>
       {isLoadingPosts ? (
@@ -99,26 +34,21 @@ const PostList = () => {
       ) : (
         <>
           <div className="flex flex-col gap-2 w-full">
-            {listPosts.map(post => (
+            {listPosts.map((post, index) => (
               <PostItem
                 key={post._id}
                 post={post}
-                onLikePost={likePost}
-                onClickComment={() => handleOpenModalViewPost(post)}
+                updateLikePost={(type, isLike) =>
+                  updateLikePost(index, type, isLike)
+                }
+                updateCommentPost={(countDeleted: number) =>
+                  updateCommentPost(index, countDeleted)
+                }
               />
             ))}
           </div>
         </>
       )}
-
-      <ModalViewPost
-        openModalViewPost={openModalViewPost}
-        post={postSelected}
-        onClose={handleCloseModalViewPost}
-        onLikePost={likePost}
-        onAddComment={handleAddComment}
-        onDeleteComment={handleDeleteComment}
-      />
     </>
   );
 };

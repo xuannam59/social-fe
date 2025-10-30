@@ -9,25 +9,25 @@ import CommentItem from '@social/components/comments/CommentItem';
 import EmptyState from '@social/components/common/EmptyState';
 import LoadingComment from '@social/components/loading/LoadingComment';
 import LoadingModalPost from '@social/components/loading/LoadingModalPost';
-import PostItem from '@social/components/posts/PostItem';
+import PostView from '@social/components/posts/PostView';
 import { COMMENT_DEFAULT } from '@social/defaults/post';
 import { NOTIFICATION_MESSAGE } from '@social/defaults/socket.default';
 import { useAppSelector } from '@social/hooks/redux.hook';
+import { useSockets } from '@social/providers/SocketProvider';
 import type { IComment, IFormComment } from '@social/types/comments.type';
-import type { IPost, IPostLike } from '@social/types/posts.type';
+import type { IPost } from '@social/types/posts.type';
 import { Button, Form, message, Modal } from 'antd';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { TbX } from 'react-icons/tb';
 import { v4 as uuidv4 } from 'uuid';
-import { useSockets } from '@social/providers/SocketProvider';
 
 interface IProps {
   openModalViewPost: boolean;
   post: IPost;
   onClose: () => void;
-  onLikePost: (post: IPostLike) => void;
-  onAddComment: (postId: string) => void;
-  onDeleteComment: (postId: string, countDeleted: number) => void;
+  onLikePost: (type: number, isLike: boolean) => void;
+  onAddComment: () => void;
+  onDeleteComment: (countDeleted: number) => void;
   isLoading?: boolean;
 }
 
@@ -60,7 +60,7 @@ const ModalViewPost: React.FC<IProps> = ({
     setIsLoadingComments(true);
     const res = await callGetComments(post._id);
     if (res.data) {
-      setComments(res.data);
+      setComments(res.data.list);
     }
     setIsLoadingComments(false);
   }, [post._id]);
@@ -126,7 +126,7 @@ const ModalViewPost: React.FC<IProps> = ({
             ]);
             comment.current = null;
           }
-          onAddComment(post._id);
+          onAddComment();
           setCommentProcess('success');
           socket.emit(NOTIFICATION_MESSAGE.POST_COMMENT, {
             postId: post._id,
@@ -150,9 +150,9 @@ const ModalViewPost: React.FC<IProps> = ({
   const handleDeleteComment = useCallback(
     (commentId: string, countDeleted: number) => {
       setComments(prev => prev.filter(comment => comment._id !== commentId));
-      onDeleteComment(post._id, countDeleted);
+      onDeleteComment(-1 * countDeleted);
     },
-    [post._id, onDeleteComment]
+    [onDeleteComment]
   );
 
   return (
@@ -186,7 +186,7 @@ const ModalViewPost: React.FC<IProps> = ({
               </div>
             </div>
             <div className="flex flex-col overflow-y-auto">
-              <PostItem
+              <PostView
                 post={post}
                 onClickComment={() => form.focusField('content')}
                 buttonClose={false}

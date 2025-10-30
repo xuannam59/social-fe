@@ -1,36 +1,28 @@
 import { callApiPostLike } from '@social/apis/posts.api';
 import { convertErrorMessage } from '@social/common/convert';
 import { emojiReactions } from '@social/constants/emoji';
+import { NOTIFICATION_MESSAGE } from '@social/defaults/socket.default';
+import { useSockets } from '@social/providers/SocketProvider';
 import type { IEmojiReaction } from '@social/types/commons.type';
 import type { IPost, IPostLike } from '@social/types/posts.type';
 import { message, Typography } from 'antd';
+import Lottie from 'lottie-react';
 import React from 'react';
 import { TbThumbUp } from 'react-icons/tb';
 import ButtonLike from '../common/ButtonLike';
-import Lottie from 'lottie-react';
-import { useAppSelector } from '@social/hooks/redux.hook';
-import { useSockets } from '@social/providers/SocketProvider';
-import { NOTIFICATION_MESSAGE } from '@social/defaults/socket.default';
 
 const { Text } = Typography;
 
 interface IProps {
   post: IPost;
   userLiked: IEmojiReaction | null;
-  onUserLiked: (userLiked: IEmojiReaction | null) => void;
+  onUserLiked: (type: number, isLike: boolean) => void;
 }
 
 const PostButtonLike: React.FC<IProps> = ({ post, userLiked, onUserLiked }) => {
-  const useInfo = useAppSelector(state => state.auth.userInfo);
   const { socket } = useSockets();
   const handleActionLike = async (type: number, isLike: boolean) => {
-    const previousState = userLiked;
-
-    if (isLike) {
-      onUserLiked(emojiReactions.find(emoji => emoji.value === type) ?? null);
-    } else {
-      onUserLiked(null);
-    }
+    onUserLiked(type, isLike);
 
     try {
       const payload: IPostLike = {
@@ -40,19 +32,15 @@ const PostButtonLike: React.FC<IProps> = ({ post, userLiked, onUserLiked }) => {
       };
       const res = await callApiPostLike(payload);
       if (res.data) {
-        if (post.authorId._id !== useInfo._id && isLike) {
-          socket.emit(NOTIFICATION_MESSAGE.POST_LIKE, {
-            postId: post._id,
-            creatorId: post.authorId._id,
-            message: post.content,
-          });
-        }
+        socket.emit(NOTIFICATION_MESSAGE.POST_LIKE, {
+          postId: post._id,
+          creatorId: post.authorId._id,
+          message: post.content,
+        });
       } else {
-        onUserLiked(previousState);
         message.error(convertErrorMessage(res.message));
       }
     } catch (error) {
-      onUserLiked(previousState);
       message.error('Có lỗi xảy ra');
     }
   };

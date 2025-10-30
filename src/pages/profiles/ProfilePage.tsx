@@ -1,13 +1,12 @@
-import { callApiGetPost } from '@social/apis/posts.api';
+import { callApiFetchPosts } from '@social/apis/posts.api';
 import { callApiGetUserInfo } from '@social/apis/user.api';
 import AvatarUser from '@social/components/common/AvatarUser';
 import CreatePost from '@social/components/posts/CreatePost';
-import PostList from '@social/components/posts/PostList';
 import ButtonAddFriend from '@social/components/profiles/ButtonAddFriend';
 import { ROUTES } from '@social/constants/route.constant';
 import { USER_DEFAULT } from '@social/defaults/user.default';
-import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
-import { setTempPosts } from '@social/redux/reducers/post.reducer';
+import { useAppSelector } from '@social/hooks/redux.hook';
+import type { IPost } from '@social/types/posts.type';
 import type { IUser } from '@social/types/user.type';
 import { Button, message, Tabs, Typography } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
@@ -19,19 +18,20 @@ const { Text, Paragraph } = Typography;
 const ProfilePage = () => {
   const { userId } = useParams();
   const userInfo = useAppSelector(state => state.auth.userInfo);
-  const dispatch = useAppDispatch();
   const [friendInfo, setFriendInfo] = useState<IUser>(USER_DEFAULT);
+  const [listPosts, setListPosts] = useState<IPost[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const fetchUserPosts = useCallback(async () => {
+    if (!userId) return;
     try {
-      const res = await callApiGetPost(`userId=${userId}`);
+      const res = await callApiFetchPosts(`userId=${userId}&limit=10`);
       if (res.data) {
-        dispatch(setTempPosts(res.data));
+        setListPosts(res.data.list);
       }
     } catch (error) {
-      console.error('Failed to fetch user posts:', error);
+      console.error('Failed to fetch posts:', error);
     }
   }, [userId]);
 
@@ -62,19 +62,19 @@ const ProfilePage = () => {
       message.error('Không tìm thấy người dùng');
       navigate(ROUTES.DEFAULT);
     }
-  }, [userId]);
+  }, [userId, navigate]);
 
   useEffect(() => {
-    if (!userId) return;
-    setIsLoading(true);
-    fetchUserPosts();
     if (userId !== userInfo._id) {
       fetchUserInfo();
     } else {
       setFriendInfo(userInfo);
     }
-    setIsLoading(false);
-  }, [fetchUserPosts, userId]);
+  }, [userId, fetchUserInfo, userInfo]);
+
+  useEffect(() => {
+    fetchUserPosts();
+  }, [fetchUserPosts]);
 
   const onChangeTab = (key: string) => {
     console.log(key);
@@ -176,7 +176,7 @@ const ProfilePage = () => {
               <div className="flex flex-col gap-3">
                 {userId === userInfo._id && <CreatePost />}
 
-                <PostList />
+                {/* <PostList /> */}
               </div>
             </div>
           </div>

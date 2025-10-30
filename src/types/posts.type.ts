@@ -1,8 +1,7 @@
-import type { IUser, IUserTag } from './user.type';
+import type { IUserTag } from './user.type';
 
 export interface IPostState {
   listPosts: IPost[];
-  tempPosts: IPost[];
   scroll: number;
   isLoadingPosts: boolean;
 }
@@ -15,21 +14,21 @@ export interface IPost {
     keyS3: string;
     type: string;
   }[];
-  userTags: IUserTag[];
-  feeling?: string;
-  likeCount: number;
-  commentCount: number;
-  createdAt: string;
-  updatedAt: string;
   authorId: {
     _id: string;
     fullname: string;
     avatar: string;
   };
-  userLiked: {
-    isLiked: boolean;
-    type: number | null;
-  };
+  userLikes: {
+    userId: string;
+    type: number;
+  }[];
+  userLiked: IUserLiked | null;
+  userTags: IUserTag[];
+  feeling?: string;
+  commentCount: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface IFormCreatePost {
@@ -60,4 +59,9 @@ export enum EOpenContent {
   POST = 'post',
   USER_TAG = 'userTag',
   FEELING = 'feeling',
+}
+
+export interface IUserLiked {
+  userId: string;
+  type: number;
 }

@@ -15,7 +15,6 @@ import { emojiReactions } from '@social/constants/emoji';
 import { COMMENT_DEFAULT } from '@social/defaults/post';
 import { useAppSelector } from '@social/hooks/redux.hook';
 import type { IComment, IFormComment } from '@social/types/comments.type';
-import type { IEmojiReaction } from '@social/types/commons.type';
 import {
   Button,
   Form,
@@ -34,6 +33,7 @@ import CommentInput from './CommentInput';
 import { useSockets } from '@social/providers/SocketProvider';
 import { NOTIFICATION_MESSAGE } from '@social/defaults/socket.default';
 import type { IPost } from '@social/types/posts.type';
+import type { IEmojiReaction } from '@social/types/commons.type';
 
 interface IProps {
   post: IPost;
@@ -62,13 +62,15 @@ const CommentItem: React.FC<IProps> = ({
     [comment.createdAt]
   );
   const [openReply, setOpenReply] = useState(false);
-  const [userLiked, setUserLiked] = useState<IEmojiReaction | null>(
-    comment.userLiked.type
-      ? (emojiReactions.find(emoji => emoji.value === comment.userLiked.type) ??
-          null)
-      : null
-  );
-  const [countLike, setCountLike] = useState(comment.likeCount);
+  const [myLike, setMyLike] = useState<IEmojiReaction | null>(() => {
+    const userLike = comment.userLikes.find(
+      like => like.userId === userInfo._id
+    );
+    return userLike
+      ? (emojiReactions.find(emoji => emoji.value === userLike.type) ?? null)
+      : null;
+  });
+  const [userLikes, setUserLikes] = useState(comment.userLikes);
   const [replyCount, setReplyCount] = useState(comment.replyCount);
   const [isOpenAllReply, setIsOpenAllReply] = useState(false);
   const [replyProcess, setReplyProcess] = useState<
@@ -83,8 +85,6 @@ const CommentItem: React.FC<IProps> = ({
   const author = comment.authorId;
   const defaultEmoji = emojiReactions[0];
 
-  const handleNotification = () => {};
-
   const getCommentChildren = useCallback(async () => {
     setIsLoadingShowMore(true);
     const res = await callGetComments(
@@ -93,7 +93,9 @@ const CommentItem: React.FC<IProps> = ({
     );
     if (res.data) {
       const existedIds = commentChildren.map(child => child._id);
-      const getData = res.data.filter(child => !existedIds.includes(child._id));
+      const getData = res.data.list.filter(
+        child => !existedIds.includes(child._id)
+      );
       setCommentChildren(prev => [...prev, ...getData]);
       setIsOpenAllReply(true);
     }
@@ -102,18 +104,14 @@ const CommentItem: React.FC<IProps> = ({
 
   const onUserLiked = useCallback(
     async (type: number, isLike: boolean) => {
-      const previousState = userLiked;
-
       if (isLike) {
-        if (!userLiked) {
-          setCountLike(prev => prev + 1);
+        if (!myLike) {
+          setUserLikes(prev => [...prev, { userId: userInfo._id, type }]);
         }
-        setUserLiked(
-          emojiReactions.find(emoji => emoji.value === type) ?? null
-        );
+        setMyLike(emojiReactions.find(emoji => emoji.value === type) ?? null);
       } else {
-        setUserLiked(null);
-        setCountLike(prev => prev - 1);
+        setUserLikes(prev => prev.filter(like => like.userId !== userInfo._id));
+        setMyLike(null);
       }
 
       const payload = {
@@ -125,16 +123,16 @@ const CommentItem: React.FC<IProps> = ({
         const res = await callApiCommentLike(payload);
         if (!res.data) {
           message.error(convertErrorMessage(res.message));
-          setUserLiked(previousState);
-          setCountLike(prev => prev - 1);
+          setUserLikes(prev =>
+            prev.filter(like => like.userId !== userInfo._id)
+          );
         }
       } catch (error) {
         console.log(error);
-        setUserLiked(previousState);
-        setCountLike(prev => prev - 1);
+        setUserLikes(prev => prev.filter(like => like.userId !== userInfo._id));
       }
     },
-    [userLiked, comment._id]
+    [comment._id, userInfo._id, myLike]
   );
 
   const onClickReply = useCallback(
@@ -158,7 +156,7 @@ const CommentItem: React.FC<IProps> = ({
         }
       }, 100);
     },
-    [form, comment]
+    [form, comment, userInfo._id]
   );
 
   const handleReplyClickCurrent = useCallback(() => {
@@ -272,14 +270,14 @@ const CommentItem: React.FC<IProps> = ({
         return (
           <div className="flex gap-3 items-center ml-2">
             <div className="text-xs text-gray-500">{time}</div>
-            <ButtonLike onActionLike={onUserLiked} likedType={userLiked?.value}>
-              {userLiked ? (
+            <ButtonLike onActionLike={onUserLiked} likedType={myLike?.value}>
+              {myLike ? (
                 <div
                   className="text-xs hover:underline font-semibold cursor-pointer text-gray-500"
-                  onClick={() => onUserLiked(userLiked.value, false)}
-                  style={{ color: userLiked.color }}
+                  onClick={() => onUserLiked(myLike.value, false)}
+                  style={{ color: myLike.color }}
                 >
-                  {userLiked.label}
+                  {myLike.label}
                 </div>
               ) : (
                 <div
@@ -296,21 +294,21 @@ const CommentItem: React.FC<IProps> = ({
             >
               Trả lời
             </div>
-            {countLike > 0 && (
+            {userLikes.length > 0 && (
               <div className="text-xs font-medium text-gray-500 flex-1 flex justify-end px-2">
-                {countLike > 1 && (
+                {userLikes.length > 1 && (
                   <div className="text-xs font-medium text-gray-500">
-                    {countLike}
+                    {userLikes.length}
                   </div>
                 )}
                 <div className="px-1">
-                  {countLike === 1 && userLiked
-                    ? userLiked.emoji
+                  {userLikes.length === 1 && myLike
+                    ? myLike.emoji
                     : defaultEmoji.emoji}
-                  {userLiked &&
-                    countLike > 1 &&
-                    userLiked.emoji !== defaultEmoji.emoji &&
-                    userLiked.emoji}
+                  {myLike &&
+                    userLikes.length > 1 &&
+                    myLike.emoji !== defaultEmoji.emoji &&
+                    myLike.emoji}
                 </div>
               </div>
             )}
@@ -321,10 +319,10 @@ const CommentItem: React.FC<IProps> = ({
     commentStatus,
     time,
     onUserLiked,
-    countLike,
-    userLiked,
+    myLike,
     handleReplyClickCurrent,
     defaultEmoji,
+    userLikes,
   ]);
 
   const handleDeleteComment = useCallback(async () => {

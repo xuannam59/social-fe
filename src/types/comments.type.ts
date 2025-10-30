@@ -22,11 +22,10 @@ export interface IComment {
       end: number;
     };
   }[];
-  userLiked: {
-    isLiked: boolean;
-    type: number | null;
-  };
-  likeCount: number;
+  userLikes: {
+    userId: string;
+    type: number;
+  }[];
   replyCount: number;
   isEdited: boolean;
   editedAt?: string;
