@@ -27,7 +27,7 @@ interface IProps {
   onClose: () => void;
   onLikePost: (type: number, isLike: boolean) => void;
   onAddComment: () => void;
-  onDeleteComment: (countDeleted: number) => void;
+  onDeleteComment: (count: number) => void;
   isLoading?: boolean;
 }
 
@@ -66,8 +66,10 @@ const ModalViewPost: React.FC<IProps> = ({
   }, [post._id]);
 
   useEffect(() => {
-    getComments();
-  }, [getComments]);
+    if (openModalViewPost) {
+      getComments();
+    }
+  }, [getComments, openModalViewPost]);
 
   const onSubmit = useCallback(
     async (values: IFormComment) => {

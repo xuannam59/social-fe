@@ -1,7 +1,9 @@
 import { callApiFetchPosts } from '@social/apis/posts.api';
 import { callApiGetUserInfo } from '@social/apis/user.api';
 import AvatarUser from '@social/components/common/AvatarUser';
+import LoadingPostList from '@social/components/loading/LoadingPostList';
 import CreatePost from '@social/components/posts/CreatePost';
+import PostItem from '@social/components/posts/PostItem';
 import ButtonAddFriend from '@social/components/profiles/ButtonAddFriend';
 import { ROUTES } from '@social/constants/route.constant';
 import { USER_DEFAULT } from '@social/defaults/user.default';
@@ -20,11 +22,12 @@ const ProfilePage = () => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
   const [friendInfo, setFriendInfo] = useState<IUser>(USER_DEFAULT);
   const [listPosts, setListPosts] = useState<IPost[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingPosts, setIsLoadingPosts] = useState(false);
   const navigate = useNavigate();
 
   const fetchUserPosts = useCallback(async () => {
     if (!userId) return;
+    setIsLoadingPosts(true);
     try {
       const res = await callApiFetchPosts(`userId=${userId}&limit=10`);
       if (res.data) {
@@ -32,6 +35,8 @@ const ProfilePage = () => {
       }
     } catch (error) {
       console.error('Failed to fetch posts:', error);
+    } finally {
+      setIsLoadingPosts(false);
     }
   }, [userId]);
 
@@ -79,6 +84,40 @@ const ProfilePage = () => {
   const onChangeTab = (key: string) => {
     console.log(key);
   };
+
+  const updateLikePost = useCallback(
+    (index: number, type: number, isLike: boolean) => {
+      const userLiked = { userId: userInfo._id, type };
+      setListPosts(prev => {
+        const newList = [...prev];
+        if (isLike) {
+          newList[index].userLiked = userLiked;
+          const existingLikeIndex = newList[index].userLikes.findIndex(
+            like => like.userId === userInfo._id
+          );
+          if (existingLikeIndex === -1) {
+            newList[index].userLikes.push(userLiked);
+          }
+        } else {
+          newList[index].userLiked = null;
+          newList[index].userLikes = newList[index].userLikes.filter(
+            like => like.userId !== userInfo._id
+          );
+        }
+
+        return newList;
+      });
+    },
+    [userInfo._id]
+  );
+
+  const updateCommentPost = useCallback((index: number, count: number) => {
+    setListPosts(prev => {
+      const newList = [...prev];
+      newList[index].commentCount += count;
+      return newList;
+    });
+  }, []);
 
   return (
     <div className="min-h-full bg-gray-50">
@@ -176,7 +215,26 @@ const ProfilePage = () => {
               <div className="flex flex-col gap-3">
                 {userId === userInfo._id && <CreatePost />}
 
-                {/* <PostList /> */}
+                {isLoadingPosts ? (
+                  <LoadingPostList />
+                ) : (
+                  <>
+                    <div className="flex flex-col gap-2 w-full">
+                      {listPosts.map((post, index) => (
+                        <PostItem
+                          key={post._id}
+                          post={post}
+                          updateLikePost={(type, isLike) =>
+                            updateLikePost(index, type, isLike)
+                          }
+                          updateCommentPost={(count: number) =>
+                            updateCommentPost(index, count)
+                          }
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>

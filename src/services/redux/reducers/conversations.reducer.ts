@@ -18,6 +18,7 @@ const initialState: IConversationState = {
   unSeenConversations: [],
   friendConversations: [],
   total: 0,
+  isLoadingFriendConversations: false,
 };
 
 export const fetchConversations = createAsyncThunk(
@@ -205,6 +206,7 @@ const conversationSlice = createSlice({
     });
     builder.addCase(fetchFriendConversations.fulfilled, (state, action) => {
       state.friendConversations = action.payload;
+      state.isLoadingFriendConversations = false;
     });
   },
 });

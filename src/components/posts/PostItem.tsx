@@ -6,7 +6,7 @@ import PostView from './PostView';
 interface IProps {
   post: IPost;
   updateLikePost: (type: number, isLike: boolean) => void;
-  updateCommentPost: (countDeleted: number) => void;
+  updateCommentPost: (count: number) => void;
 }
 
 const PostItem: React.FC<IProps> = ({

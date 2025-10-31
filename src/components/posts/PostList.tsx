@@ -1,5 +1,9 @@
 import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
-import { doToggleLike, fetchPosts } from '@social/redux/reducers/post.reducer';
+import {
+  doToggleLike,
+  doUpdateCommentCount,
+  fetchPosts,
+} from '@social/redux/reducers/post.reducer';
 import { useCallback, useEffect } from 'react';
 import LoadingPostList from '../loading/LoadingPostList';
 import PostItem from './PostItem';
@@ -10,8 +14,10 @@ const PostList = () => {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    dispatch(fetchPosts('limit=10'));
-  }, [dispatch]);
+    if (listPosts.length === 0) {
+      dispatch(fetchPosts('limit=10'));
+    }
+  }, [dispatch, listPosts.length]);
 
   const updateLikePost = useCallback(
     (index: number, type: number, isLike: boolean) => {
@@ -22,10 +28,10 @@ const PostList = () => {
   );
 
   const updateCommentPost = useCallback(
-    (index: number, countDeleted: number) => {
-      console.log(index, countDeleted);
+    (index: number, count: number) => {
+      dispatch(doUpdateCommentCount({ index, count }));
     },
-    []
+    [dispatch]
   );
   return (
     <>
@@ -41,8 +47,8 @@ const PostList = () => {
                 updateLikePost={(type, isLike) =>
                   updateLikePost(index, type, isLike)
                 }
-                updateCommentPost={(countDeleted: number) =>
-                  updateCommentPost(index, countDeleted)
+                updateCommentPost={(count: number) =>
+                  updateCommentPost(index, count)
                 }
               />
             ))}

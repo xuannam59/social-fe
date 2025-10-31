@@ -6,11 +6,12 @@ import { Button } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 import FriendItemCard from '../friends/FriendItemCard';
 import InviteFriendCard from '../friends/InviteFriendCard';
+import LoadingComment from '../loading/LoadingComment';
 
 const RightSidebar = () => {
   const [invitationList, setInvitationList] = useState<IFriend[]>([]);
-  const userFriendList = useAppSelector(
-    state => state.conversations.friendConversations
+  const { friendConversations, isLoadingFriendConversations } = useAppSelector(
+    state => state.conversations
   );
   const dispatch = useAppDispatch();
   const fetchInvitationList = useCallback(async () => {
@@ -26,8 +27,11 @@ const RightSidebar = () => {
 
   useEffect(() => {
     fetchInvitationList();
+  }, [fetchInvitationList]);
+
+  useEffect(() => {
     dispatch(fetchFriendConversations());
-  }, [fetchInvitationList, dispatch]);
+  }, [dispatch]);
 
   const handleRemoveInvitation = useCallback((invitationId: string) => {
     setInvitationList(prev =>
@@ -61,19 +65,25 @@ const RightSidebar = () => {
           <div className="flex items-center justify-between pt-2">
             <h3 className="text-[15px] font-semibold text-gray-700">Bạn bè</h3>
           </div>
-          {userFriendList.length > 0 ? (
-            <>
-              {userFriendList.map(friend => (
-                <FriendItemCard friend={friend} key={friend._id} />
-              ))}
-            </>
+          {isLoadingFriendConversations ? (
+            <LoadingComment />
           ) : (
-            <div className="flex flex-col items-center justify-center h-full">
-              <span className="text-gray-500">Chưa có bạn bè</span>
-              <span className="text-gray-500">
-                Hãy kết bạn với người bạn thân
-              </span>
-            </div>
+            <>
+              {friendConversations.length > 0 ? (
+                <>
+                  {friendConversations.map(friend => (
+                    <FriendItemCard friend={friend} key={friend._id} />
+                  ))}
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full">
+                  <span className="text-gray-500">Chưa có bạn bè</span>
+                  <span className="text-gray-500">
+                    Hãy kết bạn với người bạn thân
+                  </span>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

@@ -33,6 +33,7 @@ export interface IConversationState {
   friendConversations: IUserConversation[];
   total: number;
   unSeenConversations: string[];
+  isLoadingFriendConversations: boolean;
 }
 
 export interface IFetchConversationResponse {

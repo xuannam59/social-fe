@@ -53,26 +53,14 @@ const postSlice = createSlice({
       }
       state.listPosts[index] = postDetail;
     },
-    doAddComment: (state, action) => {
-      const postId = action.payload.postId;
-      state.listPosts = state.listPosts.map(post => {
-        if (post._id === postId) {
-          post.commentCount += 1;
-        }
-        return post;
-      });
-    },
-    doDeleteComment: (state, action) => {
-      const { countDeleted, postId } = action.payload;
-      const currentPost = state.listPosts.find(post => post._id === postId);
-      if (currentPost) {
-        state.listPosts = state.listPosts.map(post => {
-          if (post._id === postId) {
-            post.commentCount = Math.max(0, post.commentCount - countDeleted);
-          }
-          return post;
-        });
-      }
+    doUpdateCommentCount: (
+      state,
+      action: PayloadAction<{ index: number; count: number }>
+    ) => {
+      const { index, count } = action.payload;
+      const postDetail = state.listPosts[index];
+      postDetail.commentCount += count;
+      state.listPosts[index] = postDetail;
     },
   },
   extraReducers: builder => {
@@ -83,6 +71,6 @@ const postSlice = createSlice({
   },
 });
 
-export const { setPosts, doToggleLike, doDeleteComment, doAddComment } =
+export const { setPosts, doToggleLike, doUpdateCommentCount } =
   postSlice.actions;
 export const postReducer = postSlice.reducer;
