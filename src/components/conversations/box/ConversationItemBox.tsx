@@ -1,7 +1,4 @@
-import {
-  callApiGetConversationIdOrCreate,
-  callApiReadConversation,
-} from '@social/apis/conversations.api';
+import { callApiGetConversationIdOrCreate } from '@social/apis/conversations.api';
 import { callApiGetMessages } from '@social/apis/message.s.api';
 import { formatRelativeTimeV2 } from '@social/common/convert';
 import {
@@ -58,6 +55,8 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
   const bottomSentinelRef = useRef<HTMLDivElement | null>(null);
   const [hasUserScrolled, setHasUserScrolled] = useState(false);
   const conversationBoxRef = useRef<HTMLDivElement | null>(null);
+  const startGetMessage = useRef(false);
+
   const getConversationId = useCallback(async () => {
     try {
       if (isExist) return;
@@ -74,6 +73,8 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
       }
     } catch (error) {
       console.log(error);
+    } finally {
+      startGetMessage.current = true;
     }
   }, [conversation, isExist, dispatch]);
 
@@ -179,10 +180,10 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
   }, [handleReadConversation]);
 
   useEffect(() => {
-    if (isExist) {
+    if (startGetMessage.current) {
       getMessages();
     }
-  }, [getMessages, isExist]);
+  }, [getMessages]);
 
   useEffect(() => {
     const conversationBox = conversationBoxRef.current;
@@ -441,13 +442,14 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
                   <div className="flex flex-col" key={message._id}>
                     <ConversationContent
                       message={message}
+                      isGroup={conversation.isGroup}
                       getMessageReply={handleGetMessageReply}
                       onReSendMessage={handleReSendMessage}
                       onScrollToMessage={handleScrollToMessage}
                     />
                     {userInfoReadMessage.length > 0 && (
-                      <div className="flex justify-end items-center gap-1">
-                        {userInfoReadMessage.map(user => (
+                      <div className="flex justify-end items-center">
+                        {userInfoReadMessage.slice(0, 3).map(user => (
                           <AvatarUser
                             key={user._id}
                             avatar={user.avatar}

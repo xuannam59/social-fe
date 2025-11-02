@@ -11,6 +11,8 @@ import type { IPreviewMedia } from '@social/types/posts.type';
 import { convertErrorMessage } from '@social/common/convert';
 import { useSockets } from '@social/providers/SocketProvider';
 import { NOTIFICATION_MESSAGE } from '@social/defaults/socket.default';
+import { doCreatePost } from '@social/redux/reducers/post.reducer';
+import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
 
 interface IProps {
   isOpen: boolean;
@@ -34,6 +36,8 @@ const ModalCreatePost: React.FC<IProps> = ({
   const [feeling, setFeeling] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const { socket } = useSockets();
+  const { userInfo } = useAppSelector(state => state.auth);
+  const dispatch = useAppDispatch();
   const handleCancel = useCallback(() => {
     onClose();
     setUserTags([]);
@@ -82,6 +86,17 @@ const ModalCreatePost: React.FC<IProps> = ({
           });
           return;
         }
+        dispatch(
+          doCreatePost({
+            ...res.data,
+            authorId: {
+              _id: userInfo._id,
+              fullname: userInfo.fullname,
+              avatar: userInfo.avatar,
+            },
+            userTags: userTags,
+          })
+        );
         message.success('Tạo bài viết thành công');
         if (userTags.length > 0) {
           socket.emit(NOTIFICATION_MESSAGE.POST_TAG, {
@@ -100,7 +115,7 @@ const ModalCreatePost: React.FC<IProps> = ({
         setIsLoading(false);
       }
     },
-    [userTags, feeling, medias, handleCancel, socket]
+    [userTags, feeling, medias, handleCancel, socket, dispatch, userInfo]
   );
 
   const onAddUserTag = useCallback((user: IUserTag[]) => {

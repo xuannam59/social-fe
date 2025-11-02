@@ -40,3 +40,7 @@ export const callApiReadConversation = (conversationId: string) => {
 export const callApiCreateConversation = (data: ICreateConversation) => {
   return axios.post<IBackendRes<IConversation>>(`/api/v1/conversations`, data);
 };
+
+export const callApiGetGroupConversations = () => {
+  return axios.get<IBackendRes<IConversation[]>>(`/api/v1/conversations/group`);
+};

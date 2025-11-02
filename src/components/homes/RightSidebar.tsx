@@ -1,11 +1,17 @@
 import { callApiGetInvitationList } from '@social/apis/friend.api';
 import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
-import { fetchFriendConversations } from '@social/redux/reducers/conversations.reducer';
+import {
+  fetchFriendConversations,
+  fetchGroupConversations,
+} from '@social/redux/reducers/conversations.reducer';
 import type { IFriend } from '@social/types/friends.type';
 import { Button } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 import FriendItemCard from '../friends/FriendItemCard';
 import InviteFriendCard from '../friends/InviteFriendCard';
+import AvatarUser from '../common/AvatarUser';
+import type { IConversation } from '@social/types/conversations.type';
+import { doOpenConversation } from '@social/redux/reducers/conversations.reducer';
 
 const RightSidebar = () => {
   const [invitationList, setInvitationList] = useState<IFriend[]>([]);
@@ -30,6 +36,7 @@ const RightSidebar = () => {
 
   useEffect(() => {
     dispatch(fetchFriendConversations());
+    dispatch(fetchGroupConversations());
   }, [dispatch]);
 
   const handleRemoveInvitation = useCallback((invitationId: string) => {
@@ -37,6 +44,13 @@ const RightSidebar = () => {
       prev.filter(invite => invite._id !== invitationId)
     );
   }, []);
+
+  const handleOpenGroupConversation = useCallback(
+    (conversation: IConversation) => {
+      dispatch(doOpenConversation(conversation));
+    },
+    []
+  );
 
   return (
     <>
@@ -87,7 +101,20 @@ const RightSidebar = () => {
           </div>
 
           {groupConversations.length > 0 ? (
-            <></>
+            <>
+              {groupConversations.map(group => (
+                <div
+                  key={group._id}
+                  className="flex gap-2 items-center cursor-pointer rounded-lg p-1 hover:bg-gray-200"
+                  onClick={() => handleOpenGroupConversation(group)}
+                >
+                  <div className="relative">
+                    <AvatarUser avatar={group.avatar} size={42} />
+                  </div>
+                  <span className="text-base">{group.name}</span>
+                </div>
+              ))}
+            </>
           ) : (
             <div className="flex flex-col items-center justify-center h-full">
               <span className="text-gray-500 text-base">Chưa có nhóm chat</span>

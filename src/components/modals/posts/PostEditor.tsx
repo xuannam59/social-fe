@@ -316,6 +316,7 @@ const PostEditor: React.FC<IProps> = ({
                           type="text"
                           shape="circle"
                           onClick={() => onOpenChooseFile('video')}
+                          disabled={medias.length >= 4}
                         >
                           <TbVideo size={24} className="text-lime-700" />
                         </Button>

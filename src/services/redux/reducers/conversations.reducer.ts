@@ -6,6 +6,7 @@ import {
 import type { IConversationState } from '@social/types/conversations.type';
 import {
   callApiGetConversations,
+  callApiGetGroupConversations,
   callApiGetUnSeenConversations,
   callApiSeenConversation,
 } from '@social/apis/conversations.api';
@@ -41,6 +42,14 @@ export const fetchFriendConversations = createAsyncThunk(
   'conversation/fetchFriendConversations',
   async () => {
     const res = await callApiConversationFriendList();
+    return res.data;
+  }
+);
+
+export const fetchGroupConversations = createAsyncThunk(
+  'conversation/fetchGroupConversations',
+  async () => {
+    const res = await callApiGetGroupConversations();
     return res.data;
   }
 );
@@ -98,9 +107,11 @@ const conversationSlice = createSlice({
       const conversationIndex = state.openConversations.findIndex(
         oc => oc._id === _id
       );
-      state.friendConversations = state.friendConversations.map(fc =>
-        fc._id === _id ? { ...fc, _id: conversation._id, isExist: true } : fc
-      );
+      if (!conversation.isGroup) {
+        state.friendConversations = state.friendConversations.map(fc =>
+          fc._id === _id ? { ...fc, _id: conversation._id, isExist: true } : fc
+        );
+      }
       if (conversationIndex !== -1) {
         state.openConversations[conversationIndex] = {
           ...state.openConversations[conversationIndex],
@@ -207,6 +218,9 @@ const conversationSlice = createSlice({
     });
     builder.addCase(fetchFriendConversations.fulfilled, (state, action) => {
       state.friendConversations = action.payload;
+    });
+    builder.addCase(fetchGroupConversations.fulfilled, (state, action) => {
+      state.groupConversations = action.payload;
     });
   },
 });

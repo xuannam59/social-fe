@@ -17,7 +17,10 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
     },
     doGetAccount: (state, action) => {
-      state.userInfo = action.payload;
+      state.userInfo = {
+        ...action.payload,
+        isOnline: true,
+      };
       state.isAuthenticated = true;
     },
     setIsLoading: (state, action) => {

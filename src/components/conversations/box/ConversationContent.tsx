@@ -18,7 +18,7 @@ import { TbDotsVertical, TbLoader2, TbMoodSmile } from 'react-icons/tb';
 
 interface IProps {
   message: IMessage;
-
+  isGroup: boolean;
   getMessageReply: (message: IMessage, type: 'reply' | 'edit') => void;
   onReSendMessage: (messageId: string) => void;
   onScrollToMessage: (messageId: string) => void;
@@ -26,6 +26,7 @@ interface IProps {
 
 const ConversationContent: React.FC<IProps> = ({
   message,
+  isGroup,
   getMessageReply,
   onReSendMessage,
   onScrollToMessage,
@@ -53,6 +54,11 @@ const ConversationContent: React.FC<IProps> = ({
     if (message.status === 'failed') return 'border-2 border-red-500';
     return '';
   }, [message.status]);
+
+  const lastName = useMemo(() => {
+    const name = message.sender.fullname.split(' ');
+    return name[name.length - 1];
+  }, [message.sender.fullname]);
 
   useEffect(() => {
     if (!socket) return;
@@ -153,6 +159,13 @@ const ConversationContent: React.FC<IProps> = ({
   return (
     <>
       <div id={`msg_${message._id}`} className="group/message">
+        {isGroup && !isMine && (
+          <div className="flex items-center ml-11">
+            <span className="text-sm text-gray-500 mb-0.5 line-clamp-1 w-[50%]">
+              {lastName}
+            </span>
+          </div>
+        )}
         {(message.parentId || message.edited) && !isRevoked && (
           <div
             className={`flex w-full ${isMine ? 'justify-end' : 'justify-start'} mt-1`}

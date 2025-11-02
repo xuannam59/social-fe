@@ -10,7 +10,7 @@ import type {
 } from '@social/types/backend.type';
 
 export const callApiCreatePost = (data: IFormCreatePost) => {
-  return axios.post<IBackendRes<{ _id: string }>>('/api/v1/posts', data);
+  return axios.post<IBackendRes<IPost>>('/api/v1/posts', data);
 };
 
 export const callApiFetchPosts = (query?: string) => {

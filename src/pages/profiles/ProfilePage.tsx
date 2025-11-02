@@ -7,7 +7,9 @@ import PostItem from '@social/components/posts/PostItem';
 import ButtonAddFriend from '@social/components/profiles/ButtonAddFriend';
 import { ROUTES } from '@social/constants/route.constant';
 import { USER_DEFAULT } from '@social/defaults/user.default';
-import { useAppSelector } from '@social/hooks/redux.hook';
+import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
+import { doOpenConversation } from '@social/redux/reducers/conversations.reducer';
+import type { IConversation } from '@social/types/conversations.type';
 import type { IPost } from '@social/types/posts.type';
 import type { IUser } from '@social/types/user.type';
 import { Button, message, Tabs, Typography } from 'antd';
@@ -24,7 +26,7 @@ const ProfilePage = () => {
   const [listPosts, setListPosts] = useState<IPost[]>([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(false);
   const navigate = useNavigate();
-
+  const dispatch = useAppDispatch();
   const fetchUserPosts = useCallback(async () => {
     if (!userId) return;
     setIsLoadingPosts(true);
@@ -119,6 +121,35 @@ const ProfilePage = () => {
     });
   }, []);
 
+  const handleOpenConversation = () => {
+    const data: IConversation = {
+      _id: friendInfo._id,
+      users: [
+        {
+          _id: userInfo._id,
+          fullname: userInfo.fullname,
+          avatar: userInfo.avatar,
+          isOnline: userInfo.isOnline,
+        },
+        {
+          _id: friendInfo._id,
+          fullname: friendInfo.fullname,
+          avatar: friendInfo.avatar,
+          isOnline: friendInfo.isOnline,
+        },
+      ],
+      isGroup: false,
+      name: friendInfo.fullname,
+      avatar: friendInfo.avatar,
+      isExist: false,
+      lastActive: friendInfo.lastActive,
+      isOnline: friendInfo.isOnline,
+      usersState: [],
+      lastMessageAt: '',
+    };
+    dispatch(doOpenConversation(data));
+  };
+
   return (
     <div className="min-h-full bg-gray-50">
       <div className="bg-white shadow-md">
@@ -181,10 +212,12 @@ const ProfilePage = () => {
                   {userId !== userInfo._id && userId && (
                     <ButtonAddFriend userIdB={userId} />
                   )}
-                  <Button type="primary">
-                    <TbMessageCircle size={20} />
-                    <span className="text-base font-semibold">Nhắn tin</span>
-                  </Button>
+                  {userId !== userInfo._id && userId && (
+                    <Button type="primary" onClick={handleOpenConversation}>
+                      <TbMessageCircle size={20} />
+                      <span className="text-base font-semibold">Nhắn tin</span>
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>

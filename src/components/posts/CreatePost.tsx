@@ -1,13 +1,13 @@
 import { formatFile } from '@social/common/convert';
 import { useAppSelector } from '@social/hooks/redux.hook';
 import defaultAvatar from '@social/images/default-avatar.webp';
+import type { IPreviewMedia } from '@social/types/posts.type';
 import { Button } from 'antd';
 import { useCallback, useRef, useState } from 'react';
 import { FcAddImage, FcVideoCall } from 'react-icons/fc';
 import { Link } from 'react-router-dom';
-import ModalCreatePost from '../modals/posts/ModalCreatePost';
-import type { IPreviewMedia } from '@social/types/posts.type';
 import AvatarUser from '../common/AvatarUser';
+import ModalCreatePost from '../modals/posts/ModalCreatePost';
 
 const CreatePost = () => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
@@ -98,9 +98,9 @@ const CreatePost = () => {
         className="hidden"
         type="file"
         id="video-upload"
-        multiple
         accept="video/*"
         ref={videoInputRef}
+        disabled={medias.length >= 4}
         onChange={e => {
           handleMediaSelect(e);
           setIsModalOpen(true);

@@ -4,7 +4,7 @@ import {
   type PayloadAction,
 } from '@reduxjs/toolkit';
 import { callApiFetchPosts } from '@social/apis/posts.api';
-import type { IUserLiked, IPostState } from '@social/types/posts.type';
+import type { IUserLiked, IPostState, IPost } from '@social/types/posts.type';
 
 const initialState: IPostState = {
   listPosts: [],
@@ -62,6 +62,9 @@ const postSlice = createSlice({
       postDetail.commentCount += count;
       state.listPosts[index] = postDetail;
     },
+    doCreatePost: (state, action: PayloadAction<IPost>) => {
+      state.listPosts = [action.payload, ...state.listPosts];
+    },
   },
   extraReducers: builder => {
     builder.addCase(fetchPosts.fulfilled, (state, action) => {
@@ -71,6 +74,6 @@ const postSlice = createSlice({
   },
 });
 
-export const { setPosts, doToggleLike, doUpdateCommentCount } =
+export const { setPosts, doToggleLike, doUpdateCommentCount, doCreatePost } =
   postSlice.actions;
 export const postReducer = postSlice.reducer;
