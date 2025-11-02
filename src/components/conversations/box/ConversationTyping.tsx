@@ -56,7 +56,7 @@ const ConversationTyping: React.FC<IProps> = ({ conversationId }) => {
               <div className="relative z-10">
                 <AvatarUser
                   avatar={changedUsersTyping[0].sender.avatar}
-                  size={28}
+                  size={32}
                 />
               </div>
             )}

@@ -17,8 +17,8 @@ const initialState: IConversationState = {
   openConversations: [],
   unSeenConversations: [],
   friendConversations: [],
+  groupConversations: [],
   total: 0,
-  isLoadingFriendConversations: false,
 };
 
 export const fetchConversations = createAsyncThunk(
@@ -149,6 +149,7 @@ const conversationSlice = createSlice({
     ) => {
       const { conversation, userId } = action.payload;
       const listConversations = state.listConversations;
+      if (listConversations.length === 0) return;
       const existingIndex = listConversations.findIndex(
         c => c._id === conversation._id
       );
@@ -206,7 +207,6 @@ const conversationSlice = createSlice({
     });
     builder.addCase(fetchFriendConversations.fulfilled, (state, action) => {
       state.friendConversations = action.payload;
-      state.isLoadingFriendConversations = false;
     });
   },
 });

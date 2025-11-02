@@ -43,3 +43,17 @@ export const callApiCompleteChunkedUpload = (data: ICompleteChunkedUpload) => {
 export const callApiAbortChunkedUpload = (data: IAbortChunkedUpload) => {
   return axios.post<IBackendRes<string>>('/api/v1/uploads/abort-chunked', data);
 };
+
+export const callApiUploadCloudinary = (file: File, folder: string) => {
+  const bodyFormData = new FormData();
+  bodyFormData.append('file', file);
+  bodyFormData.append('folder-name', folder);
+  return axios<IBackendRes<{ fileUpload: string; publicId: string }>>({
+    method: 'post',
+    url: '/api/v1/uploads/cloudinary',
+    data: bodyFormData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};

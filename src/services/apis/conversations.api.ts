@@ -3,7 +3,10 @@ import type {
   IBackendRes,
   IBackendResPagination,
 } from '@social/types/backend.type';
-import type { IConversation } from '@social/types/conversations.type';
+import type {
+  IConversation,
+  ICreateConversation,
+} from '@social/types/conversations.type';
 
 export const callApiGetConversations = (query?: string) => {
   return axios.get<IBackendResPagination<IConversation[]>>(
@@ -32,4 +35,8 @@ export const callApiReadConversation = (conversationId: string) => {
   return axios.patch<IBackendRes<string>>(`/api/v1/messages/read`, {
     conversationId,
   });
+};
+
+export const callApiCreateConversation = (data: ICreateConversation) => {
+  return axios.post<IBackendRes<IConversation>>(`/api/v1/conversations`, data);
 };

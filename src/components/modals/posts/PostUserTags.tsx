@@ -35,13 +35,7 @@ const PostUserTags: React.FC<IProps> = ({ onBack, addUserTag, userTags }) => {
       setIsLoading(true);
       const res = await callApiFetchUserFriendList('limit=10');
       if (res.data) {
-        const users: IUserTag[] = res.data.friends.map(user => ({
-          _id: user._id,
-          fullname: user.fullname,
-          avatar: user.avatar,
-        }));
-
-        setListUser(users);
+        setListUser(res.data.friends);
         setTotal(res.data.total);
       }
     } catch (error) {
@@ -101,15 +95,11 @@ const PostUserTags: React.FC<IProps> = ({ onBack, addUserTag, userTags }) => {
         setIsLoading(true);
         try {
           const slug = formatSlug(value);
-          const query = `limit=10${slug ? `&search=${slug}` : ''}`;
+          const query = `limit=10${slug ? `&search=${slug}` : ''}
+            ${selectedUser.length > 0 ? `&exclude=${selectedUser.map(user => user._id)}` : ''}`;
           const res = await callApiFetchUserFriendList(query);
           if (res.data) {
-            const users: IUserTag[] = res.data.friends.map(user => ({
-              _id: user._id,
-              fullname: user.fullname,
-              avatar: user.avatar,
-            }));
-            setListUser(users);
+            setListUser(res.data.friends);
             setTotal(res.data.total);
           }
         } catch (error) {
@@ -118,7 +108,7 @@ const PostUserTags: React.FC<IProps> = ({ onBack, addUserTag, userTags }) => {
           setIsLoading(false);
         }
       }, 1000),
-    []
+    [selectedUser]
   );
 
   useEffect(() => {

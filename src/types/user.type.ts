@@ -29,7 +29,7 @@ export interface IMentionUser {
 }
 
 export interface IUserFriendList {
-  friends: IUser[];
+  friends: IUserTag[];
   total: number;
 }
 

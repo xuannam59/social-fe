@@ -31,11 +31,17 @@ export interface IConversationState {
   openConversations: IConversation[];
   listConversations: IConversation[];
   friendConversations: IUserConversation[];
+  groupConversations: IConversation[];
   total: number;
   unSeenConversations: string[];
-  isLoadingFriendConversations: boolean;
 }
 
 export interface IFetchConversationResponse {
   conversations: IConversation[];
+}
+
+export interface ICreateConversation {
+  name: string;
+  avatar: string;
+  userIds: string[];
 }
