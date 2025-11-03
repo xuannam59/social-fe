@@ -21,3 +21,7 @@ export const callApiConversationFriendList = async (query?: string) => {
     `/api/v1/users/conversation-friend-list?${query || ''}`
   );
 };
+
+export const callApiUpdateUserAvatar = async (avatar: string) => {
+  return axios.patch<IBackendRes<IUser>>(`/api/v1/users/avatar`, { avatar });
+};

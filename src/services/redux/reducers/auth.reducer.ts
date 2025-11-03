@@ -16,6 +16,12 @@ const authSlice = createSlice({
       state.userInfo = action.payload;
       state.isAuthenticated = true;
     },
+    doUpdateAvatar: (state, action) => {
+      state.userInfo = {
+        ...state.userInfo,
+        avatar: action.payload,
+      };
+    },
     doGetAccount: (state, action) => {
       state.userInfo = {
         ...action.payload,
@@ -32,6 +38,11 @@ const authSlice = createSlice({
   },
 });
 
-export const { doLogin, doGetAccount, setIsLoading, setIsAuthenticated } =
-  authSlice.actions;
+export const {
+  doLogin,
+  doUpdateAvatar,
+  doGetAccount,
+  setIsLoading,
+  setIsAuthenticated,
+} = authSlice.actions;
 export const authReducer = authSlice.reducer;

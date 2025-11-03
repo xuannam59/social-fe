@@ -1,5 +1,9 @@
 import { callApiFetchPosts } from '@social/apis/posts.api';
-import { callApiGetUserInfo } from '@social/apis/user.api';
+import { callApiUploadCloudinary } from '@social/apis/upload.api';
+import {
+  callApiGetUserInfo,
+  callApiUpdateUserAvatar,
+} from '@social/apis/user.api';
 import AvatarUser from '@social/components/common/AvatarUser';
 import LoadingPostList from '@social/components/loading/LoadingPostList';
 import CreatePost from '@social/components/posts/CreatePost';
@@ -8,13 +12,20 @@ import ButtonAddFriend from '@social/components/profiles/ButtonAddFriend';
 import { ROUTES } from '@social/constants/route.constant';
 import { USER_DEFAULT } from '@social/defaults/user.default';
 import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
+import { doUpdateAvatar } from '@social/redux/reducers/auth.reducer';
 import { doOpenConversation } from '@social/redux/reducers/conversations.reducer';
 import type { IConversation } from '@social/types/conversations.type';
-import type { IPost } from '@social/types/posts.type';
+import type { IPost, IPreviewMedia } from '@social/types/posts.type';
 import type { IUser } from '@social/types/user.type';
-import { Button, message, Tabs, Typography } from 'antd';
-import { useCallback, useEffect, useState } from 'react';
-import { TbCameraFilled, TbMessageCircle } from 'react-icons/tb';
+import { Button, message, Modal, Tabs, Tooltip, Typography } from 'antd';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  TbCameraFilled,
+  TbFileIsr,
+  TbMessageCircle,
+  TbPhotoPlus,
+  TbX,
+} from 'react-icons/tb';
 import { useNavigate, useParams } from 'react-router-dom';
 
 const { Text, Paragraph } = Typography;
@@ -25,6 +36,17 @@ const ProfilePage = () => {
   const [friendInfo, setFriendInfo] = useState<IUser>(USER_DEFAULT);
   const [listPosts, setListPosts] = useState<IPost[]>([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(false);
+  const [isOpenModalAddAvatar, setIsOpenModalAddAvatar] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<{
+    url: string;
+    file: File | undefined;
+  }>({
+    url: userInfo.avatar ?? '',
+    file: undefined,
+  });
+  const [isLoadingUpdateAvatar, setIsLoadingUpdateAvatar] = useState(false);
+  const [isOpenModalAddCover, setIsOpenModalAddCover] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const fetchUserPosts = useCallback(async () => {
@@ -150,130 +172,251 @@ const ProfilePage = () => {
     dispatch(doOpenConversation(data));
   };
 
+  const onOpenModalAddAvatar = () => {
+    setIsOpenModalAddAvatar(true);
+    setAvatarPreview({
+      url: userInfo.avatar ?? '',
+      file: undefined,
+    });
+  };
+
+  const handleUploadAvatar = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAvatarPreview({
+        url: URL.createObjectURL(file),
+        file,
+      });
+    }
+  };
+
+  const onSaveAvatar = async () => {
+    const file = avatarPreview.file;
+    if (!file) return;
+    try {
+      setIsLoadingUpdateAvatar(true);
+      const res = await callApiUploadCloudinary(file, 'avatar_user');
+      if (res.data) {
+        const resUpdate = await callApiUpdateUserAvatar(res.data.fileUpload);
+        if (resUpdate.data) {
+          dispatch(doUpdateAvatar(res.data.fileUpload));
+          message.success('Lưu ảnh đại diện thành công');
+          setIsOpenModalAddAvatar(false);
+        } else {
+          message.error(resUpdate.message);
+        }
+      } else {
+        message.error(res.message);
+      }
+    } catch (error) {
+      console.error('Failed to save avatar:', error);
+      message.error('Lưu ảnh đại diện thất bại');
+    } finally {
+      setIsLoadingUpdateAvatar(false);
+    }
+  };
+
   return (
-    <div className="min-h-full bg-gray-50">
-      <div className="bg-white shadow-md">
-        <div className="mx-3">
-          <div className="flex justify-center">
-            <div className="w-full max-w-6xl h-80 bg-gradient-to-b from-gray-200 to-gray-400 rounded-b-lg relative">
-              {friendInfo.cover && (
-                <img
-                  src={friendInfo.cover}
-                  alt="cover"
-                  className="w-full h-full object-cover"
-                />
-              )}
-              <div className="absolute bottom-2 right-8">
-                <button className="bg-white flex items-center gap-1 p-1.5 rounded-md cursor-pointer hover:bg-gray-100">
-                  <TbCameraFilled size={20} />
-                  <span className="text-base font-semibold hidden md:block">
-                    Thêm ảnh bìa
-                  </span>
-                </button>
+    <>
+      <div className="min-h-full bg-gray-50">
+        <div className="bg-white shadow-md">
+          <div className="mx-3">
+            <div className="flex justify-center">
+              <div className="w-full max-w-6xl h-80 bg-gradient-to-b from-gray-200 to-gray-400 rounded-b-lg relative">
+                {friendInfo.cover && (
+                  <img
+                    src={friendInfo.cover}
+                    alt="cover"
+                    className="w-full h-full object-cover"
+                  />
+                )}
+                <div className="absolute bottom-2 right-8">
+                  <button className="bg-white flex items-center gap-1 p-1.5 rounded-md cursor-pointer hover:bg-gray-100">
+                    <TbCameraFilled size={20} />
+                    <span className="text-base font-semibold hidden md:block">
+                      Thêm ảnh bìa
+                    </span>
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="flex justify-center">
-            <div className="relative w-full max-w-6xl pb-4 px-4">
-              <div className="relative flex flex-col md:flex-row items-center">
-                <div className="bottom-0 left-0 md:absolute relative -mt-[84px] md:mt-0">
-                  <AvatarUser
-                    avatar={friendInfo.avatar}
-                    size={174}
-                    className="!border-4 !border-white"
-                  />
-                  <Button
-                    type="text"
-                    shape="circle"
-                    size={'middle'}
-                    className="!absolute bottom-2 right-2 !bg-gray-200 !shadow-md"
-                  >
-                    <TbCameraFilled size={24} />
-                  </Button>
-                </div>
-                <div className="w-[174px] hidden md:block shrink-0"></div>
+            <div className="flex justify-center">
+              <div className="relative w-full max-w-6xl pb-4 px-4">
+                <div className="relative flex flex-col md:flex-row items-center">
+                  <div className="bottom-0 left-0 md:absolute relative -mt-[84px] md:mt-0">
+                    <AvatarUser
+                      avatar={friendInfo.avatar}
+                      size={174}
+                      className="!border-4 !border-white"
+                    />
 
-                <div className="md:mt-8 md:mb-4 mb-2 flex-1 ml-2 shrink-0">
-                  <span className="font-bold text-h1 text-center !mb-0 block-inline">
-                    {friendInfo.fullname || 'Tên người dùng'}
-                  </span>
-                  <div className="flex gap-2 items-center shrink-0">
-                    <Text className="text-gray-600 !text-base">
-                      {friendInfo?.followers?.length || 0} người theo dõi
-                    </Text>
-                    <span className="text-gray-600 !text-base">•</span>
-                    <Paragraph className="text-gray-600 !text-base !mb-0">
-                      {friendInfo?.following?.length || 0} đang theo dõi
-                    </Paragraph>
+                    <div
+                      className="absolute bottom-2 right-2 cursor-pointer"
+                      onClick={onOpenModalAddAvatar}
+                    >
+                      <div className="bg-gray-200 shadow-md size-9 rounded-full flex items-center justify-center">
+                        <TbCameraFilled size={24} />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="w-[174px] hidden md:block shrink-0"></div>
+
+                  <div className="md:mt-8 md:mb-4 mb-2 flex-1 ml-2 shrink-0">
+                    <span className="font-bold text-h1 text-center !mb-0 block-inline">
+                      {friendInfo.fullname || 'Tên người dùng'}
+                    </span>
+                    <div className="flex gap-2 items-center shrink-0">
+                      <Text className="text-gray-600 !text-base">
+                        {friendInfo?.followers?.length || 0} người theo dõi
+                      </Text>
+                      <span className="text-gray-600 !text-base">•</span>
+                      <Paragraph className="text-gray-600 !text-base !mb-0">
+                        {friendInfo?.following?.length || 0} đang theo dõi
+                      </Paragraph>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 mt-4 flex-1 justify-end">
+                    {userId !== userInfo._id && userId && (
+                      <ButtonAddFriend userIdB={userId} />
+                    )}
+                    {userId !== userInfo._id && userId && (
+                      <Button type="primary" onClick={handleOpenConversation}>
+                        <TbMessageCircle size={20} />
+                        <span className="text-base font-semibold">
+                          Nhắn tin
+                        </span>
+                      </Button>
+                    )}
                   </div>
                 </div>
+              </div>
+            </div>
+            <div className="flex justify-center">
+              <div className="flex gap-2 overflow-x-auto w-full max-w-6xl border-t border-gray-300">
+                <Tabs
+                  defaultActiveKey="1"
+                  items={items}
+                  onChange={onChangeTab}
+                  tabBarStyle={{ margin: 0 }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
 
-                <div className="flex gap-2 mt-4 flex-1 justify-end">
-                  {userId !== userInfo._id && userId && (
-                    <ButtonAddFriend userIdB={userId} />
-                  )}
-                  {userId !== userInfo._id && userId && (
-                    <Button type="primary" onClick={handleOpenConversation}>
-                      <TbMessageCircle size={20} />
-                      <span className="text-base font-semibold">Nhắn tin</span>
-                    </Button>
+        {/* Content placeholder */}
+        <div className="w-full flex justify-center pb-3">
+          <div className="lg:max-w-6xl w-full max-w-2xl mx-4 mt-4">
+            <div className="flex flex-col lg:flex-row gap-5 items-center lg:items-start">
+              <div className="w-full lg:w-3/7">
+                <div className="bg-white rounded-lg shadow p-4">
+                  <span className="text-lg font-bold">Giới thiệu</span>
+                </div>
+              </div>
+              <div className="w-full lg:w-4/7 shrink-0">
+                <div className="flex flex-col gap-3">
+                  {userId === userInfo._id && <CreatePost />}
+
+                  {isLoadingPosts ? (
+                    <LoadingPostList />
+                  ) : (
+                    <>
+                      <div className="flex flex-col gap-2 w-full">
+                        {listPosts.map((post, index) => (
+                          <PostItem
+                            key={post._id}
+                            post={post}
+                            updateLikePost={(type, isLike) =>
+                              updateLikePost(index, type, isLike)
+                            }
+                            updateCommentPost={(count: number) =>
+                              updateCommentPost(index, count)
+                            }
+                          />
+                        ))}
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
             </div>
           </div>
-          <div className="flex justify-center">
-            <div className="flex gap-2 overflow-x-auto w-full max-w-6xl border-t border-gray-300">
-              <Tabs
-                defaultActiveKey="1"
-                items={items}
-                onChange={onChangeTab}
-                tabBarStyle={{ margin: 0 }}
-              />
-            </div>
-          </div>
         </div>
       </div>
-
-      {/* Content placeholder */}
-      <div className="w-full flex justify-center pb-3">
-        <div className="lg:max-w-6xl w-full max-w-2xl mx-4 mt-4">
-          <div className="flex flex-col lg:flex-row gap-5 items-center lg:items-start">
-            <div className="w-full lg:w-3/7">
-              <div className="bg-white rounded-lg shadow p-4">
-                <span className="text-lg font-bold">Giới thiệu</span>
-              </div>
-            </div>
-            <div className="w-full lg:w-4/7 shrink-0">
-              <div className="flex flex-col gap-3">
-                {userId === userInfo._id && <CreatePost />}
-
-                {isLoadingPosts ? (
-                  <LoadingPostList />
+      <Modal
+        open={isOpenModalAddAvatar}
+        footer={null}
+        title={null}
+        closable={false}
+        destroyOnHidden={true}
+        className="create-post-modal"
+        centered
+      >
+        <div className="max-h-[500px] overflow-y-auto">
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
+            <span className="text-h3 font-bold text-center flex-1">
+              Thêm ảnh đại diện
+            </span>
+            <Button
+              type="text"
+              shape="circle"
+              onClick={() => setIsOpenModalAddAvatar(false)}
+            >
+              <TbX size={20} />
+            </Button>
+          </div>
+          <div className="flex flex-col gap-2 p-4">
+            <div className="h-50 flex justify-center items-center">
+              <Tooltip title="Thay ảnh đại diện">
+                {avatarPreview.url ? (
+                  <AvatarUser
+                    avatar={avatarPreview.url}
+                    size={142}
+                    className={`rounded-full ${isLoadingUpdateAvatar ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                    onClick={() => {
+                      if (isLoadingUpdateAvatar) return;
+                      avatarInputRef.current?.click();
+                    }}
+                  />
                 ) : (
-                  <>
-                    <div className="flex flex-col gap-2 w-full">
-                      {listPosts.map((post, index) => (
-                        <PostItem
-                          key={post._id}
-                          post={post}
-                          updateLikePost={(type, isLike) =>
-                            updateLikePost(index, type, isLike)
-                          }
-                          updateCommentPost={(count: number) =>
-                            updateCommentPost(index, count)
-                          }
-                        />
-                      ))}
-                    </div>
-                  </>
+                  <div
+                    className={`size-35 rounded-full outline-dashed flex items-center justify-center 
+                      ${isLoadingUpdateAvatar ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                    onClick={() => {
+                      if (isLoadingUpdateAvatar) return;
+                      avatarInputRef.current?.click();
+                    }}
+                  >
+                    <TbPhotoPlus size={20} />
+                  </div>
                 )}
-              </div>
+              </Tooltip>
+            </div>
+            <div className="flex justify-center items-center">
+              <Button
+                type="primary"
+                disabled={!avatarPreview.file}
+                onClick={onSaveAvatar}
+                loading={isLoadingUpdateAvatar}
+              >
+                <TbFileIsr size={20} />
+                <span className="text-base font-medium">Lưu ảnh</span>
+              </Button>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </Modal>
+      <input
+        type="file"
+        id="avatar-upload"
+        className="hidden"
+        onChange={handleUploadAvatar}
+        accept="image/*"
+        ref={avatarInputRef}
+        multiple={false}
+      />
+    </>
   );
 };
 
