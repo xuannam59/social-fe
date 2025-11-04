@@ -1,6 +1,7 @@
 import type { IAuthState } from '@social/types/auths.type';
 import { USER_DEFAULT } from '@social/defaults/user.default';
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import type { IUpdateProfile } from '@social/types/user.type';
 
 const initialState: IAuthState = {
   userInfo: USER_DEFAULT,
@@ -35,6 +36,11 @@ const authSlice = createSlice({
     setIsAuthenticated: (state, action) => {
       state.isAuthenticated = action.payload;
     },
+    doUpdateProfile: (state, action: PayloadAction<IUpdateProfile>) => {
+      state.userInfo.fullname = action.payload.fullname;
+      state.userInfo.phone = action.payload.phone;
+      state.userInfo.address = action.payload.address;
+    },
   },
 });
 
@@ -44,5 +50,6 @@ export const {
   doGetAccount,
   setIsLoading,
   setIsAuthenticated,
+  doUpdateProfile,
 } = authSlice.actions;
 export const authReducer = authSlice.reducer;

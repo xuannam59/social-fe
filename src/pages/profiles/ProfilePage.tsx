@@ -1,31 +1,22 @@
 import { callApiFetchPosts } from '@social/apis/posts.api';
-import { callApiUploadCloudinary } from '@social/apis/upload.api';
-import {
-  callApiGetUserInfo,
-  callApiUpdateUserAvatar,
-} from '@social/apis/user.api';
+import { callApiGetUserInfo } from '@social/apis/user.api';
 import AvatarUser from '@social/components/common/AvatarUser';
 import LoadingPostList from '@social/components/loading/LoadingPostList';
+import ModalEditProfile from '@social/components/modals/profiles/ModalEditProfile';
+import ModalUpdateAvatar from '@social/components/modals/profiles/ModalUpdateAvatar';
 import CreatePost from '@social/components/posts/CreatePost';
 import PostItem from '@social/components/posts/PostItem';
 import ButtonAddFriend from '@social/components/profiles/ButtonAddFriend';
 import { ROUTES } from '@social/constants/route.constant';
 import { USER_DEFAULT } from '@social/defaults/user.default';
 import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
-import { doUpdateAvatar } from '@social/redux/reducers/auth.reducer';
 import { doOpenConversation } from '@social/redux/reducers/conversations.reducer';
 import type { IConversation } from '@social/types/conversations.type';
-import type { IPost, IPreviewMedia } from '@social/types/posts.type';
+import type { IPost } from '@social/types/posts.type';
 import type { IUser } from '@social/types/user.type';
-import { Button, message, Modal, Tabs, Tooltip, Typography } from 'antd';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  TbCameraFilled,
-  TbFileIsr,
-  TbMessageCircle,
-  TbPhotoPlus,
-  TbX,
-} from 'react-icons/tb';
+import { Button, message, Tabs, Typography } from 'antd';
+import { useCallback, useEffect, useState } from 'react';
+import { TbCameraFilled, TbEdit, TbMessageCircle } from 'react-icons/tb';
 import { useNavigate, useParams } from 'react-router-dom';
 
 const { Text, Paragraph } = Typography;
@@ -37,16 +28,8 @@ const ProfilePage = () => {
   const [listPosts, setListPosts] = useState<IPost[]>([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(false);
   const [isOpenModalAddAvatar, setIsOpenModalAddAvatar] = useState(false);
-  const [avatarPreview, setAvatarPreview] = useState<{
-    url: string;
-    file: File | undefined;
-  }>({
-    url: userInfo.avatar ?? '',
-    file: undefined,
-  });
-  const [isLoadingUpdateAvatar, setIsLoadingUpdateAvatar] = useState(false);
   const [isOpenModalAddCover, setIsOpenModalAddCover] = useState(false);
-  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [isOpenModalEditInfo, setIsOpenModalEditInfo] = useState(false);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const fetchUserPosts = useCallback(async () => {
@@ -174,46 +157,10 @@ const ProfilePage = () => {
 
   const onOpenModalAddAvatar = () => {
     setIsOpenModalAddAvatar(true);
-    setAvatarPreview({
-      url: userInfo.avatar ?? '',
-      file: undefined,
-    });
   };
 
-  const handleUploadAvatar = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setAvatarPreview({
-        url: URL.createObjectURL(file),
-        file,
-      });
-    }
-  };
-
-  const onSaveAvatar = async () => {
-    const file = avatarPreview.file;
-    if (!file) return;
-    try {
-      setIsLoadingUpdateAvatar(true);
-      const res = await callApiUploadCloudinary(file, 'avatar_user');
-      if (res.data) {
-        const resUpdate = await callApiUpdateUserAvatar(res.data.fileUpload);
-        if (resUpdate.data) {
-          dispatch(doUpdateAvatar(res.data.fileUpload));
-          message.success('Lưu ảnh đại diện thành công');
-          setIsOpenModalAddAvatar(false);
-        } else {
-          message.error(resUpdate.message);
-        }
-      } else {
-        message.error(res.message);
-      }
-    } catch (error) {
-      console.error('Failed to save avatar:', error);
-      message.error('Lưu ảnh đại diện thất bại');
-    } finally {
-      setIsLoadingUpdateAvatar(false);
-    }
+  const handleOpenModalEditInfo = () => {
+    setIsOpenModalEditInfo(true);
   };
 
   return (
@@ -288,6 +235,17 @@ const ProfilePage = () => {
                         </span>
                       </Button>
                     )}
+                    {userId === userInfo._id && (
+                      <div
+                        className="p-1.5 flex items-center gap-1 cursor-pointer hover:bg-gray-300 bg-gray-200 rounded-md"
+                        onClick={handleOpenModalEditInfo}
+                      >
+                        <TbEdit size={20} />
+                        <span className="text-base font-semibold">
+                          Chỉnh sửa
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -344,77 +302,14 @@ const ProfilePage = () => {
           </div>
         </div>
       </div>
-      <Modal
+      <ModalUpdateAvatar
         open={isOpenModalAddAvatar}
-        footer={null}
-        title={null}
-        closable={false}
-        destroyOnHidden={true}
-        className="create-post-modal"
-        centered
-      >
-        <div className="max-h-[500px] overflow-y-auto">
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
-            <span className="text-h3 font-bold text-center flex-1">
-              Thêm ảnh đại diện
-            </span>
-            <Button
-              type="text"
-              shape="circle"
-              onClick={() => setIsOpenModalAddAvatar(false)}
-            >
-              <TbX size={20} />
-            </Button>
-          </div>
-          <div className="flex flex-col gap-2 p-4">
-            <div className="h-50 flex justify-center items-center">
-              <Tooltip title="Thay ảnh đại diện">
-                {avatarPreview.url ? (
-                  <AvatarUser
-                    avatar={avatarPreview.url}
-                    size={142}
-                    className={`rounded-full ${isLoadingUpdateAvatar ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-                    onClick={() => {
-                      if (isLoadingUpdateAvatar) return;
-                      avatarInputRef.current?.click();
-                    }}
-                  />
-                ) : (
-                  <div
-                    className={`size-35 rounded-full outline-dashed flex items-center justify-center 
-                      ${isLoadingUpdateAvatar ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-                    onClick={() => {
-                      if (isLoadingUpdateAvatar) return;
-                      avatarInputRef.current?.click();
-                    }}
-                  >
-                    <TbPhotoPlus size={20} />
-                  </div>
-                )}
-              </Tooltip>
-            </div>
-            <div className="flex justify-center items-center">
-              <Button
-                type="primary"
-                disabled={!avatarPreview.file}
-                onClick={onSaveAvatar}
-                loading={isLoadingUpdateAvatar}
-              >
-                <TbFileIsr size={20} />
-                <span className="text-base font-medium">Lưu ảnh</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Modal>
-      <input
-        type="file"
-        id="avatar-upload"
-        className="hidden"
-        onChange={handleUploadAvatar}
-        accept="image/*"
-        ref={avatarInputRef}
-        multiple={false}
+        onClose={() => setIsOpenModalAddAvatar(false)}
+        avatar={userInfo.avatar}
+      />
+      <ModalEditProfile
+        open={isOpenModalEditInfo}
+        onClose={() => setIsOpenModalEditInfo(false)}
       />
     </>
   );

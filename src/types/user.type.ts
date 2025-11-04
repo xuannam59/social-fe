@@ -5,7 +5,8 @@ export interface IUser {
   phoneNumber?: string;
   avatar: string;
   cover: string;
-  phone: string;
+  phone?: string;
+  address?: string;
   followers: string[];
   following: string[];
   role: string;
@@ -47,4 +48,10 @@ export interface IUserConversation extends IUser {
     sender: string;
     type: string;
   };
+}
+
+export interface IUpdateProfile {
+  fullname: string;
+  phone: string;
+  address: string;
 }

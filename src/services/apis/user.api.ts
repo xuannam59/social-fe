@@ -4,6 +4,7 @@ import type {
   IUser,
   IUserConversation,
   IUserFriendList,
+  IUpdateProfile,
 } from '@social/types/user.type';
 
 export const callApiGetUserInfo = async (userId: string) => {
@@ -24,4 +25,8 @@ export const callApiConversationFriendList = async (query?: string) => {
 
 export const callApiUpdateUserAvatar = async (avatar: string) => {
   return axios.patch<IBackendRes<IUser>>(`/api/v1/users/avatar`, { avatar });
+};
+
+export const callApiUpdateProfile = async (data: IUpdateProfile) => {
+  return axios.patch<IBackendRes<IUser>>(`/api/v1/users/profile`, data);
 };
