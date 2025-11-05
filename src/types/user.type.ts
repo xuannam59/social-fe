@@ -55,3 +55,7 @@ export interface IUpdateProfile {
   phone: string;
   address: string;
 }
+export interface IPreviewImage {
+  url: string;
+  file: File | undefined;
+}

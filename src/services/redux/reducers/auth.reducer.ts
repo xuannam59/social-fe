@@ -23,6 +23,12 @@ const authSlice = createSlice({
         avatar: action.payload,
       };
     },
+    doUpdateCover: (state, action) => {
+      state.userInfo = {
+        ...state.userInfo,
+        cover: action.payload,
+      };
+    },
     doGetAccount: (state, action) => {
       state.userInfo = {
         ...action.payload,
@@ -47,6 +53,7 @@ const authSlice = createSlice({
 export const {
   doLogin,
   doUpdateAvatar,
+  doUpdateCover,
   doGetAccount,
   setIsLoading,
   setIsAuthenticated,

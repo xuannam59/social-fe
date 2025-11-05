@@ -1,5 +1,9 @@
 import { callApiFetchPosts } from '@social/apis/posts.api';
-import { callApiGetUserInfo } from '@social/apis/user.api';
+import { callApiUploadCloudinary } from '@social/apis/upload.api';
+import {
+  callApiGetUserInfo,
+  callApiUpdateUserCover,
+} from '@social/apis/user.api';
 import AvatarUser from '@social/components/common/AvatarUser';
 import LoadingPostList from '@social/components/loading/LoadingPostList';
 import ModalEditProfile from '@social/components/modals/profiles/ModalEditProfile';
@@ -7,16 +11,23 @@ import ModalUpdateAvatar from '@social/components/modals/profiles/ModalUpdateAva
 import CreatePost from '@social/components/posts/CreatePost';
 import PostItem from '@social/components/posts/PostItem';
 import ButtonAddFriend from '@social/components/profiles/ButtonAddFriend';
+import ProfileIntroduction from '@social/components/profiles/ProfileIntroduction';
 import { ROUTES } from '@social/constants/route.constant';
 import { USER_DEFAULT } from '@social/defaults/user.default';
 import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
+import { doUpdateCover } from '@social/redux/reducers/auth.reducer';
 import { doOpenConversation } from '@social/redux/reducers/conversations.reducer';
 import type { IConversation } from '@social/types/conversations.type';
 import type { IPost } from '@social/types/posts.type';
-import type { IUser } from '@social/types/user.type';
+import type { IPreviewImage, IUser } from '@social/types/user.type';
 import { Button, message, Tabs, Typography } from 'antd';
-import { useCallback, useEffect, useState } from 'react';
-import { TbCameraFilled, TbEdit, TbMessageCircle } from 'react-icons/tb';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  TbCameraFilled,
+  TbEdit,
+  TbLoader2,
+  TbMessageCircle,
+} from 'react-icons/tb';
 import { useNavigate, useParams } from 'react-router-dom';
 
 const { Text, Paragraph } = Typography;
@@ -26,10 +37,13 @@ const ProfilePage = () => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
   const [friendInfo, setFriendInfo] = useState<IUser>(USER_DEFAULT);
   const [listPosts, setListPosts] = useState<IPost[]>([]);
+  const [coverPreview, setCoverPreview] = useState<IPreviewImage | null>(null);
+  const [isLoadingCover, setIsLoadingCover] = useState(false);
   const [isLoadingPosts, setIsLoadingPosts] = useState(false);
   const [isOpenModalAddAvatar, setIsOpenModalAddAvatar] = useState(false);
   const [isOpenModalAddCover, setIsOpenModalAddCover] = useState(false);
   const [isOpenModalEditInfo, setIsOpenModalEditInfo] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const fetchUserPosts = useCallback(async () => {
@@ -51,10 +65,6 @@ const ProfilePage = () => {
     {
       key: 'posts',
       label: <span className="text-base font-semibold">Bài viết</span>,
-    },
-    {
-      key: 'about',
-      label: <span className="text-base font-semibold">Giới thiệu</span>,
     },
     {
       key: 'friends',
@@ -163,28 +173,126 @@ const ProfilePage = () => {
     setIsOpenModalEditInfo(true);
   };
 
+  const handleCancelModalAddCover = () => {
+    setIsOpenModalAddCover(false);
+    setCoverPreview(null);
+  };
+
+  const handleSaveModalAddCover = async () => {
+    try {
+      setIsLoadingCover(true);
+      if (!coverPreview || !coverPreview.file) return;
+      const res = await callApiUploadCloudinary(
+        coverPreview.file,
+        'cover_user'
+      );
+      if (res.data) {
+        const resUpdate = await callApiUpdateUserCover(res.data.fileUpload);
+        if (resUpdate.data) {
+          message.success('Lưu ảnh bìa thành công');
+          dispatch(doUpdateCover(res.data.fileUpload));
+          setIsOpenModalAddCover(false);
+        } else {
+          message.error('Lưu ảnh bìa thất bại');
+        }
+      } else {
+        message.error('Upload file thất bại');
+      }
+    } catch (error) {
+      message.error('Lưu ảnh bìa thất bại');
+      console.error(error);
+    } finally {
+      setIsLoadingCover(false);
+    }
+  };
+
+  const handleUploadCover = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const maxSizeInBytes = 1024 * 1024;
+    if (file.size > maxSizeInBytes) {
+      message.error('Kích thước ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn 1MB.');
+      e.target.value = '';
+      return;
+    }
+
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+
+    img.onload = () => {
+      const minWidth = 500;
+      const minHeight = 100;
+
+      if (img.width < minWidth || img.height < minHeight) {
+        message.warning(
+          `Kích thước ảnh quá nhỏ. Vui lòng chọn ảnh có kích thước tối thiểu ${minWidth} x ${minHeight}px.`
+        );
+        e.target.value = '';
+        return;
+      }
+
+      setCoverPreview({
+        url: objectUrl,
+        file,
+      });
+      setIsOpenModalAddCover(true);
+    };
+
+    img.src = objectUrl;
+  };
+
   return (
     <>
       <div className="min-h-full bg-gray-50">
         <div className="bg-white shadow-md">
-          <div className="mx-3">
-            <div className="flex justify-center">
-              <div className="w-full max-w-6xl h-80 bg-gradient-to-b from-gray-200 to-gray-400 rounded-b-lg relative">
-                {friendInfo.cover && (
+          <div className="">
+            <div className="flex justify-center relative">
+              {isOpenModalAddCover && (
+                <div className="absolute z-1 left-0 top-0 right-0 h-15 bg-black/50">
+                  <div className="flex justify-end items-center h-full mx-5 gap-2">
+                    <Button
+                      color="lime"
+                      className="!px-8 !py-2"
+                      onClick={handleCancelModalAddCover}
+                      disabled={isLoadingCover}
+                    >
+                      Hủy
+                    </Button>
+                    <Button
+                      type="primary"
+                      onClick={handleSaveModalAddCover}
+                      className="!px-8 !py-2"
+                      loading={isLoadingCover}
+                    >
+                      Lưu thay đổi
+                    </Button>
+                  </div>
+                </div>
+              )}
+              <div className="w-full max-w-6xl h-80 bg-gradient-to-b from-gray-200 to-gray-400 rounded-b-2xl relative overflow-hidden">
+                {(friendInfo.cover || coverPreview) && (
                   <img
-                    src={friendInfo.cover}
+                    src={
+                      coverPreview?.url ? coverPreview.url : friendInfo.cover
+                    }
                     alt="cover"
                     className="w-full h-full object-cover"
                   />
                 )}
-                <div className="absolute bottom-2 right-8">
-                  <button className="bg-white flex items-center gap-1 p-1.5 rounded-md cursor-pointer hover:bg-gray-100">
-                    <TbCameraFilled size={20} />
-                    <span className="text-base font-semibold hidden md:block">
-                      Thêm ảnh bìa
-                    </span>
-                  </button>
-                </div>
+                {!isOpenModalAddCover && (
+                  <div className="absolute bottom-2 right-8">
+                    <div
+                      className="bg-white flex items-center gap-1 p-1.5 rounded-md cursor-pointer hover:bg-gray-100"
+                      onClick={() => coverInputRef.current?.click()}
+                    >
+                      <TbCameraFilled size={20} />
+                      <span className="text-base font-semibold hidden md:block">
+                        Thêm ảnh bìa
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex justify-center">
@@ -251,7 +359,7 @@ const ProfilePage = () => {
               </div>
             </div>
             <div className="flex justify-center">
-              <div className="flex gap-2 overflow-x-auto w-full max-w-6xl border-t border-gray-300">
+              <div className="flex gap-2 overflow-x-auto w-full max-w-6xl border-t border-gray-300 mx-3 lg:mx-0">
                 <Tabs
                   defaultActiveKey="1"
                   items={items}
@@ -268,9 +376,7 @@ const ProfilePage = () => {
           <div className="lg:max-w-6xl w-full max-w-2xl mx-4 mt-4">
             <div className="flex flex-col lg:flex-row gap-5 items-center lg:items-start">
               <div className="w-full lg:w-3/7">
-                <div className="bg-white rounded-lg shadow p-4">
-                  <span className="text-lg font-bold">Giới thiệu</span>
-                </div>
+                <ProfileIntroduction />
               </div>
               <div className="w-full lg:w-4/7 shrink-0">
                 <div className="flex flex-col gap-3">
@@ -310,6 +416,13 @@ const ProfilePage = () => {
       <ModalEditProfile
         open={isOpenModalEditInfo}
         onClose={() => setIsOpenModalEditInfo(false)}
+      />
+      <input
+        type="file"
+        accept="image/*"
+        onChange={handleUploadCover}
+        hidden
+        ref={coverInputRef}
       />
     </>
   );

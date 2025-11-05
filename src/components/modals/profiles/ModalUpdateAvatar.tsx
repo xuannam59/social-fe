@@ -6,6 +6,7 @@ import { Button, message, Modal, Tooltip } from 'antd';
 import React, { useRef, useState } from 'react';
 import { TbFileIsr, TbPhotoPlus, TbX } from 'react-icons/tb';
 import AvatarUser from '../../common/AvatarUser';
+import type { IPreviewImage } from '@social/types/user.type';
 
 interface IProps {
   open: boolean;
@@ -15,10 +16,7 @@ interface IProps {
 
 const ModalUpdateAvatar = ({ open, onClose, avatar }: IProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [avatarPreview, setAvatarPreview] = useState<{
-    url: string;
-    file: File | undefined;
-  }>({
+  const [avatarPreview, setAvatarPreview] = useState<IPreviewImage>({
     url: avatar,
     file: undefined,
   });

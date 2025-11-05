@@ -24,9 +24,13 @@ export const callApiConversationFriendList = async (query?: string) => {
 };
 
 export const callApiUpdateUserAvatar = async (avatar: string) => {
-  return axios.patch<IBackendRes<IUser>>(`/api/v1/users/avatar`, { avatar });
+  return axios.patch<IBackendRes<string>>(`/api/v1/users/avatar`, { avatar });
+};
+
+export const callApiUpdateUserCover = async (cover: string) => {
+  return axios.patch<IBackendRes<string>>(`/api/v1/users/cover`, { cover });
 };
 
 export const callApiUpdateProfile = async (data: IUpdateProfile) => {
-  return axios.patch<IBackendRes<IUser>>(`/api/v1/users/profile`, data);
+  return axios.patch<IBackendRes<string>>(`/api/v1/users/profile`, data);
 };
