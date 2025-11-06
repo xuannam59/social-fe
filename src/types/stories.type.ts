@@ -10,13 +10,21 @@ export interface IStory {
   content?: string;
   backgroundColor: string;
   duration: number;
-  userLikes: {
-    userId: string;
-    type: number;
-  }[];
+  viewers: { userId: string; likedType: number | null }[];
   createdAt: string;
   audio: string;
   isViewed: boolean;
+}
+
+export interface IStoryViewer {
+  _id: string;
+  userId: {
+    _id: string;
+    fullname: string;
+    avatar: string;
+  };
+  likedType: number | null;
+  storyId: string;
 }
 
 export interface IUserStory {

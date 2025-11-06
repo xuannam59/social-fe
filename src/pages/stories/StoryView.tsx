@@ -1,18 +1,22 @@
+import { callApiActionView } from '@social/apis/stories.api';
+import { convertErrorMessage } from '@social/common/convert';
+import StoryListViewer from '@social/components/stories/StoryListViewer';
 import StoryPlayer from '@social/components/stories/StoryPlayer';
+import StoryReply from '@social/components/stories/StoryReply';
 import StoryUserItem from '@social/components/stories/StoryUserItem';
 import { ROUTES } from '@social/constants/route.constant';
 import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
-import { Typography } from 'antd';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { TbChevronLeft, TbChevronRight, TbPlus } from 'react-icons/tb';
-import { Link, useParams } from 'react-router-dom';
 import {
   doNextStory,
   doPreviousStory,
+  doViewStory,
   fetchStories,
   setCurrentUserStory,
 } from '@social/redux/reducers/story.reducer';
-import StoryReply from '@social/components/stories/StoryReply';
+import { message, Typography } from 'antd';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { TbChevronLeft, TbChevronRight, TbPlus } from 'react-icons/tb';
+import { Link, useParams } from 'react-router-dom';
 
 const { Title } = Typography;
 
@@ -22,6 +26,7 @@ const StoryView = () => {
   const { currentStory, listUserStories } = useAppSelector(
     state => state.story
   );
+  const userInfo = useAppSelector(state => state.auth.userInfo);
   const [isLoading, setIsLoading] = useState(false);
   const currentUser = useMemo(() => {
     return listUserStories.find(userStory => userStory._id === userId);
@@ -39,6 +44,22 @@ const StoryView = () => {
     }
   }, [dispatch, userId]);
 
+  const handleViewStory = useCallback(async () => {
+    if (!currentStory._id) return;
+    try {
+      const res = await callApiActionView(currentStory._id);
+      if (res.data) {
+        dispatch(
+          doViewStory({ userId: userInfo._id, storyId: currentStory._id })
+        );
+      }
+    } catch (error) {
+      console.error('Failed to view story:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [dispatch, currentStory._id, userInfo._id]);
+
   useEffect(() => {
     if (userId && listUserStories.length === 0) {
       fetchUserStories();
@@ -50,6 +71,12 @@ const StoryView = () => {
       dispatch(setCurrentUserStory(currentUser));
     }
   }, [currentUser, currentStory._id, dispatch]);
+
+  useEffect(() => {
+    if (currentStory._id && currentStory.authorId !== userInfo._id) {
+      handleViewStory();
+    }
+  }, [currentStory._id, handleViewStory, userInfo._id, currentStory.authorId]);
 
   const handlePreviousStory = useCallback(() => {
     dispatch(doPreviousStory());
@@ -156,6 +183,7 @@ const StoryView = () => {
                 isLoading={isLoading}
                 navigationState={navigationState}
               />
+              <StoryListViewer />
             </div>
             <div
               className={`h-full w-[50%] relative group/right ${

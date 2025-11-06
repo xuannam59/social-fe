@@ -64,7 +64,9 @@ const StoryEdit: React.FC<IProps> = ({
     }
     const reader = new FileReader();
     reader.onload = () => {
-      setImageSrc(typeof reader.result === 'string' ? reader.result : undefined);
+      setImageSrc(
+        typeof reader.result === 'string' ? reader.result : undefined
+      );
     };
     reader.readAsDataURL(image);
   }, [image]);
@@ -101,7 +103,7 @@ const StoryEdit: React.FC<IProps> = ({
         y: (stageSize.height - finalHeight) / 2,
       };
     }
-  }, [stageSize.width, stageSize.height, type]); 
+  }, [stageSize.width, stageSize.height, type]);
 
   const saveStory = useCallback(async () => {
     if (stageRef.current === null) return;
@@ -119,7 +121,7 @@ const StoryEdit: React.FC<IProps> = ({
         try {
           const file = base64ToFile(dataUrl, `story-${Date.now()}.webp`);
           handleSave(file);
-        } catch (e) { 
+        } catch (e) {
           try {
             const pngDataUrl = stageRef.current?.toDataURL({
               pixelRatio,
@@ -234,7 +236,7 @@ const StoryEdit: React.FC<IProps> = ({
                   ref={containerRef}
                   className="h-[calc(100%-68px)] aspect-[1/1.7] w-auto relative"
                 >
-                 <div className="overflow-hidden w-full h-full rounded-lg border border-gray-200">
+                  <div className="overflow-hidden w-full h-full rounded-lg border border-gray-200">
                     <Form
                       form={formSubmit}
                       onFinish={() => {
@@ -258,7 +260,8 @@ const StoryEdit: React.FC<IProps> = ({
                           onMouseDown={e => {
                             const target = e.target;
                             const clickedOnEmpty = target === target.getStage();
-                            const clickedOnBackground = target.name?.() === 'bg-rect';
+                            const clickedOnBackground =
+                              target.name?.() === 'bg-rect';
                             if (clickedOnEmpty || clickedOnBackground) {
                               setSelectedId(null);
                             }
@@ -266,7 +269,8 @@ const StoryEdit: React.FC<IProps> = ({
                           onTouchStart={e => {
                             const target = e.target;
                             const clickedOnEmpty = target === target.getStage();
-                            const clickedOnBackground = target.name?.() === 'bg-rect';
+                            const clickedOnBackground =
+                              target.name?.() === 'bg-rect';
                             if (clickedOnEmpty || clickedOnBackground) {
                               setSelectedId(null);
                             }
@@ -296,10 +300,22 @@ const StoryEdit: React.FC<IProps> = ({
                                 ref={imageTransformerRef}
                                 nodes={[imageNodeRef.current]}
                                 rotateEnabled={false}
-                                enabledAnchors={['top-left','top-right','bottom-left','bottom-right','middle-left','middle-right','top-center','bottom-center']}
+                                enabledAnchors={[
+                                  'top-left',
+                                  'top-right',
+                                  'bottom-left',
+                                  'bottom-right',
+                                  'middle-left',
+                                  'middle-right',
+                                  'top-center',
+                                  'bottom-center',
+                                ]}
                                 boundBoxFunc={(oldBox, newBox) => {
                                   const minSize = 40;
-                                  if (newBox.width < minSize || newBox.height < minSize) {
+                                  if (
+                                    newBox.width < minSize ||
+                                    newBox.height < minSize
+                                  ) {
                                     return oldBox;
                                   }
                                   return newBox;
@@ -333,7 +349,8 @@ const StoryEdit: React.FC<IProps> = ({
                           </Layer>
                         </Stage>
                       ) : (
-                        <div className="h-full w-full relative" 
+                        <div
+                          className="h-full w-full relative"
                           style={{ backgroundColor: dominantColor }}
                         >
                           <div className="absolute inset-0 flex items-center justify-center">
@@ -362,7 +379,7 @@ const StoryEdit: React.FC<IProps> = ({
                   )}
                   {isLoading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                      <Loading/>
+                      <Loading />
                     </div>
                   )}
                 </div>
@@ -378,6 +395,7 @@ const StoryEdit: React.FC<IProps> = ({
           onCancel={onClose}
           footer={null}
           title="Nội dung văn bản"
+          centered
         >
           <Form
             form={form}

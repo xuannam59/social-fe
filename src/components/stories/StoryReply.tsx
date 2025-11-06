@@ -20,8 +20,13 @@ const StoryReply = () => {
   const [isFocused, setIsFocused] = useState(false);
   const userLiked = useMemo(() => {
     return (
-      currentStory.userLikes.find(like => like.userId === userInfo._id) ?? null
+      currentStory.viewers.find(viewer => viewer.userId === userInfo._id) ??
+      null
     );
+  }, [currentStory, userInfo]);
+
+  const myStory = useMemo(() => {
+    return currentStory.authorId === userInfo._id;
   }, [currentStory, userInfo]);
 
   useEffect(() => {
@@ -94,75 +99,77 @@ const StoryReply = () => {
   return (
     <>
       <div className="h-12 max-w-[690px] w-[80%] bg-transparent">
-        <div className="flex justify-start items-center w-full h-full gap-1 px-2">
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={onFinish}
-            className={`flex items-center border-1 border-white rounded-2xl h-10 transition-all duration-300
+        {!myStory && (
+          <div className="flex justify-start items-center w-full h-full gap-1 px-2">
+            <Form
+              form={form}
+              layout="vertical"
+              onFinish={onFinish}
+              className={`flex items-center border-1 border-white rounded-2xl h-10 transition-all duration-300
               ${isFocused ? 'flex-1' : 'w-[300px]'}`}
-          >
-            <Form.Item name="content" className="!m-0 flex-1">
-              <Input
-                className="!bg-transparent !border-none !ring-0 !shadow-none !text-white
+            >
+              <Form.Item name="content" className="!m-0 flex-1">
+                <Input
+                  className="!bg-transparent !border-none !ring-0 !shadow-none !text-white
                    placeholder:!text-white"
-                placeholder="Trả lời..."
-                ref={inputRef}
-                onFocus={onFocus}
-                onBlur={onBlur}
-                onKeyDown={onKeyDown}
-                onPressEnter={() => form.submit()}
-                autoComplete="off"
-              />
-            </Form.Item>
+                  placeholder="Trả lời..."
+                  ref={inputRef}
+                  onFocus={onFocus}
+                  onBlur={onBlur}
+                  onKeyDown={onKeyDown}
+                  onPressEnter={() => form.submit()}
+                  autoComplete="off"
+                />
+              </Form.Item>
 
-            {isFocused && (
-              <Button
-                type="text"
-                className="!text-white transition-colors duration-200"
-                onClick={() => form.submit()}
-              >
-                <TbSend size={20} />
-              </Button>
-            )}
-          </Form>
-          <div
-            className={`items-center flex-1 ${isFocused ? 'hidden' : 'flex'} gap-1`}
-            onMouseEnter={onMouseEnter}
-            onMouseLeave={onMouseLeave}
-          >
-            {emojiReactions.map(emoji => (
-              <div
-                key={emoji.id}
-                className="h-full rounded-full cursor-pointer flex-1"
-                onClick={() => {
-                  onActionLike(emoji.value);
-                }}
-              >
-                <Tooltip title={emoji.label}>
-                  <div className="flex items-center justify-center w-full h-full">
-                    <span
-                      className={`hover:scale-150 transition-all duration-300 w-10 h-10
+              {isFocused && (
+                <Button
+                  type="text"
+                  className="!text-white transition-colors duration-200"
+                  onClick={() => form.submit()}
+                >
+                  <TbSend size={20} />
+                </Button>
+              )}
+            </Form>
+            <div
+              className={`items-center flex-1 ${isFocused ? 'hidden' : 'flex'} gap-1`}
+              onMouseEnter={onMouseEnter}
+              onMouseLeave={onMouseLeave}
+            >
+              {emojiReactions.map(emoji => (
+                <div
+                  key={emoji.id}
+                  className="h-full rounded-full cursor-pointer flex-1"
+                  onClick={() => {
+                    onActionLike(emoji.value);
+                  }}
+                >
+                  <Tooltip title={emoji.label}>
+                    <div className="flex items-center justify-center w-full h-full">
+                      <span
+                        className={`hover:scale-150 transition-all duration-300 w-10 h-10
                           ${
-                            userLiked?.type === emoji.value
+                            userLiked?.likedType === emoji.value
                               ? 'scale-125'
                               : 'opacity-70 hover:opacity-100'
                           }`}
-                      style={{
-                        filter:
-                          userLiked?.type === emoji.value
-                            ? `drop-shadow(0 0 8px ${emoji.color}) drop-shadow(0 0 16px ${emoji.color}40)`
-                            : undefined,
-                      }}
-                    >
-                      <Lottie animationData={emoji.reSource} loop={true} />
-                    </span>
-                  </div>
-                </Tooltip>
-              </div>
-            ))}
+                        style={{
+                          filter:
+                            userLiked?.likedType === emoji.value
+                              ? `drop-shadow(0 0 8px ${emoji.color}) drop-shadow(0 0 16px ${emoji.color}40)`
+                              : undefined,
+                        }}
+                      >
+                        <Lottie animationData={emoji.reSource} loop={true} />
+                      </span>
+                    </div>
+                  </Tooltip>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </>
   );

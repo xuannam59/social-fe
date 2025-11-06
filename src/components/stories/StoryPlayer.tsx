@@ -26,6 +26,7 @@ const StoryPlayer: React.FC<IProps> = ({ isLoading, navigationState }) => {
   const { currentStory, currentUserStory } = useAppSelector(
     state => state.story
   );
+  const userInfo = useAppSelector(state => state.auth.userInfo);
   const paused = useAppSelector(state => state.story.paused);
   const dispatch = useAppDispatch();
   const currentIndex = useMemo(() => {
@@ -35,6 +36,10 @@ const StoryPlayer: React.FC<IProps> = ({ isLoading, navigationState }) => {
   const timeStory = useMemo(() => {
     return formatRelativeTime(currentStory.createdAt);
   }, [currentStory.createdAt]);
+
+  const isMyStory = useMemo(() => {
+    return currentStory.authorId === userInfo._id;
+  }, [currentStory, userInfo]);
 
   const renderContent = useCallback(() => {
     switch (currentStory.type) {
@@ -99,7 +104,7 @@ const StoryPlayer: React.FC<IProps> = ({ isLoading, navigationState }) => {
     dispatch(doPauseStory(!paused));
   }, [dispatch, paused]);
 
-  const userInfo = useMemo(
+  const authorInfo = useMemo(
     () => ({
       avatar: currentUserStory.avatar,
       fullName: currentUserStory.fullname,
@@ -128,10 +133,10 @@ const StoryPlayer: React.FC<IProps> = ({ isLoading, navigationState }) => {
 
             <div className="mt-3 flex items-center justify-between">
               <div className="flex items-start gap-2">
-                <AvatarUser avatar={userInfo.avatar} size={40} />
+                <AvatarUser avatar={authorInfo.avatar} size={40} />
                 <div className="flex items-center gap-2">
                   <Text className="!text-[16px] !font-medium !text-white">
-                    {userInfo.fullName}
+                    {authorInfo.fullName}
                   </Text>
                   <div className="text-sm text-white">{timeStory}</div>
                 </div>

@@ -12,7 +12,7 @@ export const STORY_DEFAULT: IStory = {
   privacy: '',
   backgroundColor: '',
   duration: 0,
-  userLikes: [],
+  viewers: [],
   createdAt: '',
   audio: '',
   isViewed: false,

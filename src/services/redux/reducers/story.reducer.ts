@@ -111,16 +111,16 @@ const storySlice = createSlice({
         s => s._id === storyId
       );
       if (currentStory) {
-        const existingLikeIndex = currentStory.userLikes.findIndex(
+        const existingLikeIndex = currentStory.viewers.findIndex(
           l => l.userId === payload.userId
         );
 
         if (existingLikeIndex !== -1) {
-          currentStory.userLikes[existingLikeIndex].type = payload.type;
+          currentStory.viewers[existingLikeIndex].likedType = payload.type;
         } else {
-          currentStory.userLikes.push({
+          currentStory.viewers.push({
             userId: payload.userId,
-            type: payload.type,
+            likedType: payload.type,
           });
         }
       }
@@ -133,31 +133,73 @@ const storySlice = createSlice({
           s => s._id === storyId
         );
         if (storyInList) {
-          const existingLikeIndex = storyInList.userLikes.findIndex(
+          const existingLikeIndex = storyInList.viewers.findIndex(
             l => l.userId === payload.userId
           );
 
           if (existingLikeIndex !== -1) {
-            storyInList.userLikes[existingLikeIndex].type = payload.type;
+            storyInList.viewers[existingLikeIndex].likedType = payload.type;
           } else {
-            storyInList.userLikes.push({
+            storyInList.viewers.push({
               userId: payload.userId,
-              type: payload.type,
+              likedType: payload.type,
             });
           }
         }
       }
 
-      const existingLikeInCurrent = state.currentStory.userLikes.findIndex(
+      const existingLikeInCurrent = state.currentStory.viewers.findIndex(
         l => l.userId === payload.userId
       );
       if (existingLikeInCurrent !== -1) {
-        state.currentStory.userLikes[existingLikeInCurrent].type = payload.type;
+        state.currentStory.viewers[existingLikeInCurrent].likedType =
+          payload.type;
       } else {
-        state.currentStory.userLikes.push({
+        state.currentStory.viewers.push({
           userId: payload.userId,
-          type: payload.type,
+          likedType: payload.type,
         });
+      }
+    },
+    doViewStory: (
+      state,
+      action: PayloadAction<{ userId: string; storyId: string }>
+    ) => {
+      const { userId, storyId } = action.payload;
+      const storyDetail = state.currentUserStory.stories.find(
+        s => s._id === storyId
+      );
+      if (storyDetail) {
+        const existingViewIndex = storyDetail.viewers.findIndex(
+          v => v.userId === userId
+        );
+        if (existingViewIndex === -1) {
+          storyDetail.viewers.push({ userId, likedType: 0 });
+        }
+      }
+
+      const userStoryIndex = state.listUserStories.findIndex(
+        us => us._id === state.currentUserStory._id
+      );
+      if (userStoryIndex !== -1) {
+        const storyInList = state.listUserStories[userStoryIndex].stories.find(
+          s => s._id === storyId
+        );
+        if (storyInList) {
+          const existingViewIndex = storyInList.viewers.findIndex(
+            v => v.userId === userId
+          );
+          if (existingViewIndex === -1) {
+            storyInList.viewers.push({ userId, likedType: 0 });
+          }
+        }
+      }
+
+      const existingViewIndex = state.currentStory.viewers.findIndex(
+        v => v.userId === userId
+      );
+      if (existingViewIndex === -1) {
+        state.currentStory.viewers.push({ userId, likedType: 0 });
       }
     },
   },
@@ -180,5 +222,6 @@ export const {
   doPauseStory,
   doCreateStory,
   doLikeStory,
+  doViewStory,
 } = storySlice.actions;
 export const storyReducer = storySlice.reducer;
