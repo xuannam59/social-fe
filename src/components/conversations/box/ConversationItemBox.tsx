@@ -233,7 +233,7 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
 
   useEffect(() => {
     if (!socket) return;
-    socket.on(CHAT_MESSAGE.SEND, (data: IMessage) => {
+    socket.on(CHAT_MESSAGE.SEND, data => {
       if (data.conversationId !== conversation._id) return;
       if (data.status === 'failed') {
         if (userInfo._id !== data.sender._id) return;
@@ -251,7 +251,7 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
         });
         return;
       }
-      if (userInfo._id === data.sender._id) {
+      if (userInfo._id === data.sender._id && data.tempId) {
         setMessages(prev => {
           return prev.map(message =>
             message._id === data.tempId ? data : message

@@ -31,6 +31,7 @@ export enum ENotificationType {
   COMMENT_MENTION = 'comment_mention',
   COMMENT_LIKE = 'comment_like',
   COMMENT_REPLY = 'comment_reply',
+  STORY_REACTION = 'story_reaction',
 }
 
 export enum EEntityType {

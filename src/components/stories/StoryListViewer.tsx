@@ -90,7 +90,9 @@ const StoryListViewer = () => {
             {isLoading ? (
               <Loading />
             ) : viewers.length === 0 ? (
-              <EmptyState />
+              <div className="max-h-full w-full">
+                <EmptyState />
+              </div>
             ) : (
               <div className="flex flex-col gap-2">
                 {viewers.map(viewer => (

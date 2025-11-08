@@ -5,8 +5,10 @@ import TextGradient from './TextGradient';
 const EmptyState = () => {
   return (
     <div className="flex flex-col items-center justify-center w-full h-full mb-2">
-      <div className="flex flex-col items-center gap-2 w-[40%]">
-        <Lottie animationData={emptyState} loop={true} className="relative" />
+      <div className="flex flex-col items-center gap-2">
+        <div className="w-[50%]">
+          <Lottie animationData={emptyState} loop={true} className="relative" />
+        </div>
         <TextGradient className="!text-lg font-bold">
           Không có dữ liệu
         </TextGradient>

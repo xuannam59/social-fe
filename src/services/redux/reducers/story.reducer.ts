@@ -55,7 +55,7 @@ const storySlice = createSlice({
           ],
         };
       } else {
-        state.listUserStories = [...state.listUserStories, action.payload];
+        state.listUserStories = [action.payload, ...state.listUserStories];
       }
     },
     doPauseStory: (state, action) => {

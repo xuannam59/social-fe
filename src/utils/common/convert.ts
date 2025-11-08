@@ -173,7 +173,7 @@ export const convertNotificationMessage = (
     case ENotificationType.POST_TAG:
       return ` đã gắn thẻ bài bạn vào bài viết của họ: ${message}`;
     case ENotificationType.POST_LIKE:
-      return ` đã thích bài viết của bạn: ${message}`;
+      return ` đã thích bài viết của bạn`;
     case ENotificationType.POST_COMMENT:
       return ` đã bình luận bài viết của bạn: ${message}`;
     case ENotificationType.POST_SHARE:
@@ -184,5 +184,7 @@ export const convertNotificationMessage = (
       return ` đã thích bình luận của bạn: ${message}`;
     case ENotificationType.COMMENT_REPLY:
       return ` đã trả lời bình luận của bạn: ${message}`;
+    case ENotificationType.STORY_REACTION:
+      return ` đã thả cảm xúc vào story của bạn`;
   }
 };

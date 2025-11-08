@@ -11,6 +11,15 @@ export interface IMessage {
     type: string;
     sender: { _id: string; fullname: string };
   };
+  storyId?: {
+    _id: string;
+    content: string;
+    type: string;
+    media: {
+      keyS3: string;
+      type: string;
+    };
+  };
   mentions: {
     userId: string;
     position: {
@@ -29,7 +38,6 @@ export interface IMessage {
   timeEdited?: string;
   createdAt?: string;
   updatedAt?: string;
-  message: string;
 }
 
 export interface IMessageStatus {

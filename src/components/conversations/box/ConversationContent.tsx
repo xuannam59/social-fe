@@ -1,3 +1,4 @@
+import { convertUrlString } from '@social/common/convert';
 import AvatarUser from '@social/components/common/AvatarUser';
 import ButtonLike from '@social/components/common/ButtonLike';
 import { emojiReactions } from '@social/constants/emoji';
@@ -9,7 +10,7 @@ import type {
   IMessageReaction,
   IMessageRevoke,
 } from '@social/types/messages.type';
-import { Dropdown, Modal, notification, Tooltip } from 'antd';
+import { Dropdown, Image, Modal, notification, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import Lottie from 'lottie-react';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -156,6 +157,10 @@ const ConversationContent: React.FC<IProps> = ({
     });
   };
 
+  if (message.storyId) {
+    console.log('message storyId', message);
+  }
+
   return (
     <>
       <div id={`msg_${message._id}`} className="group/message">
@@ -166,48 +171,93 @@ const ConversationContent: React.FC<IProps> = ({
             </span>
           </div>
         )}
-        {(message.parentId || message.edited) && !isRevoked && (
-          <div
-            className={`flex w-full ${isMine ? 'justify-end' : 'justify-start'} mt-1`}
-          >
-            {!isMine && <div className="w-9" />}
-            <div className="flex flex-col max-w-[80%]">
-              <div
-                className={`flex items-center ${isMine ? 'justify-end' : 'justify-start'}`}
-              >
+        {(message.parentId || message.edited || message.storyId) &&
+          !isRevoked && (
+            <div
+              className={`flex w-full ${isMine ? 'justify-end' : 'justify-start'} mt-1`}
+            >
+              {!isMine && <div className="w-9" />}
+              <div className="flex flex-col max-w-[80%]">
+                <div
+                  className={`flex items-center ${isMine ? 'justify-end' : 'justify-start'}`}
+                >
+                  {message.parentId && (
+                    <>
+                      <BsFillReplyFill size={16} className="text-gray-500" />
+                      <span className="text-sm text-gray-500">
+                        Phản hồi tin nhắn
+                      </span>
+                    </>
+                  )}
+                  {message.edited && (
+                    <>
+                      <div className="ml-2">
+                        <span className="text-sm text-blue-500">
+                          Đã chỉnh sửa
+                        </span>
+                      </div>
+                    </>
+                  )}
+                  {message.storyId && message.storyId.type !== 'text' && (
+                    <>
+                      <BsFillReplyFill size={16} className="text-gray-500" />
+                      <span className="text-sm text-gray-500">
+                        {isMine
+                          ? 'Bạn'
+                          : `${message.sender.fullname.split(' ')[0]}`}{' '}
+                        đã trả lời story
+                        {!isMine && ' của bạn'}
+                      </span>
+                    </>
+                  )}
+                </div>
                 {message.parentId && (
-                  <>
-                    <BsFillReplyFill size={16} className="text-gray-500" />
-                    <span className="text-sm text-gray-500">
-                      Phản hồi tin nhắn
-                    </span>
-                  </>
-                )}
-                {message.edited && (
-                  <>
-                    <div className="ml-2">
-                      <span className="text-sm text-blue-500">
-                        Đã chỉnh sửa
+                  <div
+                    className={`${isMine && 'justify-end'} flex items-center -mb-5`}
+                  >
+                    <div
+                      className="pb-5 rounded-2xl px-3 pt-2 bg-gray-300 opacity-50 w-fit cursor-pointer hover:bg-gray-400 transition-colors"
+                      onClick={() => onScrollToMessage(message.parentId!._id)}
+                    >
+                      <span className="text-sm text-gray-500 leading-5 line-clamp-3 w-fit">
+                        {message.parentId.content}
                       </span>
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
-              {message.parentId && (
-                <div
-                  className={`${isMine && 'justify-end'} flex items-center -mb-5`}
-                >
-                  <div
-                    className="pb-5 rounded-2xl px-3 pt-2 bg-gray-300 opacity-50 w-fit cursor-pointer hover:bg-gray-400 transition-colors"
-                    onClick={() => onScrollToMessage(message.parentId!._id)}
-                  >
-                    <span className="text-sm text-gray-500 leading-5 line-clamp-3 w-fit">
-                      {message.parentId.content}
-                    </span>
-                  </div>
-                </div>
-              )}
             </div>
+          )}
+        {message.storyId && !isRevoked && (
+          <div
+            className={`flex ${isMine ? 'justify-end' : 'justify-start'} -mb-3 opacity-50`}
+          >
+            {!isMine && <div className="w-9" />}
+            {message.storyId.type === 'image' && (
+              <div className="w-[25%] rounded-lg overflow-hidden h-fit flex items-end">
+                <Image
+                  src={convertUrlString(message.storyId.media.keyS3)}
+                  alt="story"
+                  className="w-full object-cover"
+                  preview={false}
+                />
+              </div>
+            )}
+            {message.storyId.type === 'text' && (
+              <div
+                className={`${isMine && 'justify-end'} flex items-center -mb-1`}
+              >
+                <div className="pb-5 rounded-2xl px-3 pt-2 bg-gray-300 opacity-50 w-fit cursor-pointer hover:bg-gray-400 transition-colors">
+                  <span className="text-sm font-medium leading-5 line-clamp-3 w-fit">
+                    {isMine
+                      ? 'Bạn'
+                      : `${message.sender.fullname.split(' ')[0]}`}{' '}
+                    đã trả lời story
+                    {!isMine && ' của bạn'}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         )}
         <div

@@ -31,7 +31,7 @@ const StoryCreate = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -64,32 +64,32 @@ const StoryCreate = () => {
         backgroundColor: form.getFieldValue('background'),
       };
 
-      if(file.current) {
+      if (file.current) {
         const resUpload = await smartUpload(file.current);
-        if(resUpload.data) {
+        if (resUpload.data) {
           payload.media = {
             keyS3: resUpload.data.key,
             type: file.current.type.split('/')[0],
           };
-        }else {
+        } else {
           throw new Error(resUpload.message);
         }
       }
 
       const res = await callApiCreateStory(payload);
-      if(res.data) {
+      if (res.data) {
         dispatch(doCreateStory(res.data));
         message.success('Tạo tin thành công');
         form.resetFields();
         file.current = undefined;
         navigate(`/`);
-      }else {
+      } else {
         notification.error({
           message: 'Tạo tin thất bại',
           description: convertErrorMessage(res.message),
         });
       }
-    } catch (error : any) {
+    } catch (error: any) {
       notification.error({
         message: 'Tạo tin thất bại',
         description: convertErrorMessage(error),
@@ -97,15 +97,18 @@ const StoryCreate = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [form, privacy, type, navigate]);
+  }, [form, privacy, type, navigate, dispatch]);
 
-  const handleSave = useCallback(async (value: File) => {
-    file.current = value;
-    if (pendingSubmit) {
-      setPendingSubmit(false);
-      void onSubmit();
-    }
-  }, [pendingSubmit, onSubmit]);
+  const handleSave = useCallback(
+    async (value: File) => {
+      file.current = value;
+      if (pendingSubmit) {
+        setPendingSubmit(false);
+        void onSubmit();
+      }
+    },
+    [pendingSubmit, onSubmit]
+  );
 
   return (
     <>

@@ -10,9 +10,17 @@ import { Button, Form, Input, message, Tooltip, type InputRef } from 'antd';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { TbSend } from 'react-icons/tb';
 import Lottie from 'lottie-react';
+import { useSockets } from '@social/providers/SocketProvider';
+import {
+  CHAT_MESSAGE,
+  NOTIFICATION_MESSAGE,
+} from '@social/defaults/socket.default';
 
 const StoryReply = () => {
-  const { currentStory, paused } = useAppSelector(state => state.story);
+  const { socket } = useSockets();
+  const { currentStory, currentUserStory, paused } = useAppSelector(
+    state => state.story
+  );
   const userInfo = useAppSelector(state => state.auth.userInfo);
   const dispatch = useAppDispatch();
   const inputRef = useRef<InputRef>(null);
@@ -41,13 +49,18 @@ const StoryReply = () => {
       const payload = {
         storyId: currentStory._id,
         content: values.content.trim(),
+        receiver: {
+          _id: currentUserStory._id,
+          fullname: currentUserStory.fullname,
+          avatar: currentUserStory.avatar,
+        },
       };
-      console.log(payload);
+      socket.emit(CHAT_MESSAGE.REPLY_STORY, payload);
       form.resetFields();
       setIsFocused(false);
       inputRef.current?.blur();
     },
-    [currentStory, form]
+    [currentStory, form, socket, currentUserStory]
   );
 
   const onActionLike = useCallback(
@@ -57,6 +70,10 @@ const StoryReply = () => {
         if (res.data) {
           dispatch(doLikeStory({ userId: userInfo._id, type: value }));
           message.success('Thả cảm xúc thành công');
+          socket.emit(NOTIFICATION_MESSAGE.STORY_REACTION, {
+            storyId: currentStory._id,
+            authorId: currentStory.authorId,
+          });
         } else {
           message.error(convertErrorMessage(res.message));
         }
@@ -65,7 +82,7 @@ const StoryReply = () => {
         message.error('Có lỗi xảy ra');
       }
     },
-    [currentStory, userInfo, dispatch]
+    [currentStory, userInfo, dispatch, socket]
   );
 
   const onFocus = () => {
@@ -98,15 +115,15 @@ const StoryReply = () => {
 
   return (
     <>
-      <div className="h-12 max-w-[690px] w-[80%] bg-transparent">
+      <div className="h-12 max-w-[690px] w-[80%] bg-transparent overflow-hidden">
         {!myStory && (
-          <div className="flex justify-start items-center w-full h-full gap-1 px-2">
+          <div className="flex justify-start items-center w-full h-full">
             <Form
               form={form}
               layout="vertical"
               onFinish={onFinish}
-              className={`flex items-center border-1 border-white rounded-2xl h-10 transition-all duration-300
-              ${isFocused ? 'flex-1' : 'w-[300px]'}`}
+              className={`flex items-center border-1 border-white rounded-2xl h-10 transition-all duration-1000
+              ${isFocused ? 'w-full' : 'w-[50%]'}`}
             >
               <Form.Item name="content" className="!m-0 flex-1">
                 <Input
@@ -133,40 +150,42 @@ const StoryReply = () => {
               )}
             </Form>
             <div
-              className={`items-center flex-1 ${isFocused ? 'hidden' : 'flex'} gap-1`}
+              className={`${isFocused ? 'w-0' : 'w-[50%]'} transition-all duration-1000`}
               onMouseEnter={onMouseEnter}
               onMouseLeave={onMouseLeave}
             >
-              {emojiReactions.map(emoji => (
-                <div
-                  key={emoji.id}
-                  className="h-full rounded-full cursor-pointer flex-1"
-                  onClick={() => {
-                    onActionLike(emoji.value);
-                  }}
-                >
-                  <Tooltip title={emoji.label}>
-                    <div className="flex items-center justify-center w-full h-full">
-                      <span
-                        className={`hover:scale-150 transition-all duration-300 w-10 h-10
+              <div className="flex items-center gap-1">
+                {emojiReactions.map(emoji => (
+                  <div
+                    key={emoji.id}
+                    className="h-full rounded-full cursor-pointer flex-1"
+                    onClick={() => {
+                      onActionLike(emoji.value);
+                    }}
+                  >
+                    <Tooltip title={emoji.label}>
+                      <div className="flex items-center justify-center w-full h-full">
+                        <span
+                          className={`hover:scale-120 transition-all rounded-full duration-300 w-10 h-10
                           ${
                             userLiked?.likedType === emoji.value
-                              ? 'scale-125'
+                              ? 'scale-120'
                               : 'opacity-70 hover:opacity-100'
                           }`}
-                        style={{
-                          filter:
-                            userLiked?.likedType === emoji.value
-                              ? `drop-shadow(0 0 8px ${emoji.color}) drop-shadow(0 0 16px ${emoji.color}40)`
-                              : undefined,
-                        }}
-                      >
-                        <Lottie animationData={emoji.reSource} loop={true} />
-                      </span>
-                    </div>
-                  </Tooltip>
-                </div>
-              ))}
+                          style={{
+                            filter:
+                              userLiked?.likedType === emoji.value
+                                ? `drop-shadow(0 0 8px ${emoji.color}) drop-shadow(0 0 16px ${emoji.color}40)`
+                                : undefined,
+                          }}
+                        >
+                          <Lottie animationData={emoji.reSource} loop={true} />
+                        </span>
+                      </div>
+                    </Tooltip>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}

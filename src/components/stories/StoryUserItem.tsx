@@ -14,9 +14,16 @@ interface IProps {
 
 const StoryUserItem: React.FC<IProps> = ({ userStory, isLoading }) => {
   const { currentUserStory } = useAppSelector(state => state.story);
+  const userInfo = useAppSelector(state => state.auth.userInfo);
   const isViewed = useMemo(() => {
     return userStory._id === currentUserStory._id;
-  }, [currentUserStory._id]);
+  }, [currentUserStory._id, userStory._id]);
+  console.log(currentUserStory);
+  console.log(userStory);
+
+  const isMyStory = useMemo(() => {
+    return userStory._id === userInfo._id;
+  }, [userStory._id, userInfo._id]);
 
   const timeNewStory = useMemo(() => {
     return formatRelativeTime(
@@ -52,11 +59,16 @@ const StoryUserItem: React.FC<IProps> = ({ userStory, isLoading }) => {
             <span className="text-[16px] font-semibold">
               {userStory.fullname}
             </span>
+
             <div className="flex gap-1 items-center">
-              <span className="text-base text-blue-light">
-                {userStory.stories.length} thẻ mới
-              </span>
-              <span> · </span>
+              {!isMyStory && (
+                <>
+                  <span className="text-base text-blue-light">
+                    {userStory.stories.length} thẻ mới
+                  </span>
+                  <span> · </span>
+                </>
+              )}
               <span className="text-base text-gray-500">{timeNewStory}</span>
             </div>
           </div>

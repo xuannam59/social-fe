@@ -1,5 +1,4 @@
 import { callApiActionView } from '@social/apis/stories.api';
-import { convertErrorMessage } from '@social/common/convert';
 import StoryListViewer from '@social/components/stories/StoryListViewer';
 import StoryPlayer from '@social/components/stories/StoryPlayer';
 import StoryReply from '@social/components/stories/StoryReply';
@@ -13,7 +12,7 @@ import {
   fetchStories,
   setCurrentUserStory,
 } from '@social/redux/reducers/story.reducer';
-import { message, Typography } from 'antd';
+import { Typography } from 'antd';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TbChevronLeft, TbChevronRight, TbPlus } from 'react-icons/tb';
 import { Link, useParams } from 'react-router-dom';
@@ -23,7 +22,7 @@ const { Title } = Typography;
 const StoryView = () => {
   const { userId } = useParams();
   const dispatch = useAppDispatch();
-  const { currentStory, listUserStories } = useAppSelector(
+  const { currentStory, listUserStories, currentUserStory } = useAppSelector(
     state => state.story
   );
   const userInfo = useAppSelector(state => state.auth.userInfo);
@@ -67,10 +66,10 @@ const StoryView = () => {
   }, [userId, fetchUserStories, listUserStories.length]);
 
   useEffect(() => {
-    if (currentUser && !currentStory._id) {
+    if (currentUser && !currentStory._id && !currentUserStory) {
       dispatch(setCurrentUserStory(currentUser));
     }
-  }, [currentUser, currentStory._id, dispatch]);
+  }, [currentUser, currentStory._id, dispatch, currentUserStory]);
 
   useEffect(() => {
     if (currentStory._id && currentStory.authorId !== userInfo._id) {
@@ -87,17 +86,15 @@ const StoryView = () => {
   }, [dispatch]);
 
   const navigationState = useMemo(() => {
-    const currentUserIndex = listUserStories.findIndex(u => u._id === userId);
-    const currentStoryIndex =
-      currentUser?.stories.findIndex(s => s._id === currentStory._id) ?? -1;
+    const firstStory = listUserStories[0].stories[0];
+    const lastUserStory = listUserStories[listUserStories.length - 1];
+    const lastStory = lastUserStory.stories[lastUserStory.stories.length - 1];
 
     return {
-      canGoPrev: currentStoryIndex > 0 || currentUserIndex > 0,
-      canGoNext:
-        (currentUser && currentStoryIndex < currentUser.stories.length - 1) ||
-        currentUserIndex < listUserStories.length - 1,
+      canGoPrev: currentStory._id !== firstStory._id,
+      canGoNext: currentStory._id !== lastStory._id,
     };
-  }, [listUserStories, userId, currentUser, currentStory._id]);
+  }, [listUserStories, currentStory._id]);
 
   return (
     <>
