@@ -22,13 +22,13 @@ const PostMediaGallery: React.FC<IProps> = ({ medias }) => {
                   return (
                     <div
                       key={media.id}
-                      className="max-h-[400px] bg-black border border-gray-200 overflow-hidden "
+                      className=" bg-black border border-gray-200 overflow-hidden "
                     >
-                      <div className="flex items-center justify-center ">
+                      <div className="flex items-center justify-center max-h-[400px] h-full">
                         <Image
                           src={media.url}
                           alt="media"
-                          className="max-w-[500px] min-w-[378px]"
+                          className="w-full h-full max-h-[400px]"
                           loading="lazy"
                         />
                       </div>
@@ -63,7 +63,7 @@ const PostMediaGallery: React.FC<IProps> = ({ medias }) => {
                   return (
                     <div
                       key={media.id}
-                      className="h-[250px] bg-black border border-gray-200 overflow-hidden"
+                      className="h-[400px] bg-black border border-gray-200 overflow-hidden"
                     >
                       <div className="flex items-center justify-center w-full h-full">
                         <Image
@@ -104,7 +104,7 @@ const PostMediaGallery: React.FC<IProps> = ({ medias }) => {
                   return (
                     <div
                       key={media.id}
-                      className={`h-[250px] bg-black border border-gray-200 overflow-hidden ${
+                      className={`h-[400px] bg-black border border-gray-200 overflow-hidden ${
                         index === 0 ? 'col-span-2' : ''
                       }`}
                     >
@@ -147,7 +147,7 @@ const PostMediaGallery: React.FC<IProps> = ({ medias }) => {
                   return (
                     <div
                       key={media.id}
-                      className="h-[200px] bg-black border border-gray-200 overflow-hidden"
+                      className="h-[400px] bg-black border border-gray-200 overflow-hidden"
                     >
                       <div className="flex items-center justify-center w-full h-full">
                         <Image
@@ -190,7 +190,7 @@ const PostMediaGallery: React.FC<IProps> = ({ medias }) => {
                     {index <= 4 ? (
                       <div
                         key={media.id}
-                        className={`relative h-[150px] bg-black border border-gray-200 overflow-hidden ${
+                        className={`relative h-[400px] bg-black border border-gray-200 overflow-hidden ${
                           index > 1 ? 'col-span-2' : 'col-span-3'
                         }`}
                       >

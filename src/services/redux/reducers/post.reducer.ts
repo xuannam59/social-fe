@@ -65,6 +65,14 @@ const postSlice = createSlice({
     doCreatePost: (state, action: PayloadAction<IPost>) => {
       state.listPosts = [action.payload, ...state.listPosts];
     },
+
+    doUpdatePost: (
+      state,
+      action: PayloadAction<{ index: number; post: IPost }>
+    ) => {
+      const { index, post } = action.payload;
+      state.listPosts[index] = post;
+    },
   },
   extraReducers: builder => {
     builder.addCase(fetchPosts.fulfilled, (state, action) => {
@@ -74,6 +82,11 @@ const postSlice = createSlice({
   },
 });
 
-export const { setPosts, doToggleLike, doUpdateCommentCount, doCreatePost } =
-  postSlice.actions;
+export const {
+  setPosts,
+  doToggleLike,
+  doUpdateCommentCount,
+  doCreatePost,
+  doUpdatePost,
+} = postSlice.actions;
 export const postReducer = postSlice.reducer;

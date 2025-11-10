@@ -2,11 +2,13 @@ import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
 import {
   doToggleLike,
   doUpdateCommentCount,
+  doUpdatePost,
   fetchPosts,
 } from '@social/redux/reducers/post.reducer';
 import { useCallback, useEffect } from 'react';
 import LoadingPostList from '../loading/LoadingPostList';
 import PostItem from './PostItem';
+import type { IPost } from '@social/types/posts.type';
 
 const PostList = () => {
   const { listPosts, isLoadingPosts } = useAppSelector(state => state.post);
@@ -33,13 +35,20 @@ const PostList = () => {
     },
     [dispatch]
   );
+
+  const updatePost = useCallback(
+    (index: number, post: IPost) => {
+      dispatch(doUpdatePost({ index, post }));
+    },
+    [dispatch]
+  );
   return (
     <>
       {isLoadingPosts ? (
         <LoadingPostList />
       ) : (
         <>
-          <div className="flex flex-col gap-2 w-full">
+          <div className="flex flex-col gap-2 w-full mb-5">
             {listPosts.map((post, index) => (
               <PostItem
                 key={post._id}
@@ -50,6 +59,7 @@ const PostList = () => {
                 updateCommentPost={(count: number) =>
                   updateCommentPost(index, count)
                 }
+                updatePost={post => updatePost(index, post)}
               />
             ))}
           </div>

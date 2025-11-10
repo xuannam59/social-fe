@@ -1,4 +1,7 @@
-import { callApiFetchPosts } from '@social/apis/posts.api';
+import {
+  callApiFetchPosts,
+  callApiFetchPostsByUserId,
+} from '@social/apis/posts.api';
 import { callApiUploadCloudinary } from '@social/apis/upload.api';
 import {
   callApiGetUserInfo,
@@ -22,12 +25,7 @@ import type { IPost } from '@social/types/posts.type';
 import type { IPreviewImage, IUser } from '@social/types/user.type';
 import { Button, message, Tabs, Typography } from 'antd';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  TbCameraFilled,
-  TbEdit,
-  TbLoader2,
-  TbMessageCircle,
-} from 'react-icons/tb';
+import { TbCameraFilled, TbEdit, TbMessageCircle } from 'react-icons/tb';
 import { useNavigate, useParams } from 'react-router-dom';
 
 const { Text, Paragraph } = Typography;
@@ -50,7 +48,7 @@ const ProfilePage = () => {
     if (!userId) return;
     setIsLoadingPosts(true);
     try {
-      const res = await callApiFetchPosts(`userId=${userId}&limit=10`);
+      const res = await callApiFetchPostsByUserId(userId, 'limit=10');
       if (res.data) {
         setListPosts(res.data.list);
       }
@@ -241,7 +239,16 @@ const ProfilePage = () => {
 
     img.src = objectUrl;
   };
+  const updatePost = useCallback((index: number, post: IPost) => {
+    console.log(post);
+    setListPosts(prev => {
+      const newList = [...prev];
+      newList[index] = post;
+      return newList;
+    });
+  }, []);
 
+  console.log(listPosts);
   return (
     <>
       <div className="min-h-full bg-gray-50">
@@ -397,6 +404,7 @@ const ProfilePage = () => {
                             updateCommentPost={(count: number) =>
                               updateCommentPost(index, count)
                             }
+                            updatePost={post => updatePost(index, post)}
                           />
                         ))}
                       </div>

@@ -14,6 +14,7 @@ import React, {
   lazy,
   Suspense,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -36,6 +37,10 @@ interface IProps {
   userTags: IUserTag[];
   feeling: string;
   medias: IPreviewMedia[];
+  dataEdit?: {
+    content: string;
+    privacy: string;
+  };
   handleCancel: () => void;
   handlePostSubmit: (values: any) => void;
   handleOpenContent: (content: EOpenContent) => void;
@@ -48,6 +53,7 @@ const PostEditor: React.FC<IProps> = ({
   userTags,
   feeling,
   medias,
+  dataEdit,
   handleCancel,
   handlePostSubmit,
   handleOpenContent,
@@ -140,6 +146,13 @@ const PostEditor: React.FC<IProps> = ({
     []
   );
 
+  useEffect(() => {
+    if (dataEdit) {
+      form.setFieldValue('content', dataEdit.content);
+      form.setFieldValue('privacy', dataEdit.privacy);
+    }
+  }, [dataEdit, form]);
+
   // Component đã được tách ra thành UserTagsDisplay
 
   const handleSubmit = useCallback(
@@ -157,7 +170,7 @@ const PostEditor: React.FC<IProps> = ({
     <>
       <div className="flex flex-col h-full">
         <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
-          <h2 className="text-xl font-bold text-center flex-1">Tạo bài viết</h2>
+          <h2 className="text-xl font-bold text-center flex-1">{`${dataEdit ? 'Chỉnh sửa' : 'Tạo'} bài viết`}</h2>
           <Button
             type="text"
             shape="circle"
@@ -361,7 +374,7 @@ const PostEditor: React.FC<IProps> = ({
                     onClick={() => form.submit()}
                     className="w-full"
                   >
-                    Đăng bài viết
+                    {dataEdit ? 'Cập nhật' : 'Đăng'} bài viết
                   </ButtonGradient>
                 </div>
               </div>

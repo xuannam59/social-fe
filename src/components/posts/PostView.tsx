@@ -6,7 +6,7 @@ import {
 } from '@social/common/convert';
 import { emojiReactions } from '@social/constants/emoji';
 import type { IPost, IPostLike, IUserLiked } from '@social/types/posts.type';
-import { Button, Tooltip, Typography } from 'antd';
+import { Button, Dropdown, Tooltip, Typography } from 'antd';
 import Lottie from 'lottie-react';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
@@ -14,17 +14,20 @@ import {
   TbLock,
   TbMessageCircle,
   TbMessageCircleFilled,
+  TbPencil,
   TbShare3,
+  TbTrash,
   TbUsers,
   TbWorld,
   TbX,
 } from 'react-icons/tb';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import AvatarUser from '../common/AvatarUser';
 import UserTagsDisplay from '../common/UserTagsDisplay';
 import PostButtonLike from './PostButtonLike';
 import PostMediaGallery from './PostMediaGallery';
+import { useAppSelector } from '@social/hooks/redux.hook';
 
 const { Text } = Typography;
 
@@ -33,6 +36,7 @@ interface IProps {
   buttonClose?: boolean;
   onClickComment: () => void;
   onLikePost: (type: number, isLike: boolean) => void;
+  onClickEditPost?: () => void;
 }
 
 const PostView: React.FC<IProps> = ({
@@ -40,8 +44,10 @@ const PostView: React.FC<IProps> = ({
   buttonClose = true,
   onClickComment,
   onLikePost,
+  onClickEditPost,
 }) => {
   const navigate = useNavigate();
+  const userInfo = useAppSelector(state => state.auth.userInfo);
   const time = formatRelativeTime(post.createdAt);
   const exactTime = formatFullDateTime(post.createdAt);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -54,12 +60,18 @@ const PostView: React.FC<IProps> = ({
     return emojiReactions.find(emoji => emoji.value === userLiked.type) ?? null;
   }, [post.userLiked]);
 
-  const medias = useRef(
-    post.medias.map(media => ({
-      id: uuidv4(),
-      url: convertUrlString(media.keyS3 ?? ''),
-      type: media.type,
-    }))
+  const isMyPost = useMemo(() => {
+    return post.authorId._id === userInfo._id;
+  }, [post.authorId._id, userInfo._id]);
+
+  const medias = useMemo(
+    () =>
+      post.medias.map(media => ({
+        id: uuidv4(),
+        url: convertUrlString(media.keyS3 ?? ''),
+        type: media.type,
+      })),
+    [post.medias]
   );
 
   const onUserLiked = useCallback(
@@ -73,20 +85,29 @@ const PostView: React.FC<IProps> = ({
     navigate(`/${post.authorId._id}`);
   };
 
+  const handleDeletePost = () => {
+    console.log('Xoá bài viết');
+  };
+
+  const handleEditPost = () => {
+    if (onClickEditPost && isMyPost) {
+      onClickEditPost();
+    }
+  };
+
   return (
     <>
       <div className="w-full h-fit bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 flex-shrink-0">
         <div className="flex flex-col">
           <div className="flex w-full justify-between items-start pt-3 px-3 mb-3 flex-shrink-0">
-            <div
-              className="flex-1 flex items-start gap-1"
-              onClick={handleNavigateToProfile}
-            >
-              <AvatarUser
-                size={50}
-                avatar={post.authorId.avatar}
-                className="flex-shrink-0"
-              />
+            <div className="flex-1 flex items-start gap-1">
+              <Link to={`/${post.authorId._id}`}>
+                <AvatarUser
+                  size={50}
+                  avatar={post.authorId.avatar}
+                  className="flex-shrink-0"
+                />
+              </Link>
               <div className="flex-1">
                 <div className="w-full">
                   <div
@@ -125,13 +146,41 @@ const PostView: React.FC<IProps> = ({
             <div className="flex items-center gap-2">
               {buttonClose && (
                 <>
-                  <Button type="text" shape="circle">
-                    <TbDots size={24} className="text-gray-500" />
-                  </Button>
-
-                  <Button type="text" shape="circle">
-                    <TbX size={24} className="text-gray-500" />
-                  </Button>
+                  {isMyPost && (
+                    <>
+                      <Dropdown
+                        trigger={['click']}
+                        placement="bottomRight"
+                        arrow={true}
+                        menu={{
+                          items: [
+                            {
+                              label: (
+                                <div className="flex items-center gap-2">
+                                  <TbTrash size={18} className="text-red-500" />
+                                  <span className="text-base text-red-500">
+                                    Xoá bài viết
+                                  </span>
+                                </div>
+                              ),
+                              key: 'delete',
+                              onClick: handleDeletePost,
+                            },
+                            {
+                              label: 'Sửa bài viết',
+                              key: 'edit',
+                              icon: <TbPencil size={20} />,
+                              onClick: handleEditPost,
+                            },
+                          ],
+                        }}
+                      >
+                        <Button type="text" shape="circle">
+                          <TbDots size={24} className="text-gray-500" />
+                        </Button>
+                      </Dropdown>
+                    </>
+                  )}
                 </>
               )}
             </div>
@@ -159,9 +208,9 @@ const PostView: React.FC<IProps> = ({
             </div>
           </div>
 
-          {medias.current.length > 0 && (
+          {medias.length > 0 && (
             <div className="mb-1.5 flex-1 overflow-hidden">
-              <PostMediaGallery medias={medias.current} onClick={() => {}} />
+              <PostMediaGallery medias={medias} onClick={() => {}} />
             </div>
           )}
           <div className="px-3 mb-1.5 flex-shrink-0">

@@ -33,7 +33,9 @@ const PostUserTags: React.FC<IProps> = ({ onBack, addUserTag, userTags }) => {
   const fetchUserFriendList = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await callApiFetchUserFriendList('limit=10');
+      const res = await callApiFetchUserFriendList(
+        `limit=10${userTags.length > 0 ? `&exclude=${userTags.map(user => user._id)}` : ''}`
+      );
       if (res.data) {
         setListUser(res.data.friends);
         setTotal(res.data.total);
