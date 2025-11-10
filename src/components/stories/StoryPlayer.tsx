@@ -1,18 +1,22 @@
-import { convertUrlString } from '@social/common/convert';
+import { callApiDeleteStory } from '@social/apis/stories.api';
+import { convertUrlString, formatRelativeTime } from '@social/common/convert';
 import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
-import React, { useCallback, useMemo } from 'react';
-import ProgressBar from '../common/ProgressBar';
-import { TbPlayerPlayFilled, TbPlayerPauseFilled } from 'react-icons/tb';
-import { Button, Typography } from 'antd';
-import AvatarUser from '../common/AvatarUser';
 import {
   doNextStory,
   doPauseStory,
+  doDeleteStory,
 } from '@social/redux/reducers/story.reducer';
+import { Button, Dropdown, message, Modal } from 'antd';
+import React, { useCallback, useMemo } from 'react';
+import {
+  TbDotsVertical,
+  TbPlayerPauseFilled,
+  TbPlayerPlayFilled,
+  TbTrash,
+} from 'react-icons/tb';
+import AvatarUser from '../common/AvatarUser';
+import ProgressBar from '../common/ProgressBar';
 import LoadingStoryPlayer from '../loading/LoadingStoryPlayer';
-import { formatRelativeTime } from '@social/common/convert';
-
-const { Text } = Typography;
 
 interface IProps {
   isLoading: boolean;
@@ -112,6 +116,34 @@ const StoryPlayer: React.FC<IProps> = ({ isLoading, navigationState }) => {
     [currentUserStory.avatar, currentUserStory.fullname]
   );
 
+  const handelDeleteStory = useCallback(async () => {
+    Modal.confirm({
+      title: 'Xoá story',
+      centered: true,
+      content: (
+        <span className="text-base text-gray-500">
+          Bạn có chắc chắn muốn xoá story này không?
+        </span>
+      ),
+      onOk: async () => {
+        try {
+          const res = await callApiDeleteStory(currentStory._id);
+          if (res.data) {
+            console.log(res.data);
+            message.success('Xoá story thành công');
+            dispatch(doDeleteStory());
+          } else {
+            message.error('Xoá story thất bại');
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      },
+      okText: 'Xoá',
+      cancelText: 'Hủy',
+    });
+  }, [dispatch, currentStory._id]);
+
   return (
     <div className="absolute inset-0 bg-[#222429] my-5 rounded-lg overflow-hidden">
       {isLoading ? (
@@ -133,27 +165,63 @@ const StoryPlayer: React.FC<IProps> = ({ isLoading, navigationState }) => {
 
             <div className="mt-3 flex items-center justify-between">
               <div className="flex items-start gap-2">
-                <AvatarUser avatar={authorInfo.avatar} size={40} />
+                <div className="shrink-0">
+                  <AvatarUser avatar={authorInfo.avatar} size={40} />
+                </div>
                 <div className="flex items-center gap-2">
-                  <Text className="!text-[16px] !font-medium !text-white">
+                  <span className="text-base font-medium text-white line-clamp-1">
                     {authorInfo.fullName}
-                  </Text>
-                  <div className="text-sm text-white">{timeStory}</div>
+                  </span>
+                  <span className="text-sm text-white line-clamp-1">
+                    {timeStory}
+                  </span>
                 </div>
               </div>
-              <Button
-                type="text"
-                shape="circle"
-                onClick={handleTogglePause}
-                className="hover:bg-white/10"
-                aria-label={paused ? 'Phát story' : 'Tạm dừng story'}
-              >
-                {paused ? (
-                  <TbPlayerPlayFilled size={20} className="text-white" />
-                ) : (
-                  <TbPlayerPauseFilled size={20} className="text-white" />
+              <div className="flex item-center gap-0.5">
+                <Button
+                  type="text"
+                  shape="circle"
+                  onClick={handleTogglePause}
+                  className="hover:bg-white/10"
+                  aria-label={paused ? 'Phát story' : 'Tạm dừng story'}
+                >
+                  {paused ? (
+                    <TbPlayerPlayFilled size={20} className="text-white" />
+                  ) : (
+                    <TbPlayerPauseFilled size={20} className="text-white" />
+                  )}
+                </Button>
+                {isMyStory && (
+                  <Dropdown
+                    trigger={['click']}
+                    placement="bottomRight"
+                    arrow={true}
+                    onOpenChange={open => {
+                      dispatch(doPauseStory(open));
+                    }}
+                    menu={{
+                      items: [
+                        {
+                          label: (
+                            <div className="flex items-center gap-2">
+                              <TbTrash size={20} className="text-red-500" />
+                              <span className="text-base text-red-500">
+                                Xoá story
+                              </span>
+                            </div>
+                          ),
+                          key: 'delete',
+                          onClick: handelDeleteStory,
+                        },
+                      ],
+                    }}
+                  >
+                    <Button type="text" shape="circle">
+                      <TbDotsVertical size={20} className="text-white" />
+                    </Button>
+                  </Dropdown>
                 )}
-              </Button>
+              </div>
             </div>
           </div>
           {renderContent()}

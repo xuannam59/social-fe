@@ -38,8 +38,19 @@ const storySlice = createSlice({
         state.currentStory = state.currentUserStory.stories[0];
       }
     },
-    setListUserStories: (state, action) => {
-      state.listUserStories = action.payload;
+    setListUserStories: (
+      state,
+      action: PayloadAction<{
+        list: IUserStory[];
+        total: number;
+        page: number;
+        limit: number;
+      }>
+    ) => {
+      state.listUserStories = action.payload.list;
+      state.totalStories = action.payload.total;
+      state.page = action.payload.page;
+      state.limit = action.payload.limit;
     },
     doCreateStory: (state, action: PayloadAction<IUserStory>) => {
       const authorId = action.payload._id;
@@ -202,6 +213,35 @@ const storySlice = createSlice({
         state.currentStory.viewers.push({ userId, likedType: 0 });
       }
     },
+    doDeleteStory: state => {
+      const userStory = state.currentUserStory;
+      const listStory = userStory.stories.filter(
+        s => s._id !== state.currentStory._id
+      );
+      if (listStory.length > 0) {
+        state.currentUserStory = {
+          ...userStory,
+          stories: listStory,
+        };
+        state.currentStory = listStory[0];
+        state.listUserStories.forEach(us => {
+          if (us._id === userStory._id) {
+            us.stories = listStory;
+          }
+        });
+      } else {
+        state.listUserStories = state.listUserStories.filter(
+          us => us._id !== userStory._id
+        );
+        if (state.listUserStories.length > 0) {
+          state.currentUserStory = state.listUserStories[0];
+          state.currentStory = state.currentUserStory.stories[0];
+        } else {
+          state.currentUserStory = USER_STORY_DEFAULT;
+          state.currentStory = STORY_DEFAULT;
+        }
+      }
+    },
   },
   extraReducers: builder => {
     builder.addCase(fetchStories.fulfilled, (state, action) => {
@@ -223,5 +263,6 @@ export const {
   doCreateStory,
   doLikeStory,
   doViewStory,
+  doDeleteStory,
 } = storySlice.actions;
 export const storyReducer = storySlice.reducer;

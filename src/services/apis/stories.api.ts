@@ -41,3 +41,9 @@ export const callApiActionView = async (storyId: string) => {
     `/api/v1/stories/views/${storyId}`
   );
 };
+
+export const callApiDeleteStory = async (storyId: string) => {
+  return axios.delete<IBackendRes<{ _id: string }>>(
+    `/api/v1/stories/${storyId}`
+  );
+};

@@ -1,4 +1,4 @@
-import { callApiActionView } from '@social/apis/stories.api';
+import { callApiActionView, callApiGetStories } from '@social/apis/stories.api';
 import StoryListViewer from '@social/components/stories/StoryListViewer';
 import StoryPlayer from '@social/components/stories/StoryPlayer';
 import StoryReply from '@social/components/stories/StoryReply';
@@ -11,17 +11,19 @@ import {
   doViewStory,
   fetchStories,
   setCurrentUserStory,
+  setListUserStories,
 } from '@social/redux/reducers/story.reducer';
-import { Typography } from 'antd';
+import { message, Typography } from 'antd';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TbChevronLeft, TbChevronRight, TbPlus } from 'react-icons/tb';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 const { Title } = Typography;
 
 const StoryView = () => {
   const { userId } = useParams();
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { currentStory, listUserStories, currentUserStory } = useAppSelector(
     state => state.story
   );
@@ -31,17 +33,45 @@ const StoryView = () => {
     return listUserStories.find(userStory => userStory._id === userId);
   }, [listUserStories, userId]);
 
+  const navigationState = useMemo(() => {
+    if (listUserStories.length === 0 || !currentStory._id)
+      return { canGoPrev: false, canGoNext: false };
+    const firstStory = listUserStories[0].stories[0];
+    const lastUserStory = listUserStories[listUserStories.length - 1];
+    const lastStory = lastUserStory.stories[lastUserStory.stories.length - 1];
+
+    return {
+      canGoPrev: currentStory._id !== firstStory._id,
+      canGoNext: currentStory._id !== lastStory._id,
+    };
+  }, [listUserStories, currentStory._id]);
+
   const fetchUserStories = useCallback(async () => {
     if (!userId) return;
     try {
       setIsLoading(true);
-      await dispatch(fetchStories(`userId=${userId}`)).unwrap();
+      const res = await callApiGetStories(`userId=${userId}`);
+      if (res.data) {
+        const listStories = res.data.list;
+        const exist = listStories.find(us => us._id === userId);
+        if (exist) {
+          const data = {
+            list: listStories,
+            total: res.data.meta.total,
+            page: res.data.meta.page,
+            limit: res.data.meta.limit,
+          };
+          dispatch(setListUserStories(data));
+        } else {
+          navigate(ROUTES.DEFAULT);
+        }
+      }
     } catch (error) {
       console.error('Failed to fetch stories:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [dispatch, userId]);
+  }, [dispatch, userId, navigate]);
 
   const handleViewStory = useCallback(async () => {
     if (!currentStory._id) return;
@@ -54,8 +84,6 @@ const StoryView = () => {
       }
     } catch (error) {
       console.error('Failed to view story:', error);
-    } finally {
-      setIsLoading(false);
     }
   }, [dispatch, currentStory._id, userInfo._id]);
 
@@ -66,10 +94,10 @@ const StoryView = () => {
   }, [userId, fetchUserStories, listUserStories.length]);
 
   useEffect(() => {
-    if (currentUser && !currentStory._id && !currentUserStory) {
+    if (currentUser && !currentStory._id) {
       dispatch(setCurrentUserStory(currentUser));
     }
-  }, [currentUser, currentStory._id, dispatch, currentUserStory]);
+  }, [currentUser, currentStory._id, dispatch, currentUserStory, navigate]);
 
   useEffect(() => {
     if (currentStory._id && currentStory.authorId !== userInfo._id) {
@@ -84,17 +112,6 @@ const StoryView = () => {
   const handleNextStory = useCallback(() => {
     dispatch(doNextStory());
   }, [dispatch]);
-
-  const navigationState = useMemo(() => {
-    const firstStory = listUserStories[0].stories[0];
-    const lastUserStory = listUserStories[listUserStories.length - 1];
-    const lastStory = lastUserStory.stories[lastUserStory.stories.length - 1];
-
-    return {
-      canGoPrev: currentStory._id !== firstStory._id,
-      canGoNext: currentStory._id !== lastStory._id,
-    };
-  }, [listUserStories, currentStory._id]);
 
   return (
     <>
