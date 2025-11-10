@@ -1,5 +1,6 @@
 import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
 import {
+  doDeletePost,
   doToggleLike,
   doUpdateCommentCount,
   doUpdatePost,
@@ -42,6 +43,13 @@ const PostList = () => {
     },
     [dispatch]
   );
+
+  const deletePost = useCallback(
+    (id: string) => {
+      dispatch(doDeletePost(id));
+    },
+    [dispatch]
+  );
   return (
     <>
       {isLoadingPosts ? (
@@ -60,6 +68,7 @@ const PostList = () => {
                   updateCommentPost(index, count)
                 }
                 updatePost={post => updatePost(index, post)}
+                deletePost={() => deletePost(post._id)}
               />
             ))}
           </div>

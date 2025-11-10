@@ -9,6 +9,7 @@ interface IProps {
   updateLikePost: (type: number, isLike: boolean) => void;
   updateCommentPost: (count: number) => void;
   updatePost: (post: IPost) => void;
+  deletePost: () => void;
 }
 
 const PostItem: React.FC<IProps> = ({
@@ -16,6 +17,7 @@ const PostItem: React.FC<IProps> = ({
   updateLikePost,
   updateCommentPost,
   updatePost,
+  deletePost,
 }) => {
   const [openModalViewPost, setOpenModalViewPost] = useState(false);
   const [openModalEditPost, setOpenModalEditPost] = useState(false);
@@ -35,6 +37,7 @@ const PostItem: React.FC<IProps> = ({
         onClickComment={onClickComment}
         onLikePost={updateLikePost}
         onClickEditPost={onClickEditPost}
+        onDeletePost={deletePost}
       />
 
       {openModalViewPost && (

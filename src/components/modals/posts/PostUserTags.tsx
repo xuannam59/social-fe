@@ -1,8 +1,12 @@
-import InputSearch from '@social/components/common/InputSearch';
+import { callApiFetchUserFriendList } from '@social/apis/user.api';
+import { formatSlug } from '@social/common/convert';
 import EmptyState from '@social/components/common/EmptyState';
+import InputSearch from '@social/components/common/InputSearch';
+import Loading from '@social/components/loading/Loading';
 import defaultAvatar from '@social/images/default-avatar.webp';
 import type { IUserTag } from '@social/types/user.type';
 import { Avatar, Button, Modal, Typography } from 'antd';
+import { debounce } from 'lodash';
 import React, {
   useCallback,
   useEffect,
@@ -11,10 +15,6 @@ import React, {
   type ChangeEvent,
 } from 'react';
 import { TbArrowLeft, TbX } from 'react-icons/tb';
-import { callApiFetchUserFriendList } from '@social/apis/user.api';
-import Loading from '@social/components/loading/Loading';
-import { debounce } from 'lodash';
-import { formatSlug } from '@social/common/convert';
 
 interface IProps {
   onBack: () => void;

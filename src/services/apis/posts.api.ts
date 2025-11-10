@@ -39,3 +39,7 @@ export const callApiGetPostDetail = (postId: string) => {
 export const callApiUpdatePost = (postId: string, data: IFormCreatePost) => {
   return axios.patch<IBackendRes<string>>(`/api/v1/posts/${postId}`, data);
 };
+
+export const callApiDeletePost = (postId: string) => {
+  return axios.delete<IBackendRes<string>>(`/api/v1/posts/${postId}`);
+};

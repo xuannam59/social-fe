@@ -1,14 +1,16 @@
 import {
+  convertErrorMessage,
   convertUrlString,
   formatFullDateTime,
   formatNumberAbbreviate,
   formatRelativeTime,
 } from '@social/common/convert';
 import { emojiReactions } from '@social/constants/emoji';
-import type { IPost, IPostLike, IUserLiked } from '@social/types/posts.type';
-import { Button, Dropdown, Tooltip, Typography } from 'antd';
+import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
+import type { IPost } from '@social/types/posts.type';
+import { Button, Dropdown, message, Modal, Tooltip, Typography } from 'antd';
 import Lottie from 'lottie-react';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   TbDots,
   TbLock,
@@ -19,7 +21,6 @@ import {
   TbTrash,
   TbUsers,
   TbWorld,
-  TbX,
 } from 'react-icons/tb';
 import { Link, useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
@@ -27,7 +28,8 @@ import AvatarUser from '../common/AvatarUser';
 import UserTagsDisplay from '../common/UserTagsDisplay';
 import PostButtonLike from './PostButtonLike';
 import PostMediaGallery from './PostMediaGallery';
-import { useAppSelector } from '@social/hooks/redux.hook';
+import { callApiDeletePost } from '@social/apis/posts.api';
+import { doDeletePost } from '@social/redux/reducers/post.reducer';
 
 const { Text } = Typography;
 
@@ -37,6 +39,7 @@ interface IProps {
   onClickComment: () => void;
   onLikePost: (type: number, isLike: boolean) => void;
   onClickEditPost?: () => void;
+  onDeletePost?: () => void;
 }
 
 const PostView: React.FC<IProps> = ({
@@ -45,9 +48,11 @@ const PostView: React.FC<IProps> = ({
   onClickComment,
   onLikePost,
   onClickEditPost,
+  onDeletePost,
 }) => {
   const navigate = useNavigate();
   const userInfo = useAppSelector(state => state.auth.userInfo);
+  const dispatch = useAppDispatch();
   const time = formatRelativeTime(post.createdAt);
   const exactTime = formatFullDateTime(post.createdAt);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -85,8 +90,30 @@ const PostView: React.FC<IProps> = ({
     navigate(`/${post.authorId._id}`);
   };
 
-  const handleDeletePost = () => {
-    console.log('Xoá bài viết');
+  const handleDeletePost = async () => {
+    if (onDeletePost && isMyPost) {
+      Modal.confirm({
+        title: 'Xoá bài viết',
+        content: `Bạn có chắc chắn muốn xoá bài viết này không?`,
+        centered: true,
+        onOk: async () => {
+          try {
+            const res = await callApiDeletePost(post._id);
+            if (res.data) {
+              onDeletePost();
+              dispatch(doDeletePost(post._id));
+              message.success('Xoá bài viết thành công');
+            } else {
+              message.error(convertErrorMessage(res.message));
+            }
+          } catch (error) {
+            console.log(error);
+          }
+        },
+        okText: 'Xoá',
+        cancelText: 'Hủy',
+      });
+    }
   };
 
   const handleEditPost = () => {

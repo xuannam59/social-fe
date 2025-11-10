@@ -73,6 +73,10 @@ const postSlice = createSlice({
       const { index, post } = action.payload;
       state.listPosts[index] = post;
     },
+    doDeletePost: (state, action: PayloadAction<string>) => {
+      const id = action.payload;
+      state.listPosts = state.listPosts.filter(post => post._id !== id);
+    },
   },
   extraReducers: builder => {
     builder.addCase(fetchPosts.fulfilled, (state, action) => {
@@ -88,5 +92,6 @@ export const {
   doUpdateCommentCount,
   doCreatePost,
   doUpdatePost,
+  doDeletePost,
 } = postSlice.actions;
 export const postReducer = postSlice.reducer;

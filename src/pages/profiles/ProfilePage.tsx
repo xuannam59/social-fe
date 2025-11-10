@@ -1,13 +1,11 @@
-import {
-  callApiFetchPosts,
-  callApiFetchPostsByUserId,
-} from '@social/apis/posts.api';
+import { callApiFetchPostsByUserId } from '@social/apis/posts.api';
 import { callApiUploadCloudinary } from '@social/apis/upload.api';
 import {
   callApiGetUserInfo,
   callApiUpdateUserCover,
 } from '@social/apis/user.api';
 import AvatarUser from '@social/components/common/AvatarUser';
+import EmptyState from '@social/components/common/EmptyState';
 import LoadingPostList from '@social/components/loading/LoadingPostList';
 import ModalEditProfile from '@social/components/modals/profiles/ModalEditProfile';
 import ModalUpdateAvatar from '@social/components/modals/profiles/ModalUpdateAvatar';
@@ -248,7 +246,13 @@ const ProfilePage = () => {
     });
   }, []);
 
-  console.log(listPosts);
+  const deletePost = useCallback((id: string) => {
+    setListPosts(prev => {
+      const newList = [...prev];
+      return newList.filter(post => post._id !== id);
+    });
+  }, []);
+
   return (
     <>
       <div className="min-h-full bg-gray-50">
@@ -391,6 +395,14 @@ const ProfilePage = () => {
 
                   {isLoadingPosts ? (
                     <LoadingPostList />
+                  ) : listPosts.length === 0 ? (
+                    <>
+                      <div className="flex items-center justify-center w-full h-full">
+                        <span className="text-gray-500 text-h2 font-bold">
+                          Chưa có bài viết nào
+                        </span>
+                      </div>
+                    </>
                   ) : (
                     <>
                       <div className="flex flex-col gap-2 w-full">
@@ -405,6 +417,7 @@ const ProfilePage = () => {
                               updateCommentPost(index, count)
                             }
                             updatePost={post => updatePost(index, post)}
+                            deletePost={() => deletePost(post._id)}
                           />
                         ))}
                       </div>
