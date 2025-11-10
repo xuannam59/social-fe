@@ -17,7 +17,7 @@ const SendEmail: React.FC<IProps> = ({ setForgotPassword, handleNextStep }) => {
     const email = values.email;
     const res = await callApiForgotPassword(email);
     if (res.data) {
-      message.success('OTP has been sent to your email');
+      message.success('OTP đã được gửi đến email của bạn');
       setForgotPassword(prev => ({
         ...prev,
         email,
@@ -26,7 +26,10 @@ const SendEmail: React.FC<IProps> = ({ setForgotPassword, handleNextStep }) => {
     } else {
       notification.error({
         message: res.error,
-        description: res.message && Array.isArray(res.message) ? res.message.join(', ') : res.message,
+        description:
+          res.message && Array.isArray(res.message)
+            ? res.message.join(', ')
+            : res.message,
         duration: 3,
       });
     }
@@ -35,22 +38,27 @@ const SendEmail: React.FC<IProps> = ({ setForgotPassword, handleNextStep }) => {
 
   return (
     <>
-      <Form layout="vertical" form={form} onFinish={onSubmit} disabled={isLoading}>
+      <Form
+        layout="vertical"
+        form={form}
+        onFinish={onSubmit}
+        disabled={isLoading}
+      >
         <Form.Item
           label="Email"
           name="email"
           rules={[
             {
               required: true,
-              message: 'Please enter your email address',
+              message: 'Vui lòng nhập email của bạn',
             },
             {
               type: 'email',
-              message: 'Please enter a valid email address',
+              message: 'Vui lòng nhập email hợp lệ',
             },
           ]}
         >
-          <Input placeholder="Enter your email address" allowClear />
+          <Input placeholder="Nhập email của bạn" allowClear />
         </Form.Item>
 
         <Form.Item className="!mb-0">
@@ -63,7 +71,7 @@ const SendEmail: React.FC<IProps> = ({ setForgotPassword, handleNextStep }) => {
             }}
             className="w-full rounded-lg h-12 font-medium"
           >
-            Sending
+            Gửi
           </Button>
         </Form.Item>
       </Form>

@@ -13,10 +13,16 @@ import { Link } from 'react-router-dom';
 const { Title } = Typography;
 
 const ForgotPasswordPage = () => {
-  const [forgotPassword, setForgotPassword] = useState<IForgotPasswordForm>(DEFAULT_FORGOT_PASSWORD);
+  const [forgotPassword, setForgotPassword] = useState<IForgotPasswordForm>(
+    DEFAULT_FORGOT_PASSWORD
+  );
   const [stepCurrent, setStepCurrent] = useState(0);
 
-  const steps = [{ description: 'Email' }, { description: 'OTP' }, { description: 'New Password' }];
+  const steps = [
+    { description: 'Email' },
+    { description: 'OTP' },
+    { description: 'Mật khẩu mới' },
+  ];
 
   const handleNextStep = () => {
     setStepCurrent(prev => prev + 1);
@@ -25,7 +31,12 @@ const ForgotPasswordPage = () => {
   const renderStep = () => {
     switch (stepCurrent) {
       case 0:
-        return <SendEmail setForgotPassword={setForgotPassword} handleNextStep={handleNextStep} />;
+        return (
+          <SendEmail
+            setForgotPassword={setForgotPassword}
+            handleNextStep={handleNextStep}
+          />
+        );
       case 1:
         return (
           <VerifyOtp
@@ -42,14 +53,16 @@ const ForgotPasswordPage = () => {
   return (
     <div className="flex flex-col gap-4 p-6 max-w-md mx-auto">
       <Steps current={stepCurrent} labelPlacement="vertical" items={steps} />
-      <div className={`flex justify-between items-center ${stepCurrent === 2 ? 'justify-center' : 'justify-between'}`}>
+      <div
+        className={`flex justify-between items-center ${stepCurrent === 2 ? 'justify-center' : 'justify-between'}`}
+      >
         {stepCurrent === 0 && (
           <Link
             to={ROUTES.AUTH.LOGIN}
             className="flex items-center gap-2 text-gray-600 hover:text-primary transition-colors duration-200"
           >
             <TbChevronLeft size={18} />
-            <span className="text-sm font-medium">Back to Login</span>
+            <span className="text-sm font-medium">Quay lại đăng nhập</span>
           </Link>
         )}
         {stepCurrent === 1 && (
@@ -61,11 +74,15 @@ const ForgotPasswordPage = () => {
             }}
           >
             <TbChevronLeft size={18} />
-            <span className="text-sm font-medium">Back</span>
+            <span className="text-sm font-medium">Quay lại</span>
           </Button>
         )}
         <div className="flex items-center gap-2">
-          <img src={logo} alt="logo" className="w-[50px] h-[50px] object-contain" />
+          <img
+            src={logo}
+            alt="logo"
+            className="w-[50px] h-[50px] object-contain"
+          />
           <Title
             level={2}
             className="!mb-0 !text-transparent bg-clip-text bg-gradient-to-r from-[#3793B6] to-[#B5AF3A]"
@@ -77,10 +94,11 @@ const ForgotPasswordPage = () => {
 
       <div className="flex flex-col gap-2">
         <Title level={3} className="!text-primary !mb-0">
-          Forgot Password?
+          Quên mật khẩu?
         </Title>
         <p className="text-gray-600 text-sm leading-relaxed">
-          Don't worry! It happens. Please enter the email address associated with your account.
+          Đừng lo lắng! Điều này xảy ra. Vui lòng nhập địa chỉ email liên kết
+          với tài khoản của bạn.
         </p>
       </div>
 
@@ -88,9 +106,12 @@ const ForgotPasswordPage = () => {
 
       <div className="text-center">
         <p className="text-gray-500 text-sm">
-          Remember your password?
-          <Link to={ROUTES.AUTH.LOGIN} className="text-primary hover:underline font-medium ml-2">
-            Login here
+          Nhớ mật khẩu của bạn?
+          <Link
+            to={ROUTES.AUTH.LOGIN}
+            className="text-primary hover:underline font-medium ml-2"
+          >
+            Đăng nhập ở đây
           </Link>
         </p>
       </div>

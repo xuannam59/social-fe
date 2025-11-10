@@ -15,7 +15,10 @@ const ResetPassword: React.FC<IProps> = ({ forgotPassword }) => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const onSubmit = async (values: { newPassword: string; confirmPassword: string }) => {
+  const onSubmit = async (values: {
+    newPassword: string;
+    confirmPassword: string;
+  }) => {
     setIsLoading(true);
     const data: IForgotPasswordForm = {
       email: forgotPassword.email,
@@ -25,12 +28,15 @@ const ResetPassword: React.FC<IProps> = ({ forgotPassword }) => {
     };
     const res = await callApiResetPassword(data);
     if (res.data) {
-      message.success('Reset password successful');
+      message.success('Đặt lại mật khẩu thành công');
       navigate(ROUTES.AUTH.LOGIN);
     } else {
       notification.error({
         message: res.error,
-        description: res.message && Array.isArray(res.message) ? res.message.join(', ') : res.message,
+        description:
+          res.message && Array.isArray(res.message)
+            ? res.message.join(', ')
+            : res.message,
         duration: 3,
       });
     }
@@ -39,38 +45,53 @@ const ResetPassword: React.FC<IProps> = ({ forgotPassword }) => {
 
   return (
     <>
-      <Form layout="vertical" form={form} onFinish={onSubmit} disabled={isLoading}>
+      <Form
+        layout="vertical"
+        form={form}
+        onFinish={onSubmit}
+        disabled={isLoading}
+      >
         <Form.Item
-          label="New Password"
+          label="Mật khẩu mới"
           name="newPassword"
           rules={[
-            { required: true, message: 'New password is required' },
-            { min: 8, message: 'New password must be at least 8 characters' },
+            { required: true, message: 'Mật khẩu mới là bắt buộc' },
+            { min: 8, message: 'Mật khẩu mới phải ít nhất 8 ký tự' },
           ]}
         >
-          <Input.Password placeholder="Enter your new password" allowClear />
+          <Input.Password placeholder="Nhập mật khẩu mới của bạn" allowClear />
         </Form.Item>
         <Form.Item
-          label="Confirm Password"
+          label="Xác nhận mật khẩu"
           name="confirmPassword"
           rules={[
-            { required: true, message: 'Confirm password is required' },
-            { min: 8, message: 'Confirm password must be at least 8 characters' },
+            { required: true, message: 'Xác nhận mật khẩu là bắt buộc' },
+            { min: 8, message: 'Xác nhận mật khẩu phải ít nhất 8 ký tự' },
             {
               validator: (_, value) => {
                 if (value !== form.getFieldValue('newPassword')) {
-                  return Promise.reject(new Error('The two passwords that you entered do not match!'));
+                  return Promise.reject(
+                    new Error('Mật khẩu và xác nhận mật khẩu không khớp!')
+                  );
                 }
                 return Promise.resolve();
               },
             },
           ]}
         >
-          <Input.Password placeholder="Enter your confirm password" allowClear />
+          <Input.Password
+            placeholder="Nhập xác nhận mật khẩu của bạn"
+            allowClear
+          />
         </Form.Item>
         <Form.Item className="!mb-0">
-          <Button type="primary" htmlType="submit" loading={isLoading} className="w-full">
-            Reset Password
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={isLoading}
+            className="w-full"
+          >
+            Đặt lại mật khẩu
           </Button>
         </Form.Item>
       </Form>

@@ -2,7 +2,15 @@ import { callApiRegister } from '@social/apis/auths.api';
 import { ROUTES } from '@social/constants/route.constant';
 import logo from '@social/images/logo.webp';
 import type { IRegisterForm } from '@social/types/auths.type';
-import { Button, Divider, Form, Input, message, notification, Typography } from 'antd';
+import {
+  Button,
+  Divider,
+  Form,
+  Input,
+  message,
+  notification,
+  Typography,
+} from 'antd';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -18,12 +26,15 @@ const RegisterPage = () => {
 
     const res = await callApiRegister(values);
     if (res.data) {
-      message.success('Register successful');
+      message.success('Đăng ký thành công');
       navigate(ROUTES.AUTH.LOGIN);
     } else {
       notification.error({
         message: res.error,
-        description: res.message && Array.isArray(res.message) ? res.message.join(', ') : res.message,
+        description:
+          res.message && Array.isArray(res.message)
+            ? res.message.join(', ')
+            : res.message,
         duration: 3,
       });
     }
@@ -44,13 +55,25 @@ const RegisterPage = () => {
         </div>
         <div className="flex flex-col">
           <Title level={3} className="!text-primary">
-            Create Your Account
+            Tạo tài khoản của bạn
           </Title>
-          <p className="text-gray-600 text-sm">Join our community and connect with friends around the world</p>
+          <p className="text-gray-600 text-sm">
+            Tham gia cộng đồng của chúng tôi và kết nối với bạn bè trên toàn thế
+            giới
+          </p>
         </div>
-        <Form layout="vertical" form={form} onFinish={onSubmit} disabled={isLoading}>
-          <Form.Item label="Full Name" name="fullname" rules={[{ required: true, message: 'Full name is required' }]}>
-            <Input placeholder="Enter your full name" allowClear />
+        <Form
+          layout="vertical"
+          form={form}
+          onFinish={onSubmit}
+          disabled={isLoading}
+        >
+          <Form.Item
+            label="Họ và tên"
+            name="fullname"
+            rules={[{ required: true, message: 'Họ và tên là bắt buộc' }]}
+          >
+            <Input placeholder="Nhập họ và tên của bạn" allowClear />
           </Form.Item>
 
           <Form.Item
@@ -59,56 +82,70 @@ const RegisterPage = () => {
             rules={[
               {
                 required: true,
-                message: 'Email is required',
+                message: 'Email là bắt buộc',
               },
               {
                 type: 'email',
-                message: 'Please enter a valid email',
+                message: 'Vui lòng nhập email hợp lệ',
               },
             ]}
           >
-            <Input placeholder="Enter your email" allowClear />
+            <Input placeholder="Nhập email của bạn" allowClear />
           </Form.Item>
 
           <Form.Item
-            label="Password"
+            label="Mật khẩu"
             name="password"
             rules={[
-              { required: true, message: 'Password is required' },
-              { min: 8, message: 'Password must be at least 8 characters' },
+              { required: true, message: 'Mật khẩu là bắt buộc' },
+              { min: 8, message: 'Mật khẩu phải ít nhất 8 ký tự' },
             ]}
           >
-            <Input.Password placeholder="Enter your password" allowClear />
+            <Input.Password placeholder="Nhập mật khẩu của bạn" allowClear />
           </Form.Item>
           <Form.Item
-            label="Confirm Password"
+            label="Xác nhận mật khẩu"
             name="confirmPassword"
             rules={[
-              { required: true, message: 'Confirm password is required' },
-              { min: 8, message: 'Confirm password must be at least 8 characters' },
+              { required: true, message: 'Xác nhận mật khẩu là bắt buộc' },
+              { min: 8, message: 'Xác nhận mật khẩu phải ít nhất 8 ký tự' },
               {
                 validator: (_, value) => {
                   if (value !== form.getFieldValue('password')) {
-                    return Promise.reject(new Error('The two passwords that you entered do not match!'));
+                    return Promise.reject(
+                      new Error('Mật khẩu và xác nhận mật khẩu không khớp!')
+                    );
                   }
                   return Promise.resolve();
                 },
               },
             ]}
           >
-            <Input.Password placeholder="Enter your confirm password" allowClear onPressEnter={() => form.submit()} />
+            <Input.Password
+              placeholder="Nhập xác nhận mật khẩu của bạn"
+              allowClear
+              onPressEnter={() => form.submit()}
+            />
           </Form.Item>
 
           <div className="flex flex-col">
-            <Button type="primary" size="middle" loading={isLoading} onClick={() => form.submit()}>
-              Register
+            <Button
+              type="primary"
+              size="middle"
+              loading={isLoading}
+              onClick={() => form.submit()}
+            >
+              Đăng ký
             </Button>
             <Divider />
           </div>
           <div className="flex justify-center items-center gap-4">
-            <span className="text-sm text-gray-600">Already have an account?</span>
-            <Link to={ROUTES.AUTH.LOGIN} className="text-primary hover:!underline">
-              Login
+            <span className="text-sm text-gray-600">Đã có tài khoản?</span>
+            <Link
+              to={ROUTES.AUTH.LOGIN}
+              className="text-primary hover:!underline"
+            >
+              Đăng nhập
             </Link>
           </div>
         </Form>

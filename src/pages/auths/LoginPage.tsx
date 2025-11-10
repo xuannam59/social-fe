@@ -30,8 +30,9 @@ const LoginPage = () => {
     const status = searchParams.get('status');
     if (status && status.toLowerCase() === 'false' && counts.current === 0) {
       notification.error({
-        message: 'Login google failed',
-        description: 'Please try again',
+        message: 'Đăng nhập với Google thất bại',
+        description: 'vui lòng thử lại',
+        duration: 2.5,
       });
     }
     counts.current = 1;
@@ -41,7 +42,7 @@ const LoginPage = () => {
     setIsLoading(true);
     const res = await callApiLogin(values);
     if (res.data) {
-      message.success('Login successful');
+      message.success('Đăng nhập thành công');
       navigate(ROUTES.DEFAULT);
       localStorage.setItem('access_token', res.data.access_token);
       dispatch(doLogin(res.data));
@@ -72,10 +73,10 @@ const LoginPage = () => {
         </div>
         <div className="flex flex-col">
           <Title level={3} className="!text-primary">
-            Welcome Back!
+            Chào mừng trở lại!
           </Title>
           <p className="text-gray-600 text-sm">
-            Login to continue your journey with us
+            Đăng nhập để tiếp tục hành trình của bạn với chúng tôi
           </p>
         </div>
         <Form
@@ -90,23 +91,23 @@ const LoginPage = () => {
             rules={[
               {
                 required: true,
-                message: 'Email is required',
+                message: 'Email là bắt buộc',
               },
               {
                 type: 'email',
-                message: 'Please enter a valid email',
+                message: 'Vui lòng nhập email hợp lệ',
               },
             ]}
           >
-            <Input placeholder="Enter your email" allowClear />
+            <Input placeholder="Nhập email của bạn" allowClear />
           </Form.Item>
           <Form.Item
-            label="Password"
+            label="Mật khẩu"
             name="password"
-            rules={[{ required: true, message: 'Password is required' }]}
+            rules={[{ required: true, message: 'Mật khẩu là bắt buộc' }]}
           >
             <Input.Password
-              placeholder="Enter your password"
+              placeholder="Nhập mật khẩu của bạn"
               allowClear
               onPressEnter={() => form.submit()}
             />
@@ -116,7 +117,7 @@ const LoginPage = () => {
               to={ROUTES.AUTH.FORGOT_PASSWORD}
               className="text-primary hover:!underline"
             >
-              Forgot password?
+              Quên mật khẩu?
             </Link>
           </div>
           <div className="flex flex-col mb-4">
@@ -126,20 +127,18 @@ const LoginPage = () => {
               loading={isLoading}
               onClick={() => form.submit()}
             >
-              Login
+              Đăng nhập
             </Button>
             <Divider />
             <LoginGoogle disabled={isLoading} />
           </div>
           <div className="flex justify-center items-center gap-4">
-            <span className="text-sm text-gray-600">
-              Don't have an account?
-            </span>
+            <span className="text-sm text-gray-600">Không có tài khoản?</span>
             <Link
               to={ROUTES.AUTH.REGISTER}
               className="text-primary hover:!underline"
             >
-              Register
+              Đăng ký
             </Link>
           </div>
         </Form>

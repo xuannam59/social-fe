@@ -1,5 +1,11 @@
-import { callApiForgotPassword, callApiVerifyOtp } from '@social/apis/auths.api';
-import type { IForgotPasswordForm, IVerifyOtpForm } from '@social/types/auths.type';
+import {
+  callApiForgotPassword,
+  callApiVerifyOtp,
+} from '@social/apis/auths.api';
+import type {
+  IForgotPasswordForm,
+  IVerifyOtpForm,
+} from '@social/types/auths.type';
 import { Button, Form, Input, message, notification } from 'antd';
 import React, { useEffect, useState } from 'react';
 
@@ -9,7 +15,11 @@ interface IProps {
   handleNextStep: () => void;
 }
 
-const VerifyOtp: React.FC<IProps> = ({ forgotPassword, setForgotPassword, handleNextStep }) => {
+const VerifyOtp: React.FC<IProps> = ({
+  forgotPassword,
+  setForgotPassword,
+  handleNextStep,
+}) => {
   const [form] = Form.useForm();
   const [isLoading, setIsLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -28,11 +38,14 @@ const VerifyOtp: React.FC<IProps> = ({ forgotPassword, setForgotPassword, handle
     setTimeLeft(60);
     const res = await callApiForgotPassword(forgotPassword.email);
     if (res.data) {
-      message.success('OTP has been sent to your email');
+      message.success('OTP đã được gửi đến email của bạn');
     } else {
       notification.error({
         message: res.error,
-        description: res.message && Array.isArray(res.message) ? res.message.join(', ') : res.message,
+        description:
+          res.message && Array.isArray(res.message)
+            ? res.message.join(', ')
+            : res.message,
         duration: 3,
       });
     }
@@ -47,7 +60,7 @@ const VerifyOtp: React.FC<IProps> = ({ forgotPassword, setForgotPassword, handle
 
     const res = await callApiVerifyOtp(data);
     if (res.data) {
-      message.success('OTP verified successfully');
+      message.success('OTP đã được xác thực thành công');
       setForgotPassword(prev => ({
         ...prev,
         otp: values.otp,
@@ -56,7 +69,10 @@ const VerifyOtp: React.FC<IProps> = ({ forgotPassword, setForgotPassword, handle
     } else {
       notification.error({
         message: res.error,
-        description: res.message && Array.isArray(res.message) ? res.message.join(', ') : res.message,
+        description:
+          res.message && Array.isArray(res.message)
+            ? res.message.join(', ')
+            : res.message,
         duration: 3,
       });
     }
@@ -64,16 +80,28 @@ const VerifyOtp: React.FC<IProps> = ({ forgotPassword, setForgotPassword, handle
   };
   return (
     <>
-      <Form layout="vertical" form={form} onFinish={onSubmit} disabled={isLoading}>
-        <Form.Item label="OTP" name="otp" rules={[{ required: true, message: 'OTP is required' }]} className="!mb-0">
+      <Form
+        layout="vertical"
+        form={form}
+        onFinish={onSubmit}
+        disabled={isLoading}
+      >
+        <Form.Item
+          label="OTP"
+          name="otp"
+          rules={[{ required: true, message: 'OTP is required' }]}
+          className="!mb-0"
+        >
           <Input.OTP length={6} className="!w-full" />
         </Form.Item>
         <div className="flex justify-between items-center mb-4">
           {timeLeft > 0 ? (
-            <span className="text-sm text-gray-500">Resend OTP in {timeLeft} seconds</span>
+            <span className="text-sm text-gray-500">
+              Gửi lại OTP trong {timeLeft} giây
+            </span>
           ) : (
             <Button type="link" className="!p-0" onClick={handleResendOtp}>
-              Resend OTP
+              Gửi lại OTP
             </Button>
           )}
         </div>
@@ -87,7 +115,7 @@ const VerifyOtp: React.FC<IProps> = ({ forgotPassword, setForgotPassword, handle
             }}
             className="w-full rounded-lg h-12 font-medium"
           >
-            Verify
+            Xác thực
           </Button>
         </Form.Item>
       </Form>
