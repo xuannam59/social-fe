@@ -3,6 +3,7 @@ import type {
   IFormCreatePost,
   IPost,
   IPostLike,
+  IFormCreatePostShare,
 } from '@social/types/posts.type';
 import type {
   IBackendRes,
@@ -11,6 +12,10 @@ import type {
 
 export const callApiCreatePost = (data: IFormCreatePost) => {
   return axios.post<IBackendRes<IPost>>('/api/v1/posts', data);
+};
+
+export const callApiCreatePostShare = (data: IFormCreatePostShare) => {
+  return axios.post<IBackendRes<IPost>>('/api/v1/posts/share', data);
 };
 
 export const callApiPostLike = (data: IPostLike) => {

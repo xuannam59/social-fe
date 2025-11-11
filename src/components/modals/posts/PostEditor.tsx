@@ -113,38 +113,35 @@ const PostEditor: React.FC<IProps> = ({
     }
   }, [showEmojiPicker, form]);
 
-  const privacyOptions = useMemo(
-    () => [
-      {
-        label: (
-          <div className="flex items-center gap-2">
-            <TbWorld size={16} />
-            <span>Công khai</span>
-          </div>
-        ),
-        value: 'public',
-      },
-      {
-        label: (
-          <div className="flex items-center gap-2">
-            <TbUsers size={16} />
-            <span>Bạn bè</span>
-          </div>
-        ),
-        value: 'friends',
-      },
-      {
-        label: (
-          <div className="flex items-center gap-2">
-            <TbLock size={16} />
-            <span>Chỉ mình tôi</span>
-          </div>
-        ),
-        value: 'private',
-      },
-    ],
-    []
-  );
+  const privacyOptions = [
+    {
+      label: (
+        <div className="flex items-center gap-2">
+          <TbWorld size={16} />
+          <span>Công khai</span>
+        </div>
+      ),
+      value: 'public',
+    },
+    {
+      label: (
+        <div className="flex items-center gap-2">
+          <TbUsers size={16} />
+          <span>Bạn bè</span>
+        </div>
+      ),
+      value: 'friends',
+    },
+    {
+      label: (
+        <div className="flex items-center gap-2">
+          <TbLock size={16} />
+          <span>Chỉ mình tôi</span>
+        </div>
+      ),
+      value: 'private',
+    },
+  ];
 
   useEffect(() => {
     if (dataEdit) {

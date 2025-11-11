@@ -10,6 +10,7 @@ export interface IPostState {
 
 export interface IPost {
   _id: string;
+  parentId?: string;
   content: string;
   privacy: string;
   medias: {
@@ -21,6 +22,7 @@ export interface IPost {
     fullname: string;
     avatar: string;
   };
+  parentPost?: IPost | null;
   userLikes: {
     userId: string;
     type: number;
@@ -29,6 +31,7 @@ export interface IPost {
   userTags: IUserTag[];
   feeling?: string;
   commentCount: number;
+  shareCount: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -42,6 +45,12 @@ export interface IFormCreatePost {
   }>;
   userTags?: string[];
   feeling?: string;
+}
+
+export interface IFormCreatePostShare {
+  content: string;
+  privacy: string;
+  parentId: string;
 }
 
 export interface IPostLike {

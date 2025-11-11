@@ -30,6 +30,7 @@ import PostButtonLike from './PostButtonLike';
 import PostMediaGallery from './PostMediaGallery';
 import { callApiDeletePost } from '@social/apis/posts.api';
 import { doDeletePost } from '@social/redux/reducers/post.reducer';
+import ModalSharePost from '../modals/posts/ModalSharePost';
 
 const { Text } = Typography;
 
@@ -55,6 +56,7 @@ const PostView: React.FC<IProps> = ({
   const dispatch = useAppDispatch();
   const time = formatRelativeTime(post.createdAt);
   const exactTime = formatFullDateTime(post.createdAt);
+  const [openModalSharePost, setOpenModalSharePost] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const totalLikes = useMemo(() => {
     return post.userLikes.length;
@@ -68,6 +70,10 @@ const PostView: React.FC<IProps> = ({
   const isMyPost = useMemo(() => {
     return post.authorId._id === userInfo._id;
   }, [post.authorId._id, userInfo._id]);
+
+  const postParent = useMemo(() => {
+    return post.parentId ? post.parentId : null;
+  }, [post.parentId]);
 
   const medias = useMemo(
     () =>
@@ -240,6 +246,15 @@ const PostView: React.FC<IProps> = ({
               <PostMediaGallery medias={medias} onClick={() => {}} />
             </div>
           )}
+          {post.parentId === null && (
+            <>
+              {/* <div className="px-3 mb-1.5 flex-shrink-0">
+              <div className="text-sm text-gray-800 whitespace-pre-wrap transition-all">
+                {postParent.content}
+              </div>
+            </div> */}
+            </>
+          )}
           <div className="px-3 mb-1.5 flex-shrink-0">
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-1 cursor-pointer">
@@ -288,6 +303,14 @@ const PostView: React.FC<IProps> = ({
                     />
                   </>
                 )}
+                {post.shareCount > 0 && (
+                  <>
+                    <span className="text-gray-500 text-base hover:underline">
+                      {formatNumberAbbreviate(post.shareCount)}
+                    </span>
+                    <TbShare3 size={18} className="text-gray-500" />
+                  </>
+                )}
               </div>
             </div>
             <div className="flex border-t border-gray-200 pt-2">
@@ -304,8 +327,11 @@ const PostView: React.FC<IProps> = ({
                 <TbMessageCircle size={24} className="text-gray-500" />
                 <Text className="text-sm font-semibold">Bình luận</Text>
               </Button>
-              {/* TODO: Chia sẻ */}
-              <Button type="text" className="flex items-center flex-1">
+              <Button
+                type="text"
+                className="flex items-center flex-1"
+                onClick={() => setOpenModalSharePost(true)}
+              >
                 <TbShare3 size={24} className="text-gray-500" />
                 <Text className="text-sm font-semibold">Chia sẻ</Text>
               </Button>
@@ -313,6 +339,11 @@ const PostView: React.FC<IProps> = ({
           </div>
         </div>
       </div>
+      <ModalSharePost
+        open={openModalSharePost}
+        parentId={post.parentId ? post.parentId : post._id}
+        onClose={() => setOpenModalSharePost(false)}
+      />
     </>
   );
 };
