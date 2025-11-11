@@ -5,7 +5,6 @@ import {
   callApiUpdateUserCover,
 } from '@social/apis/user.api';
 import AvatarUser from '@social/components/common/AvatarUser';
-import EmptyState from '@social/components/common/EmptyState';
 import LoadingPostList from '@social/components/loading/LoadingPostList';
 import ModalEditProfile from '@social/components/modals/profiles/ModalEditProfile';
 import ModalUpdateAvatar from '@social/components/modals/profiles/ModalUpdateAvatar';

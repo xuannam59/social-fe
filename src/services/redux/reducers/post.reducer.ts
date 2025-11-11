@@ -10,6 +10,8 @@ const initialState: IPostState = {
   listPosts: [],
   scroll: 0,
   isLoadingPosts: true,
+  total: 0,
+  page: 1,
 };
 
 export const fetchPosts = createAsyncThunk(
@@ -24,8 +26,11 @@ const postSlice = createSlice({
   name: 'post',
   initialState,
   reducers: {
-    setPosts: (state, action) => {
-      state.listPosts = action.payload;
+    doSetScroll: (state, action: PayloadAction<number>) => {
+      state.scroll = action.payload;
+    },
+    doAddMorePosts: (state, action: PayloadAction<IPost[]>) => {
+      state.listPosts = [...state.listPosts, ...action.payload];
     },
     doToggleLike: (
       state,
@@ -65,7 +70,6 @@ const postSlice = createSlice({
     doCreatePost: (state, action: PayloadAction<IPost>) => {
       state.listPosts = [action.payload, ...state.listPosts];
     },
-
     doUpdatePost: (
       state,
       action: PayloadAction<{ index: number; post: IPost }>
@@ -82,12 +86,15 @@ const postSlice = createSlice({
     builder.addCase(fetchPosts.fulfilled, (state, action) => {
       state.listPosts = action.payload.list;
       state.isLoadingPosts = false;
+      state.total = action.payload.meta.total;
+      state.page = action.payload.meta.page;
     });
   },
 });
 
 export const {
-  setPosts,
+  doSetScroll,
+  doAddMorePosts,
   doToggleLike,
   doUpdateCommentCount,
   doCreatePost,

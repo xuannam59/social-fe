@@ -4,6 +4,8 @@ export interface IPostState {
   listPosts: IPost[];
   scroll: number;
   isLoadingPosts: boolean;
+  total: number;
+  page: number;
 }
 
 export interface IPost {
