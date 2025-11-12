@@ -1,7 +1,7 @@
 import { callApiCreateConversation } from '@social/apis/conversations.api';
 import { callApiUploadCloudinary } from '@social/apis/upload.api';
 import { callApiFetchUserFriendList } from '@social/apis/user.api';
-import { formatSlug } from '@social/common/convert';
+import { convertSlug } from '@social/common/convert';
 import AvatarUser from '@social/components/common/AvatarUser';
 import type { ICreateConversation } from '@social/types/conversations.type';
 import type { IUserTag } from '@social/types/user.type';
@@ -64,7 +64,7 @@ const ModalCreateConversation: React.FC<IProps> = ({ open, onClose }) => {
       debounce(async (value: string) => {
         try {
           setIsLoadingFriend(true);
-          const slug = formatSlug(value);
+          const slug = convertSlug(value);
           const query = `limit=10${slug ? `&search=${slug}` : ''}
             ${selectedUsers.length > 0 ? `&exclude=${selectedUsers.map(user => user._id)}` : ''}`;
           const res = await callApiFetchUserFriendList(query);

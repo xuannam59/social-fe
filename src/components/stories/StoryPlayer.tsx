@@ -169,7 +169,7 @@ const StoryPlayer: React.FC<IProps> = ({ isLoading, navigationState }) => {
                   <AvatarUser avatar={authorInfo.avatar} size={40} />
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-base font-medium text-white line-clamp-1">
+                  <span className="text-base font-medium text-white line-clamp-1 text-shadow-lg">
                     {authorInfo.fullName}
                   </span>
                   <span className="text-sm text-white line-clamp-1">

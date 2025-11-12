@@ -12,13 +12,14 @@ import {
 } from '@social/apis/conversations.api';
 import type { IConversation } from '@social/types/conversations.type';
 import { callApiConversationFriendList } from '@social/apis/user.api';
+import type { IUserTag } from '@social/types/user.type';
 
 const initialState: IConversationState = {
   listConversations: [],
   openConversations: [],
-  unSeenConversations: [],
   friendConversations: [],
   groupConversations: [],
+  unSeenConversations: [],
   total: 0,
 };
 
@@ -208,6 +209,138 @@ const conversationSlice = createSlice({
           : oc
       );
     },
+    doAddMemberToConversation: (state, action) => {
+      const { conversationId, users } = action.payload;
+      state.groupConversations = state.groupConversations.map(gc =>
+        gc._id === conversationId
+          ? {
+              ...gc,
+              users: [...gc.users, ...users],
+              usersState: [
+                ...gc.usersState,
+                ...users.map((user: IUserTag) => ({
+                  user: user._id,
+                  readLastMessage: null,
+                })),
+              ],
+            }
+          : gc
+      );
+      state.listConversations = state.listConversations.map(c =>
+        c._id === conversationId
+          ? {
+              ...c,
+              users: [...c.users, ...users],
+              usersState: [
+                ...c.usersState,
+                ...users.map((user: IUserTag) => ({
+                  user: user._id,
+                  readLastMessage: null,
+                })),
+              ],
+            }
+          : c
+      );
+      state.openConversations = state.openConversations.map(oc =>
+        oc._id === conversationId
+          ? {
+              ...oc,
+              users: [...oc.users, ...users],
+              usersState: [
+                ...oc.usersState,
+                ...users.map((user: IUserTag) => ({
+                  user: user._id,
+                  readLastMessage: null,
+                })),
+              ],
+            }
+          : oc
+      );
+    },
+    doRemoveMemberFromConversation: (state, action) => {
+      const { userId, conversationId } = action.payload;
+      state.groupConversations = state.groupConversations.map(gc =>
+        gc._id === conversationId
+          ? {
+              ...gc,
+              users: gc.users.filter(user => user._id !== userId),
+              usersState: gc.usersState.filter(user => user.user !== userId),
+            }
+          : gc
+      );
+      state.listConversations = state.listConversations.map(c =>
+        c._id === conversationId
+          ? {
+              ...c,
+              users: c.users.filter(user => user._id !== userId),
+              usersState: c.usersState.filter(user => user.user !== userId),
+            }
+          : c
+      );
+      state.openConversations = state.openConversations.map(oc =>
+        oc._id === conversationId
+          ? {
+              ...oc,
+              users: oc.users.filter(user => user._id !== userId),
+              usersState: oc.usersState.filter(user => user.user !== userId),
+            }
+          : oc
+      );
+    },
+    doGrantAdminToConversation: (state, action) => {
+      const { userId, conversationId } = action.payload;
+      state.groupConversations = state.groupConversations.map(gc =>
+        gc._id === conversationId
+          ? {
+              ...gc,
+              admins: [...gc.admins, userId],
+            }
+          : gc
+      );
+      state.listConversations = state.listConversations.map(c =>
+        c._id === conversationId
+          ? {
+              ...c,
+              admins: [...c.admins, userId],
+            }
+          : c
+      );
+      state.openConversations = state.openConversations.map(oc =>
+        oc._id === conversationId
+          ? {
+              ...oc,
+              admins: [...oc.admins, userId],
+            }
+          : oc
+      );
+    },
+    doRevokeAdminFromConversation: (state, action) => {
+      const { userId, conversationId } = action.payload;
+      state.groupConversations = state.groupConversations.map(gc =>
+        gc._id === conversationId
+          ? {
+              ...gc,
+              admins: gc.admins.filter(admin => admin !== userId),
+            }
+          : gc
+      );
+      state.listConversations = state.listConversations.map(c =>
+        c._id === conversationId
+          ? {
+              ...c,
+              admins: c.admins.filter(admin => admin !== userId),
+            }
+          : c
+      );
+      state.openConversations = state.openConversations.map(oc =>
+        oc._id === conversationId
+          ? {
+              ...oc,
+              admins: oc.admins.filter(admin => admin !== userId),
+            }
+          : oc
+      );
+    },
   },
   extraReducers: builder => {
     builder.addCase(fetchUnSeenConversations.fulfilled, (state, action) => {
@@ -233,5 +366,9 @@ export const {
   doSetUnSeenConversation,
   doUpdateConversationPosition,
   doReadConversation,
+  doAddMemberToConversation,
+  doRemoveMemberFromConversation,
+  doGrantAdminToConversation,
+  doRevokeAdminFromConversation,
 } = conversationSlice.actions;
 export const conversationReducer = conversationSlice.reducer;

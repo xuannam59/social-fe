@@ -10,7 +10,7 @@ import {
 dayjs.extend(relativeTime);
 dayjs.extend(calendar);
 
-export const formatSlug = (str: string): string => {
+export const convertSlug = (str: string): string => {
   if (!str) return '';
 
   return str
@@ -56,6 +56,7 @@ export const formatRelativeTime = (date: string) => {
 };
 
 export const formatRelativeTimeV2 = (date: string) => {
+  if (!date) return '';
   const dateTime = dayjs(date);
   const diffInSeconds = dayjs().diff(dateTime, 'second');
   const diffInMinutes = dayjs().diff(dateTime, 'minute');

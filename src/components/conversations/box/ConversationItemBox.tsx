@@ -25,6 +25,7 @@ import React, {
 import { TbLoader2, TbX } from 'react-icons/tb';
 import AvatarUser from '../../common/AvatarUser';
 import Loading from '../../loading/Loading';
+import ConversationButtonDots from './ConversationButtonDots';
 import ConversationContent from './ConversationContent';
 import ConversationInput from './ConversationInput';
 import ConversationTyping from './ConversationTyping';
@@ -61,7 +62,8 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
     try {
       if (isExist) return;
       const res = await callApiGetConversationIdOrCreate(
-        conversation.users.map(user => user._id)
+        conversation.users.map(user => user._id),
+        conversation.isGroup
       );
       if (res.data) {
         dispatch(
@@ -376,7 +378,7 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
         ref={conversationBoxRef}
       >
         <div className="p-2 flex items-center shadow-sm">
-          <div className="flex flex-1 gap-2 items-center min-w-0">
+          <div className="flex flex-1 gap-2 items-start min-w-0">
             <div className="shrink-0 relative">
               <AvatarUser avatar={conversation.avatar} size={36} />
               {conversation.isOnline && (
@@ -393,19 +395,25 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
                 <span className="text-sm text-gray-500 truncate leading-4 block">
                   {conversation.isOnline
                     ? 'Đang hoạt động'
-                    : `Hoạt động ${formatRelativeTimeV2(conversation.lastActive)} trước`}
+                    : `${formatRelativeTimeV2(conversation.lastActive)}`}
                 </span>
               </div>
             </div>
           </div>
           <div className="shrink-0 ml-2">
-            <Button
-              type="text"
-              shape="circle"
-              onClick={handleCloseConversation}
-            >
-              <TbX size={20} />
-            </Button>
+            <div className="flex items-center gap-2">
+              {conversation.isGroup && (
+                <ConversationButtonDots conversation={conversation} />
+              )}
+
+              <Button
+                type="text"
+                shape="circle"
+                onClick={handleCloseConversation}
+              >
+                <TbX size={20} />
+              </Button>
+            </div>
           </div>
         </div>
         <div className="flex flex-col min-h-0 h-[400px]">

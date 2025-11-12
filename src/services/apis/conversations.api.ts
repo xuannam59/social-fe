@@ -4,8 +4,12 @@ import type {
   IBackendResPagination,
 } from '@social/types/backend.type';
 import type {
+  IAddMemberToConversation,
   IConversation,
   ICreateConversation,
+  IGrantAdminToConversation,
+  IRemoveMemberFromConversation,
+  IRevokeAdminFromConversation,
 } from '@social/types/conversations.type';
 
 export const callApiGetConversations = (query?: string) => {
@@ -14,10 +18,16 @@ export const callApiGetConversations = (query?: string) => {
   );
 };
 
-export const callApiGetConversationIdOrCreate = (data: string[]) => {
+export const callApiGetConversationIdOrCreate = (
+  userIds: string[],
+  isGroup: boolean
+) => {
   return axios.post<IBackendRes<IConversation>>(
     `/api/v1/conversations/id-or-create`,
-    data
+    {
+      userIds,
+      isGroup,
+    }
   );
 };
 
@@ -43,4 +53,40 @@ export const callApiCreateConversation = (data: ICreateConversation) => {
 
 export const callApiGetGroupConversations = () => {
   return axios.get<IBackendRes<IConversation[]>>(`/api/v1/conversations/group`);
+};
+
+export const callApiAddMemberToConversation = (
+  payload: IAddMemberToConversation
+) => {
+  return axios.patch<IBackendRes<IConversation>>(
+    `/api/v1/conversations/add-members`,
+    payload
+  );
+};
+
+export const callApiRemoveMemberFromConversation = (
+  payload: IRemoveMemberFromConversation
+) => {
+  return axios.patch<IBackendRes<IConversation>>(
+    `/api/v1/conversations/remove-member`,
+    payload
+  );
+};
+
+export const callApiGrantAdminToConversation = (
+  payload: IGrantAdminToConversation
+) => {
+  return axios.patch<IBackendRes<IConversation>>(
+    `/api/v1/conversations/grant-admin`,
+    payload
+  );
+};
+
+export const callApiRevokeAdminFromConversation = (
+  payload: IRevokeAdminFromConversation
+) => {
+  return axios.patch<IBackendRes<IConversation>>(
+    `/api/v1/conversations/revoke-admin`,
+    payload
+  );
 };

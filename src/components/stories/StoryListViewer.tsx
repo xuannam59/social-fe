@@ -58,7 +58,7 @@ const StoryListViewer = () => {
             }}
           >
             <div className="flex items-center gap-0.5">
-              <span className="text-white text-base font-semibold ">
+              <span className="text-white text-base font-semibold text-shadow-lg">
                 Xem thông tin
               </span>
               <TbChevronUp size={20} className="text-white" />

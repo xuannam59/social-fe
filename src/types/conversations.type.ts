@@ -15,6 +15,7 @@ export interface IConversation {
     user: string;
     readLastMessage: string;
   }[];
+  admins: string[];
   lastMessage?: {
     _id: string;
     content: string;
@@ -30,8 +31,8 @@ export interface IConversation {
 export interface IConversationState {
   openConversations: IConversation[];
   listConversations: IConversation[];
-  friendConversations: IUserConversation[];
   groupConversations: IConversation[];
+  friendConversations: IUserConversation[];
   total: number;
   unSeenConversations: string[];
 }
@@ -44,4 +45,24 @@ export interface ICreateConversation {
   name: string;
   avatar: string;
   userIds: string[];
+}
+
+export interface IAddMemberToConversation {
+  userIds: string[];
+  conversationId: string;
+}
+
+export interface IRemoveMemberFromConversation {
+  userId: string;
+  conversationId: string;
+}
+
+export interface IGrantAdminToConversation {
+  userId: string;
+  conversationId: string;
+}
+
+export interface IRevokeAdminFromConversation {
+  userId: string;
+  conversationId: string;
 }

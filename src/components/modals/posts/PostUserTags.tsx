@@ -1,5 +1,5 @@
 import { callApiFetchUserFriendList } from '@social/apis/user.api';
-import { formatSlug } from '@social/common/convert';
+import { convertSlug } from '@social/common/convert';
 import EmptyState from '@social/components/common/EmptyState';
 import InputSearch from '@social/components/common/InputSearch';
 import Loading from '@social/components/loading/Loading';
@@ -96,7 +96,7 @@ const PostUserTags: React.FC<IProps> = ({ onBack, addUserTag, userTags }) => {
       debounce(async (value: string) => {
         setIsLoading(true);
         try {
-          const slug = formatSlug(value);
+          const slug = convertSlug(value);
           const query = `limit=10${slug ? `&search=${slug}` : ''}
             ${selectedUser.length > 0 ? `&exclude=${selectedUser.map(user => user._id)}` : ''}`;
           const res = await callApiFetchUserFriendList(query);

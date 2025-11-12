@@ -94,10 +94,6 @@ const PostView: React.FC<IProps> = ({
     [onLikePost]
   );
 
-  if (postParent) {
-    console.log(postParent);
-  }
-
   const handleNavigateToProfile = () => {
     navigate(`/${post.authorId._id}`);
   };

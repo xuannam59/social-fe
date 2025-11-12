@@ -10,7 +10,7 @@ import AvatarUser from './AvatarUser';
 import type { IMentionUser } from '@social/types/user.type';
 import { callApiFetchUserFriendList } from '@social/apis/user.api';
 import { debounce } from 'lodash';
-import { formatSlug } from '@social/common/convert';
+import { convertSlug } from '@social/common/convert';
 
 const MentionsInputComponent = MentionsInput as any;
 const MentionComponent = Mention as any;
@@ -58,7 +58,7 @@ const MentionsUser: React.FC<IProps> = ({
     () =>
       debounce(async (query: string, callback) => {
         try {
-          const slug = formatSlug(query);
+          const slug = convertSlug(query);
           const res = await callApiFetchUserFriendList(
             `limit=10${slug ? `&search=${slug}` : ''}`
           );
