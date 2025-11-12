@@ -10,7 +10,7 @@ export interface IPostState {
 
 export interface IPost {
   _id: string;
-  parentId?: string;
+  parentId?: IPost;
   content: string;
   privacy: string;
   medias: {

@@ -14,3 +14,9 @@ export const callApiGetNotifications = (query?: string) => {
 export const callApiGetUnSeenNotifications = () => {
   return axios.get<IBackendRes<string[]>>(`/api/v1/notifications/un-seen`);
 };
+
+export const callApiReadNotifications = (notificationId: string) => {
+  return axios.patch<IBackendRes<string>>(
+    `/api/v1/notifications/read/${notificationId}`
+  );
+};

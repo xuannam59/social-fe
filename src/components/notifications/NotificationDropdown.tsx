@@ -3,10 +3,12 @@ import {
   callApiGetUnSeenNotifications,
 } from '@social/apis/notifications.api';
 import { convertNotificationMessage } from '@social/common/convert';
+import { POST_DEFAULT } from '@social/defaults/post';
 import { NOTIFICATION_MESSAGE } from '@social/defaults/socket.default';
 import { useSockets } from '@social/providers/SocketProvider';
 import type { INotificationResponse } from '@social/types/notifications.type';
-import { Badge, Button, Dropdown, notification, Spin, Typography } from 'antd';
+import type { IPost } from '@social/types/posts.type';
+import { Badge, Dropdown, notification, Spin, Typography } from 'antd';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { TbBell, TbX } from 'react-icons/tb';
 import AvatarUser from '../common/AvatarUser';
@@ -14,8 +16,6 @@ import EmptyState from '../common/EmptyState';
 import LoadingComment from '../loading/LoadingComment';
 import NotificationItem from './NotificationItem';
 import NotificationPost from './NotificationPost';
-import { POST_DEFAULT } from '@social/defaults/post';
-import type { IPost } from '@social/types/posts.type';
 
 const { Title } = Typography;
 
@@ -184,6 +184,7 @@ const NotificationDropdown = () => {
             setNotificationList(res.data.list);
             setCurrentPage(1);
             setHasMore(res.data.list.length < res.data.meta.total);
+            setUnSeenNotifications(new Set());
           } else {
             notification.error({
               message: 'Lỗi',

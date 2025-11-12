@@ -9,7 +9,8 @@ import {
   convertNotificationMessage,
   formatRelativeTimeV2,
 } from '@social/common/convert';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { callApiReadNotifications } from '@social/apis/notifications.api';
 
 interface IProps {
   notification: INotificationResponse;
@@ -25,16 +26,19 @@ const NotificationItem: React.FC<IProps> = ({
   const lasSenderInfo = useMemo(() => {
     return notification.senderIds[notification.senderIds.length - 1];
   }, [notification.senderIds]);
+  const [isRead, setIsRead] = useState(notification.isRead);
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       e.preventDefault();
       e.stopPropagation();
+      setIsRead(true);
       switch (notification.entityType) {
         case EEntityType.POST:
           onSetPostDetail(notification.entityId);
           break;
       }
 
+      callApiReadNotifications(notification._id);
       onCloseDropdown();
     },
     [notification, onCloseDropdown, onSetPostDetail]
@@ -70,7 +74,7 @@ const NotificationItem: React.FC<IProps> = ({
                   </span>
                 </div>
 
-                {!notification.isRead && (
+                {!isRead && (
                   <div className="ml-1 h-full">
                     <TbPointFilled size={25} className="text-sky-500" />
                   </div>

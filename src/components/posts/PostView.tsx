@@ -14,6 +14,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   TbDots,
   TbLock,
+  TbLockFilled,
   TbMessageCircle,
   TbMessageCircleFilled,
   TbPencil,
@@ -31,6 +32,7 @@ import PostMediaGallery from './PostMediaGallery';
 import { callApiDeletePost } from '@social/apis/posts.api';
 import { doDeletePost } from '@social/redux/reducers/post.reducer';
 import ModalSharePost from '../modals/posts/ModalSharePost';
+import PostShareContent from './PostShareContent';
 
 const { Text } = Typography;
 
@@ -91,6 +93,10 @@ const PostView: React.FC<IProps> = ({
     },
     [onLikePost]
   );
+
+  if (postParent) {
+    console.log(postParent);
+  }
 
   const handleNavigateToProfile = () => {
     navigate(`/${post.authorId._id}`);
@@ -246,14 +252,31 @@ const PostView: React.FC<IProps> = ({
               <PostMediaGallery medias={medias} onClick={() => {}} />
             </div>
           )}
-          {post.parentId === null && (
+          {(post.parentId === null ||
+            (post.parentId && post.parentId.privacy === 'private')) && (
             <>
-              {/* <div className="px-3 mb-1.5 flex-shrink-0">
-              <div className="text-sm text-gray-800 whitespace-pre-wrap transition-all">
-                {postParent.content}
+              <div className="w-full px-3">
+                <div className="border border-gray-200 p-2">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-shrink-0">
+                      <TbLockFilled size={30} />
+                    </div>
+                    <div className="flex-1 flex flex-col">
+                      <div className="text-sm font-semibold">
+                        Nội Dung bài viết không thể hiển thị
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        Lỗi này thường do chủ sở hữu đã thay đổi người được xem
+                        hoặc xóa nội dung.
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div> */}
             </>
+          )}
+          {postParent && postParent.privacy !== 'private' && (
+            <PostShareContent post={postParent} />
           )}
           <div className="px-3 mb-1.5 flex-shrink-0">
             <div className="flex items-center justify-between mb-1">
@@ -341,7 +364,7 @@ const PostView: React.FC<IProps> = ({
       </div>
       <ModalSharePost
         open={openModalSharePost}
-        parentId={post.parentId ? post.parentId : post._id}
+        parentId={post.parentId ? post.parentId._id : post._id}
         onClose={() => setOpenModalSharePost(false)}
       />
     </>
