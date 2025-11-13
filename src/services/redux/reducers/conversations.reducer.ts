@@ -3,7 +3,10 @@ import {
   createSlice,
   type PayloadAction,
 } from '@reduxjs/toolkit';
-import type { IConversationState } from '@social/types/conversations.type';
+import type {
+  IConversationState,
+  IEditConversation,
+} from '@social/types/conversations.type';
 import {
   callApiGetConversations,
   callApiGetGroupConversations,
@@ -341,6 +344,32 @@ const conversationSlice = createSlice({
           : oc
       );
     },
+    doCreateConversation: (state, action: PayloadAction<IConversation>) => {
+      state.groupConversations.unshift(action.payload);
+    },
+    doEditConversation: (state, action: PayloadAction<IEditConversation>) => {
+      const { conversationId, name, avatar } = action.payload;
+      state.groupConversations = state.groupConversations.map(gc =>
+        gc._id === conversationId ? { ...gc, name, avatar } : gc
+      );
+      state.listConversations = state.listConversations.map(c =>
+        c._id === conversationId ? { ...c, name, avatar } : c
+      );
+      state.openConversations = state.openConversations.map(oc =>
+        oc._id === conversationId ? { ...oc, name, avatar } : oc
+      );
+    },
+    doDeleteConversation: (state, action: PayloadAction<string>) => {
+      state.groupConversations = state.groupConversations.filter(
+        gc => gc._id !== action.payload
+      );
+      state.listConversations = state.listConversations.filter(
+        c => c._id !== action.payload
+      );
+      state.openConversations = state.openConversations.filter(
+        oc => oc._id !== action.payload
+      );
+    },
   },
   extraReducers: builder => {
     builder.addCase(fetchUnSeenConversations.fulfilled, (state, action) => {
@@ -370,5 +399,8 @@ export const {
   doRemoveMemberFromConversation,
   doGrantAdminToConversation,
   doRevokeAdminFromConversation,
+  doEditConversation,
+  doCreateConversation,
+  doDeleteConversation,
 } = conversationSlice.actions;
 export const conversationReducer = conversationSlice.reducer;

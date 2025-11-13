@@ -378,7 +378,7 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
         ref={conversationBoxRef}
       >
         <div className="p-2 flex items-center shadow-sm">
-          <div className="flex flex-1 gap-2 items-start min-w-0">
+          <div className="flex flex-1 gap-2 items-center min-w-0">
             <div className="shrink-0 relative">
               <AvatarUser avatar={conversation.avatar} size={36} />
               {conversation.isOnline && (

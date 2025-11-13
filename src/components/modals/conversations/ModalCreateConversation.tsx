@@ -25,6 +25,8 @@ import {
   type ChangeEvent,
 } from 'react';
 import { TbLoader2, TbPhotoPlus, TbX } from 'react-icons/tb';
+import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
+import { doCreateConversation } from '@social/redux/reducers/conversations.reducer';
 
 interface IProps {
   open: boolean;
@@ -34,13 +36,14 @@ interface IProps {
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
 
 const ModalCreateConversation: React.FC<IProps> = ({ open, onClose }) => {
+  const userInfo = useAppSelector(state => state.auth.userInfo);
   const [avatar, setAvatar] = useState<UploadFile | null>(null);
   const [isLoadingFriend, setIsLoadingFriend] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [listFriend, setListFriend] = useState<IUserTag[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<IUserTag[]>([]);
   const [form] = Form.useForm();
-
+  const dispatch = useAppDispatch();
   const fetchUserFriendList = useCallback(async () => {
     try {
       setIsLoadingFriend(true);
@@ -154,7 +157,25 @@ const ModalCreateConversation: React.FC<IProps> = ({ open, onClose }) => {
       const res = await callApiCreateConversation(data);
       if (res.data) {
         message.success('Tạo nhóm chat thành công');
-        console.log(res.data);
+        dispatch(
+          doCreateConversation({
+            ...res.data,
+            users: [
+              {
+                _id: userInfo._id,
+                fullname: userInfo.fullname,
+                avatar: userInfo.avatar,
+                isOnline: userInfo.isOnline,
+              },
+              ...selectedUsers.map(user => ({
+                _id: user._id,
+                fullname: user.fullname,
+                avatar: user.avatar,
+                isOnline: false,
+              })),
+            ],
+          })
+        );
         handleCancel();
       } else {
         message.error(res.message);
@@ -183,6 +204,7 @@ const ModalCreateConversation: React.FC<IProps> = ({ open, onClose }) => {
     setSelectedUsers(prev => prev.filter(item => item._id !== user._id));
     setListFriend(prev => [user, ...prev]);
   }, []);
+
   return (
     <>
       <Modal
@@ -210,28 +232,26 @@ const ModalCreateConversation: React.FC<IProps> = ({ open, onClose }) => {
               layout="vertical"
               disabled={isLoading}
             >
-              <div className="flex flex-col mb-2">
-                <Form.Item label="Avatar" className="!mb-2">
-                  <Upload
-                    accept="image/*"
-                    multiple={false}
-                    listType="picture-circle"
-                    onChange={handleUploadChange}
-                    fileList={avatar ? [avatar] : []}
-                    beforeUpload={beforeUpload}
-                  >
-                    {avatar ? null : <TbPhotoPlus size={20} />}
-                  </Upload>
-                </Form.Item>
-                <div className="col-span-6">
-                  <span className="text-sm">Kéo thả hoặc bấm để chọn ảnh</span>
-                  <span className="text-xs text-gray-500">
-                    PNG/JPG/WebP · &lt; 1MB
-                  </span>
-                </div>
+              <div className="flex flex-col items-center mb-2">
+                <div className="text-base mb-2">Ảnh đại diện nhóm</div>
+                <Upload
+                  accept="image/*"
+                  multiple={false}
+                  listType="picture-circle"
+                  onChange={handleUploadChange}
+                  fileList={avatar ? [avatar] : []}
+                  beforeUpload={beforeUpload}
+                >
+                  {avatar ? null : <TbPhotoPlus size={20} />}
+                </Upload>
+
+                <span className="text-sm">Kéo thả hoặc bấm để chọn ảnh</span>
+                <span className="text-xs text-gray-500">
+                  PNG/JPG/WebP · &lt; 1MB
+                </span>
               </div>
-              <div className="grid grid-cols-12 gap-2">
-                <div className="col-span-6">
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
                   <Form.Item
                     name="name"
                     label="Tên nhóm"
@@ -243,7 +263,7 @@ const ModalCreateConversation: React.FC<IProps> = ({ open, onClose }) => {
                     <Input placeholder="Nhập tên nhóm" allowClear />
                   </Form.Item>
                 </div>
-                <div className="col-span-6">
+                <div className="flex-1">
                   <Form.Item label="Tim bạn bè" className="!mb-2">
                     <Input
                       placeholder="Tìm bạn bè"
@@ -253,27 +273,41 @@ const ModalCreateConversation: React.FC<IProps> = ({ open, onClose }) => {
                   </Form.Item>
                 </div>
               </div>
-              {selectedUsers.length > 0 && (
-                <div className="mb-2 p-2 border border-gray-200 rounded-lg">
-                  <span className="text-base font-medium">Đã chọn</span>
-                  <div className="flex items-center gap-2 flex-wrap">
+              <div className="h-25 mb-2">
+                {selectedUsers.length > 0 ? (
+                  <div className="flex gap-2 overflow-x-auto overflow-y-hidden h-full px-8">
                     {selectedUsers.map(user => (
                       <div
                         key={user._id}
-                        className="px-2 py-1 rounded-full bg-primary text-white flex items-center gap-1"
+                        className="flex flex-col items-center w-[80px] relative flex-shrink-0"
                       >
-                        <span className="text-base">{user.fullname}</span>
-                        <div
-                          className="size-5 rounded-full cursor-pointer hover:bg-black/10 flex items-center justify-center"
-                          onClick={() => handleRemoveUser(user)}
-                        >
-                          <TbX size={16} />
+                        <div className="h-[60%]">
+                          <AvatarUser avatar={user.avatar} size={42} />
+                        </div>
+                        <div className="h-[40%]">
+                          <div className="text-sm text-center text-gray-500 break-warp line-clamp-2">
+                            {user.fullname}
+                          </div>
+                        </div>
+                        <div className="absolute top-0 right-3">
+                          <div
+                            className="bg-white rounded-full p-0.5 shadow-lg border border-gray-200 cursor-pointer"
+                            onClick={() => handleRemoveUser(user)}
+                          >
+                            <TbX size={14} />
+                          </div>
                         </div>
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <span className="text-base text-gray-500">
+                      Chưa chọn thành viên nào
+                    </span>
+                  </div>
+                )}
+              </div>
               <div className="flex-1 max-h-[200px] overflow-y-auto overflow-x-hidden">
                 <div className="mb-1">
                   <span className="text-h4 font-medium">Bạn bè</span>
@@ -316,6 +350,7 @@ const ModalCreateConversation: React.FC<IProps> = ({ open, onClose }) => {
               htmlType="submit"
               onClick={() => form.submit()}
               loading={isLoading}
+              className="w-full"
             >
               Tạo nhóm
             </Button>

@@ -1,5 +1,6 @@
 import {
   callApiGrantAdminToConversation,
+  callApiLeaveConversation,
   callApiRemoveMemberFromConversation,
   callApiRevokeAdminFromConversation,
 } from '@social/apis/conversations.api';
@@ -9,6 +10,7 @@ import {
   doGrantAdminToConversation,
   doRemoveMemberFromConversation,
   doRevokeAdminFromConversation,
+  doDeleteConversation,
 } from '@social/redux/reducers/conversations.reducer';
 import type { IConversation } from '@social/types/conversations.type';
 import { Button, Dropdown, message, Modal, Tabs } from 'antd';
@@ -120,12 +122,23 @@ const ModalConversationMember: React.FC<IProps> = ({
     }
   };
 
-  const handleLeaveConversation = useCallback(() => {
-    if (adminIds.size < 2) {
-      message.error('Vui lòng có ít nhất 2 quản trị viên');
-      return;
+  const handleLeaveConversation = useCallback(async () => {
+    try {
+      if (adminIds.size < 2) {
+        message.error('Vui lòng có ít nhất 2 quản trị viên');
+        return;
+      }
+      const res = await callApiLeaveConversation(conversation._id);
+      if (res.data) {
+        message.success('Rời nhóm thành công');
+        dispatch(doDeleteConversation(conversation._id));
+      } else {
+        message.error(res.message);
+      }
+    } catch (error) {
+      console.log(error);
     }
-  }, [adminIds.size]);
+  }, [adminIds.size, dispatch, conversation._id]);
 
   const handleRemoveAdmin = async (userId: string) => {
     try {
@@ -219,8 +232,7 @@ const ModalConversationMember: React.FC<IProps> = ({
                             icon: <TbUserCircle size={20} />,
                             onClick: () => handleViewProfile(user._id),
                           },
-                          ...(adminIds.has(user._id) &&
-                          user._id !== userInfo._id
+                          ...(!adminIds.has(user._id)
                             ? [
                                 {
                                   label: 'Xoá thành viên',
@@ -235,7 +247,16 @@ const ModalConversationMember: React.FC<IProps> = ({
                                   onClick: () => handleAddAdmin(user._id),
                                 },
                               ]
-                            : []),
+                            : user._id !== userInfo._id
+                              ? [
+                                  {
+                                    label: 'Gỡ quản trị viên',
+                                    key: 'removeAdmin',
+                                    icon: <TbUserX size={20} />,
+                                    onClick: () => handleRemoveAdmin(user._id),
+                                  },
+                                ]
+                              : []),
                           ...(user._id === userInfo._id
                             ? [
                                 {

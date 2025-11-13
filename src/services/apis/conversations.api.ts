@@ -7,6 +7,7 @@ import type {
   IAddMemberToConversation,
   IConversation,
   ICreateConversation,
+  IEditConversation,
   IGrantAdminToConversation,
   IRemoveMemberFromConversation,
   IRevokeAdminFromConversation,
@@ -89,4 +90,20 @@ export const callApiRevokeAdminFromConversation = (
     `/api/v1/conversations/revoke-admin`,
     payload
   );
+};
+
+export const callApiEditConversation = (data: IEditConversation) => {
+  return axios.patch<IBackendRes<string>>(`/api/v1/conversations/edit`, data);
+};
+
+export const callApiDeleteConversation = (conversationId: string) => {
+  return axios.delete<IBackendRes<string>>(
+    `/api/v1/conversations/${conversationId}`
+  );
+};
+
+export const callApiLeaveConversation = (conversationId: string) => {
+  return axios.patch<IBackendRes<string>>(`/api/v1/conversations/leave`, {
+    conversationId,
+  });
 };

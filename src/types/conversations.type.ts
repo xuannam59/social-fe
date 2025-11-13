@@ -37,6 +37,12 @@ export interface IConversationState {
   unSeenConversations: string[];
 }
 
+export interface IEditConversation {
+  name: string;
+  avatar: string;
+  conversationId: string;
+}
+
 export interface IFetchConversationResponse {
   conversations: IConversation[];
 }
