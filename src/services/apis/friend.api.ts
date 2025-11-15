@@ -1,5 +1,5 @@
-import type { IBackendRes } from '@social/types/backend.type';
 import axios from '@social/configs/axios/axiosCustom';
+import type { IBackendRes } from '@social/types/backend.type';
 import type { IFriend } from '@social/types/friends.type';
 
 export const callApiRequestFriend = (toUserId: string) => {

@@ -7,7 +7,7 @@ import PostFelling from './PostFelling';
 import PostUserTags from './PostUserTags';
 import { callApiCreatePost } from '@social/apis/posts.api';
 import { smartUpload } from '@social/common/uploads';
-import type { IPreviewMedia } from '@social/types/posts.type';
+import type { IPost, IPreviewMedia } from '@social/types/posts.type';
 import { convertErrorMessage } from '@social/common/convert';
 import { useSockets } from '@social/providers/SocketProvider';
 import { NOTIFICATION_MESSAGE } from '@social/defaults/socket.default';
@@ -20,14 +20,16 @@ interface IProps {
   onClose: () => void;
   onOpenChooseFile: (type: 'image' | 'video') => void;
   onDeleteFile: () => void;
+  onAddPostMySelf?: (post: IPost) => void;
 }
 
 const ModalCreatePost: React.FC<IProps> = ({
   isOpen,
-  onClose,
   medias,
+  onClose,
   onOpenChooseFile,
   onDeleteFile,
+  onAddPostMySelf,
 }) => {
   const [openContent, setOpenContent] = useState<EOpenContent>(
     EOpenContent.POST
@@ -97,6 +99,17 @@ const ModalCreatePost: React.FC<IProps> = ({
             userTags: userTags,
           })
         );
+        if (onAddPostMySelf) {
+          onAddPostMySelf({
+            ...res.data,
+            authorId: {
+              _id: userInfo._id,
+              fullname: userInfo.fullname,
+              avatar: userInfo.avatar,
+            },
+            userTags: userTags,
+          });
+        }
         message.success('Tạo bài viết thành công');
         if (userTags.length > 0) {
           socket.emit(NOTIFICATION_MESSAGE.POST_TAG, {
@@ -115,7 +128,16 @@ const ModalCreatePost: React.FC<IProps> = ({
         setIsLoading(false);
       }
     },
-    [userTags, feeling, medias, handleCancel, socket, dispatch, userInfo]
+    [
+      userTags,
+      feeling,
+      medias,
+      handleCancel,
+      socket,
+      dispatch,
+      userInfo,
+      onAddPostMySelf,
+    ]
   );
 
   const onAddUserTag = useCallback((user: IUserTag[]) => {

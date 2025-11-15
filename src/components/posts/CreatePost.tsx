@@ -1,7 +1,7 @@
 import { formatFile } from '@social/common/convert';
 import { useAppSelector } from '@social/hooks/redux.hook';
 import defaultAvatar from '@social/images/default-avatar.webp';
-import type { IPreviewMedia } from '@social/types/posts.type';
+import type { IPost, IPreviewMedia } from '@social/types/posts.type';
 import { Button } from 'antd';
 import { useCallback, useRef, useState } from 'react';
 import { FcAddImage, FcVideoCall } from 'react-icons/fc';
@@ -9,7 +9,11 @@ import { Link } from 'react-router-dom';
 import AvatarUser from '../common/AvatarUser';
 import ModalCreatePost from '../modals/posts/ModalCreatePost';
 
-const CreatePost = () => {
+interface IProps {
+  onAddPostMySelf?: (post: IPost) => void;
+}
+
+const CreatePost: React.FC<IProps> = ({ onAddPostMySelf }) => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -113,6 +117,7 @@ const CreatePost = () => {
         onClose={handleCancel}
         onOpenChooseFile={onOpenChooseFile}
         onDeleteFile={onDeleteFile}
+        onAddPostMySelf={onAddPostMySelf}
       />
     </>
   );

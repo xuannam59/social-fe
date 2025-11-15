@@ -65,7 +65,7 @@ const FriendItemCard: React.FC<IProps> = ({ friend }) => {
             </div>
           )}
         </div>
-        <span className="text-base">{friend.fullname}</span>
+        <span className="text-base line-clamp-1">{friend.fullname}</span>
       </div>
     </>
   );

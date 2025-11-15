@@ -29,7 +29,6 @@ const AppRoutes = () => {
             <Route path={ROUTES.DEFAULT} element={<HomePages />} />
             <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
             <Route path={ROUTES.WATCH} element={<div>helloworld</div>} />
-            <Route path={ROUTES.GROUPS} element={<div>helloworld</div>} />
           </Route>
           <Route element={<StoryLayout />}>
             <Route path={ROUTES.STORY.CREATE} element={<StoryCreate />} />

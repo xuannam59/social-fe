@@ -9,6 +9,7 @@ export interface IUser {
   address?: string;
   followers: string[];
   following: string[];
+  friends: string[];
   role: string;
   isActive: boolean;
   isOnline: boolean;

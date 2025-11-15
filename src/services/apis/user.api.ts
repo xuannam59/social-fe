@@ -1,4 +1,7 @@
-import type { IBackendRes } from '@social/types/backend.type';
+import type {
+  IBackendRes,
+  IBackendResPagination,
+} from '@social/types/backend.type';
 import axios from '@social/configs/axios/axiosCustom';
 import type {
   IUser,
@@ -33,4 +36,13 @@ export const callApiUpdateUserCover = async (cover: string) => {
 
 export const callApiUpdateProfile = async (data: IUpdateProfile) => {
   return axios.patch<IBackendRes<string>>(`/api/v1/users/profile`, data);
+};
+
+export const callApiGetFriendByUserId = async (
+  userId: string,
+  query?: string
+) => {
+  return axios.get<IBackendResPagination<IUser[]>>(
+    `/api/v1/users/friends/${userId}?${query || ''}`
+  );
 };

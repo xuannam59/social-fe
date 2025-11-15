@@ -19,11 +19,6 @@ const HeaderMenu = () => {
       path: ROUTES.WATCH,
       title: 'Watch',
     },
-    {
-      icon: <TbUsersGroup size={25} />,
-      path: ROUTES.GROUPS,
-      title: 'Groups',
-    },
   ];
 
   useEffect(() => {

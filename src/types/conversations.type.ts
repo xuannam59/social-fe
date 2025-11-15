@@ -15,7 +15,7 @@ export interface IConversation {
     user: string;
     readLastMessage: string;
   }[];
-  admins: string[];
+  admins?: string[];
   lastMessage?: {
     _id: string;
     content: string;

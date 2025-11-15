@@ -9,7 +9,7 @@ import AvatarUser from '../common/AvatarUser';
 import ConversationDropdown from '../conversations/ConversationDropdown';
 import NotificationDropdown from '../notifications/NotificationDropdown';
 import defaultAvatar from '@social/images/default-avatar.webp';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { fetchUnSeenConversations } from '@social/redux/reducers/conversations.reducer';
 
 const { Text } = Typography;
@@ -18,6 +18,7 @@ const HeaderUserInfo = () => {
   const { userInfo } = useAppSelector(state => state.auth);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const [openDropdown, setOpenDropdown] = useState(false);
   const handleLogout = async () => {
     const res = await callApiLogout();
     if (res.data) {
@@ -38,6 +39,8 @@ const HeaderUserInfo = () => {
 
         <NotificationDropdown />
         <Dropdown
+          open={openDropdown}
+          onOpenChange={setOpenDropdown}
           trigger={['click']}
           placement={'bottomRight'}
           className="cursor-pointer"
@@ -53,6 +56,7 @@ const HeaderUserInfo = () => {
                       className="flex items-center justify-start gap-2 cursor-pointer hover:bg-gray-100 rounded-lg p-2"
                       onClick={() => {
                         navigate(`/${userInfo._id}`);
+                        setOpenDropdown(false);
                       }}
                     >
                       <AvatarUser
@@ -65,7 +69,13 @@ const HeaderUserInfo = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-start gap-2 cursor-pointer hover:bg-gray-100 rounded-lg p-2 mt-3">
+                  <div
+                    className="flex items-center justify-start gap-2 cursor-pointer hover:bg-gray-100 rounded-lg p-2 mt-3"
+                    onClick={() => {
+                      // navigate(ROUTES.SETTINGS);
+                      setOpenDropdown(false);
+                    }}
+                  >
                     <div className="flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full">
                       <TbSettings size={25} />
                     </div>
@@ -86,7 +96,11 @@ const HeaderUserInfo = () => {
             );
           }}
         >
-          <AvatarUser size={40} avatar={userInfo?.avatar || defaultAvatar} />
+          <AvatarUser
+            size={40}
+            avatar={userInfo.avatar}
+            onClick={() => setOpenDropdown(!openDropdown)}
+          />
         </Dropdown>
       </div>
     </>

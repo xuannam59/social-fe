@@ -27,6 +27,7 @@ const ConversationButtonDots: React.FC<IProps> = ({ conversation }) => {
   const [openModalUpdate, setOpenModalUpdate] = useState(false);
   const [isLoadingDelete, setIsLoadingDelete] = useState(false);
   const isAdmin = useMemo(() => {
+    if (!conversation.admins) return false;
     return conversation.admins.includes(userInfo._id);
   }, [conversation.admins, userInfo._id]);
 
@@ -43,6 +44,13 @@ const ConversationButtonDots: React.FC<IProps> = ({ conversation }) => {
           </span>
         </>
       ),
+      okButtonProps: {
+        loading: isLoadingDelete,
+      },
+      cancelButtonProps: {
+        loading: isLoadingDelete,
+      },
+      maskClosable: false,
       centered: true,
       okText: 'Xoá',
       cancelText: 'Hủy',
@@ -58,10 +66,12 @@ const ConversationButtonDots: React.FC<IProps> = ({ conversation }) => {
           }
         } catch (error) {
           console.log(error);
+        } finally {
+          setIsLoadingDelete(false);
         }
       },
     });
-  }, [conversation._id, dispatch]);
+  }, [conversation._id, dispatch, isLoadingDelete]);
 
   const handleOpenModalMember = useCallback(() => {
     setOpenModalMember(true);
