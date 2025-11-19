@@ -1,6 +1,7 @@
 import {
   callApiGetNotifications,
   callApiGetUnSeenNotifications,
+  callApiUpdateSeenNotifications,
 } from '@social/apis/notifications.api';
 import { convertNotificationMessage } from '@social/common/convert';
 import { POST_DEFAULT } from '@social/defaults/post';
@@ -159,6 +160,9 @@ const NotificationDropdown = () => {
               </div>
             </>
           ),
+          onClick: () => {
+            notification.destroy(data._id);
+          },
           duration: 2.5,
           closeIcon: null,
           className: '!px-4 !py-3',
@@ -187,34 +191,50 @@ const NotificationDropdown = () => {
   const handleOpenDropdown = useCallback(
     async (visible: boolean) => {
       setOpenDropdown(visible);
-      if (visible && notificationList.length === 0) {
-        setIsLoading(true);
-
-        try {
-          const res = await callApiGetNotifications('page=1&limit=10');
-          if (res.data) {
-            setNotificationList(res.data.list);
-            setCurrentPage(1);
-            setHasMore(res.data.list.length < res.data.meta.total);
-            setUnSeenNotifications(new Set());
-          } else {
+      if (visible) {
+        if (notificationList.length === 0) {
+          setIsLoading(true);
+          try {
+            const res = await callApiGetNotifications('page=1&limit=10');
+            if (res.data) {
+              setNotificationList(res.data.list);
+              setCurrentPage(1);
+              setHasMore(res.data.list.length < res.data.meta.total);
+              setUnSeenNotifications(new Set());
+            } else {
+              notification.error({
+                message: 'Lỗi',
+                description: res.message,
+              });
+            }
+          } catch (error) {
+            console.log(error);
             notification.error({
               message: 'Lỗi',
-              description: res.message,
+              description: 'Không tải được thông báo',
             });
+          } finally {
+            setIsLoading(false);
           }
-        } catch (error) {
-          console.log(error);
-          notification.error({
-            message: 'Lỗi',
-            description: 'Không tải được thông báo',
-          });
-        } finally {
-          setIsLoading(false);
+        }
+        if (unSeenNotifications.size > 0) {
+          try {
+            const res = await callApiUpdateSeenNotifications();
+            if (res.data) {
+              setUnSeenNotifications(new Set());
+            } else {
+              notification.error({
+                message: 'Lỗi',
+                description: res.message,
+              });
+            }
+          } catch (error) {
+            console.log(error);
+          }
         }
       }
     },
-    [notificationList]
+    [notificationList, unSeenNotifications]
   );
 
   const handleCloseDropdown = useCallback(() => {

@@ -20,3 +20,7 @@ export const callApiReadNotifications = (notificationId: string) => {
     `/api/v1/notifications/read/${notificationId}`
   );
 };
+
+export const callApiUpdateSeenNotifications = () => {
+  return axios.patch<IBackendRes<string>>(`/api/v1/notifications/seen`);
+};

@@ -1,12 +1,9 @@
+import { ENotificationType } from '@social/types/notifications.type';
 import type { IPreviewMedia } from '@social/types/posts.type';
 import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
 import calendar from 'dayjs/plugin/calendar';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  EEntityType,
-  ENotificationType,
-} from '@social/types/notifications.type';
 dayjs.extend(relativeTime);
 dayjs.extend(calendar);
 
