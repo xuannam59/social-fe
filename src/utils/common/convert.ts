@@ -187,5 +187,9 @@ export const convertNotificationMessage = (
       return ` đã trả lời bình luận của bạn: ${message}`;
     case ENotificationType.STORY_REACTION:
       return ` đã thả cảm xúc vào story của bạn`;
+    case ENotificationType.FRIEND_REQUEST:
+      return ` đã gửi lời mời kết bạn đến bạn`;
+    case ENotificationType.FRIEND_REQUEST_ACCEPT:
+      return ` đã chấp nhận lời mời kết bạn của bạn`;
   }
 };

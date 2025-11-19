@@ -11,6 +11,7 @@ import StoryView from '@social/pages/stories/StoryView';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import RouterPrivate from './RouterPrivate';
 import ProfilePage from '@social/pages/profiles/ProfilePage';
+import WatchPage from '@social/pages/watches/WatchPage';
 
 const AppRoutes = () => {
   return (
@@ -28,7 +29,7 @@ const AppRoutes = () => {
           <Route element={<DefaultLayout />}>
             <Route path={ROUTES.DEFAULT} element={<HomePages />} />
             <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
-            <Route path={ROUTES.WATCH} element={<div>helloworld</div>} />
+            <Route path={ROUTES.WATCH} element={<WatchPage />} />
           </Route>
           <Route element={<StoryLayout />}>
             <Route path={ROUTES.STORY.CREATE} element={<StoryCreate />} />

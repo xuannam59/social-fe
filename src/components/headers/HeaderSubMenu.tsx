@@ -14,7 +14,7 @@ const SubMenuHeader: React.FC<IProps> = ({ isActive, icon, path, title }) => {
   return (
     <>
       <Tooltip title={title} placement="bottom" arrow={false}>
-        <div className="flex-1/3 relative h-full group/home cursor-pointer py-1">
+        <div className="flex-1/4 relative h-full group/home cursor-pointer py-1">
           <Link to={path}>
             <div
               className={`rounded-md w-full h-full flex items-center justify-center 

@@ -165,9 +165,21 @@ const NotificationDropdown = () => {
         });
       }
     });
+
+    socket.on(NOTIFICATION_MESSAGE.DELETE, (data: INotificationResponse) => {
+      if (!data._id) return;
+      console.log('delete notification', data._id);
+      setNotificationList(prev => prev.filter(item => item._id !== data._id));
+      setUnSeenNotifications(prev => {
+        const newUnSeenNotifications = new Set(prev);
+        newUnSeenNotifications.delete(data._id);
+        return newUnSeenNotifications;
+      });
+    });
     return () => {
       if (socket) {
         socket.off(NOTIFICATION_MESSAGE.RESPONSE);
+        socket.off(NOTIFICATION_MESSAGE.DELETE);
       }
     };
   }, [socket, openDropdown, notificationList]);

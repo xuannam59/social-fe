@@ -5,7 +5,7 @@ import HeaderUserInfo from './HeaderUserInFo';
 const Header = () => {
   return (
     <>
-      <div className="sticky top-0 z-10 bg-white h-14 shadow-sm relative">
+      <div className="sticky top-0 z-10 bg-white h-14 shadow-sm">
         <header className="flex items-center justify-between h-full gap-4 px-4">
           {/* Left */}
           <div className="w-[360px] h-full relative z-2">
@@ -14,7 +14,7 @@ const Header = () => {
 
           {/* Center Menu*/}
           <div className="flex-1 justify-center h-full hidden lg:flex absolute inset-0">
-            <div className="w-[680px]">
+            <div className="2xl:w-[680px] xl:w-[480px] lg:w-[320px]">
               <HeaderMenu />
             </div>
           </div>

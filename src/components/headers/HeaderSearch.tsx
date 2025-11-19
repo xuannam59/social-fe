@@ -39,12 +39,14 @@ const HeaderSearch = () => {
             <TbArrowLeft size={20} className="text-gray-500" />
           </Button>
         </div>
-        <InputSearch
-          className="!w-[280px] h-[40px]"
-          placeholder="Search on JunSocial"
-          onFocus={() => setIsSearchFocused(true)}
-          onBlur={() => setIsSearchFocused(false)}
-        />
+        <div className="hidden md:block">
+          <InputSearch
+            className="!w-[280px] h-[40px] "
+            placeholder="Search on JunSocial"
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setIsSearchFocused(false)}
+          />
+        </div>
       </div>
     </>
   );

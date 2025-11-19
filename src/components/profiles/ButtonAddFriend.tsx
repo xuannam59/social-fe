@@ -12,6 +12,8 @@ import { Dropdown, message } from 'antd';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { TbUserCheck, TbUserPlus, TbUserX } from 'react-icons/tb';
 import ButtonGradient from '../common/ButtonGradient';
+import { useSockets } from '@social/providers/SocketProvider';
+import { NOTIFICATION_MESSAGE } from '@social/defaults/socket.default';
 
 interface IProps {
   userIdB: string;
@@ -21,6 +23,7 @@ const ButtonAddFriend: React.FC<IProps> = ({ userIdB }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [friendShip, setFriendShip] = useState<IFriend | null>(null);
   const userInfo = useAppSelector(state => state.auth.userInfo);
+  const { socket } = useSockets();
 
   const buttonState = useMemo((): EFriendStatus => {
     if (!friendShip) return EFriendStatus.ADD_FRIEND;
@@ -54,6 +57,9 @@ const ButtonAddFriend: React.FC<IProps> = ({ userIdB }) => {
       if (res.data) {
         message.success('Lời mời đã được gửi');
         setFriendShip(res.data);
+        socket.emit(NOTIFICATION_MESSAGE.FRIEND_REQUEST, {
+          friendId: userIdB,
+        });
       } else {
         message.error(convertErrorMessage(res.message));
       }
@@ -63,26 +69,38 @@ const ButtonAddFriend: React.FC<IProps> = ({ userIdB }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [userIdB]);
+  }, [userIdB, socket]);
 
-  const rejectRequest = useCallback(async () => {
-    if (!userIdB) return;
-    try {
-      setIsLoading(true);
-      const res = await callApiRejectFriend(userIdB);
-      if (res.data) {
-        message.success('Lời mời đã được từ chối');
-        setFriendShip(null);
-      } else {
-        message.error(convertErrorMessage(res.message));
+  const rejectRequest = useCallback(
+    async (action: 'reject' | 'cancel') => {
+      if (!userIdB) return;
+      try {
+        setIsLoading(true);
+        const res = await callApiRejectFriend(userIdB);
+        if (res.data) {
+          message.success('Lời mời đã được từ chối');
+          setFriendShip(null);
+          if (action === 'reject') {
+            socket.emit(NOTIFICATION_MESSAGE.FRIEND_REQUEST_REJECT, {
+              friendId: userIdB,
+            });
+          } else {
+            socket.emit(NOTIFICATION_MESSAGE.FRIEND_REQUEST_CANCEL, {
+              friendId: userIdB,
+            });
+          }
+        } else {
+          message.error(convertErrorMessage(res.message));
+        }
+      } catch (error) {
+        console.error('Failed to reject request:', error);
+        message.error('Có lỗi xảy ra');
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Failed to reject request:', error);
-      message.error('Có lỗi xảy ra');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userIdB]);
+    },
+    [userIdB, socket]
+  );
 
   const acceptRequest = useCallback(async () => {
     if (!userIdB) return;
@@ -94,6 +112,9 @@ const ButtonAddFriend: React.FC<IProps> = ({ userIdB }) => {
         setFriendShip(prev =>
           prev ? { ...prev, status: res.data.status } : null
         );
+        socket.emit(NOTIFICATION_MESSAGE.FRIEND_REQUEST_ACCEPT, {
+          friendId: userIdB,
+        });
       } else {
         message.error(convertErrorMessage(res.message));
       }
@@ -103,7 +124,7 @@ const ButtonAddFriend: React.FC<IProps> = ({ userIdB }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [userIdB]);
+  }, [userIdB, socket]);
 
   const unfriendRequest = useCallback(async () => {
     if (!userIdB) return;
@@ -142,7 +163,7 @@ const ButtonAddFriend: React.FC<IProps> = ({ userIdB }) => {
         return (
           <ButtonGradient
             icon={<TbUserX className="!text-white" size={20} />}
-            onClick={rejectRequest}
+            onClick={() => rejectRequest('cancel')}
           >
             <span className="text-base font-semibold">Hủy lời mời</span>
           </ButtonGradient>
@@ -169,7 +190,7 @@ const ButtonAddFriend: React.FC<IProps> = ({ userIdB }) => {
                   label: (
                     <span className="text-base font-semibold">Xoá lời mời</span>
                   ),
-                  onClick: rejectRequest,
+                  onClick: () => rejectRequest('reject'),
                 },
               ],
             }}

@@ -32,6 +32,8 @@ export enum ENotificationType {
   COMMENT_LIKE = 'comment_like',
   COMMENT_REPLY = 'comment_reply',
   STORY_REACTION = 'story_reaction',
+  FRIEND_REQUEST = 'friend_request',
+  FRIEND_REQUEST_ACCEPT = 'friend_request_accept',
 }
 
 export enum EEntityType {
@@ -42,4 +44,5 @@ export enum EEntityType {
   CONVERSATION = 'conversation',
   FRIEND = 'friend',
   SYSTEM = 'system',
+  FRIEND_REQUEST = 'friend_request',
 }

@@ -1,16 +1,25 @@
-import { Avatar } from 'antd';
-import { TbPointFilled } from 'react-icons/tb';
+import { Avatar, Button, message } from 'antd';
+import { TbPointFilled, TbUserCheck, TbUserX } from 'react-icons/tb';
 import defaultAvatar from '@social/images/default-avatar.webp';
 import {
   EEntityType,
+  ENotificationType,
   type INotificationResponse,
 } from '@social/types/notifications.type';
 import {
+  convertErrorMessage,
   convertNotificationMessage,
   formatRelativeTimeV2,
 } from '@social/common/convert';
 import { useCallback, useMemo, useState } from 'react';
 import { callApiReadNotifications } from '@social/apis/notifications.api';
+import { useNavigate } from 'react-router-dom';
+import {
+  callApiAcceptFriend,
+  callApiRejectFriend,
+} from '@social/apis/friend.api';
+import { NOTIFICATION_MESSAGE } from '@social/defaults/socket.default';
+import { useSockets } from '@social/providers/SocketProvider';
 
 interface IProps {
   notification: INotificationResponse;
@@ -27,6 +36,10 @@ const NotificationItem: React.FC<IProps> = ({
     return notification.senderIds[notification.senderIds.length - 1];
   }, [notification.senderIds]);
   const [isRead, setIsRead] = useState(notification.isRead);
+  const [isLoadingAccept, setIsLoadingAccept] = useState(false);
+  const [isLoadingReject, setIsLoadingReject] = useState(false);
+  const { socket } = useSockets();
+  const navigate = useNavigate();
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       e.preventDefault();
@@ -36,13 +49,67 @@ const NotificationItem: React.FC<IProps> = ({
         case EEntityType.POST:
           onSetPostDetail(notification.entityId);
           break;
+        case EEntityType.FRIEND_REQUEST:
+          navigate(`/${notification.senderIds[0]._id}`);
+          break;
       }
 
       callApiReadNotifications(notification._id);
       onCloseDropdown();
     },
-    [notification, onCloseDropdown, onSetPostDetail]
+    [notification, onCloseDropdown, onSetPostDetail, navigate]
   );
+
+  const handleAcceptRequest = useCallback(
+    async (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      try {
+        setIsLoadingAccept(true);
+        const res = await callApiAcceptFriend(notification.senderIds[0]._id);
+        if (res.data) {
+          message.success('Lời mời đã được chấp nhận');
+          socket.emit(NOTIFICATION_MESSAGE.FRIEND_REQUEST_ACCEPT, {
+            friendId: notification.senderIds[0]._id,
+          });
+        } else {
+          message.error(convertErrorMessage(res.message));
+        }
+      } catch (error) {
+        console.error('Failed to accept request:', error);
+        message.error('Có lỗi xảy ra');
+      } finally {
+        setIsLoadingAccept(false);
+      }
+    },
+    [socket, notification.senderIds]
+  );
+
+  const handleRejectRequest = useCallback(
+    async (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      try {
+        setIsLoadingReject(true);
+        const res = await callApiRejectFriend(notification.senderIds[0]._id);
+        if (res.data) {
+          message.success('Lời mời đã được từ chối');
+          socket.emit(NOTIFICATION_MESSAGE.FRIEND_REQUEST_REJECT, {
+            friendId: notification.senderIds[0]._id,
+          });
+        } else {
+          message.error(convertErrorMessage(res.message));
+        }
+      } catch (error) {
+        console.error('Failed to reject request:', error);
+        message.error('Có lỗi xảy ra');
+      } finally {
+        setIsLoadingReject(false);
+      }
+    },
+    [socket, notification.senderIds]
+  );
+
   return (
     <>
       <div
@@ -80,6 +147,30 @@ const NotificationItem: React.FC<IProps> = ({
                   </div>
                 )}
               </div>
+              {notification.type === ENotificationType.FRIEND_REQUEST && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="primary"
+                    onClick={handleAcceptRequest}
+                    loading={isLoadingAccept}
+                  >
+                    <div className="flex items-center gap-2">
+                      <TbUserCheck size={20} />
+                      <span className="text-base font-semibold">Xác nhận</span>
+                    </div>
+                  </Button>
+                  <Button
+                    type="default"
+                    onClick={handleRejectRequest}
+                    loading={isLoadingReject}
+                  >
+                    <div className="flex items-center gap-2">
+                      <TbUserX size={20} />
+                      <span className="text-base font-semibold">Từ chối</span>
+                    </div>
+                  </Button>
+                </div>
+              )}
               <span className="text-sm text-blue-500 shrink-0 whitespace-nowrap !m-0">
                 {formatRelativeTimeV2(notification.createdAt)}
               </span>

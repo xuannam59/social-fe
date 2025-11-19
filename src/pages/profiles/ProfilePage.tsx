@@ -231,17 +231,15 @@ const ProfilePage = () => {
               )}
               <div className="w-full max-w-6xl h-80 bg-gradient-to-b from-gray-200 to-gray-400 rounded-b-2xl relative overflow-hidden">
                 {(friendInfo.cover || coverPreview) && (
-                  <AntdImage.PreviewGroup>
-                    <img
-                      src={
-                        coverPreview?.url ? coverPreview.url : friendInfo.cover
-                      }
-                      alt="cover"
-                      className="w-full h-full object-cover"
-                    />
-                  </AntdImage.PreviewGroup>
+                  <img
+                    src={
+                      coverPreview?.url ? coverPreview.url : friendInfo.cover
+                    }
+                    alt="cover"
+                    className="w-full h-full object-cover"
+                  />
                 )}
-                {!isOpenModalAddCover && (
+                {!isOpenModalAddCover && userId === userInfo._id && (
                   <div className="absolute bottom-2 right-8">
                     <div
                       className="bg-white flex items-center gap-1 p-1.5 rounded-md cursor-pointer hover:bg-gray-100"
@@ -265,15 +263,16 @@ const ProfilePage = () => {
                       size={174}
                       className="!border-4 !border-white"
                     />
-
-                    <div
-                      className="absolute bottom-2 right-2 cursor-pointer"
-                      onClick={onOpenModalAddAvatar}
-                    >
-                      <div className="bg-gray-200 shadow-md size-9 rounded-full flex items-center justify-center">
-                        <TbCameraFilled size={24} />
+                    {userId === userInfo._id && (
+                      <div
+                        className="absolute bottom-2 right-2 cursor-pointer"
+                        onClick={onOpenModalAddAvatar}
+                      >
+                        <div className="bg-gray-200 shadow-md size-9 rounded-full flex items-center justify-center">
+                          <TbCameraFilled size={24} />
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                   <div className="w-[174px] hidden md:block shrink-0"></div>
 

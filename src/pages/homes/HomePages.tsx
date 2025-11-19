@@ -6,7 +6,7 @@ const HomePages = () => {
   return (
     <>
       <div className="flex h-full gap-4 overflow-y-auto pt-4">
-        <div className="w-[360px] sticky top-0 left-0 hidden lg:block">
+        <div className="hidden lg:block lg:w-[280px] xl:w-[360px] sticky top-0 left-0">
           <LeftSidebar />
         </div>
         <div className="flex-1 flex justify-center h-[100vh]">
@@ -14,7 +14,7 @@ const HomePages = () => {
             <CenterContent />
           </div>
         </div>
-        <div className="w-[360px] sticky top-0 right-0 hidden lg:block">
+        <div className=" md:w-[280px] xl:w-[360px] sticky top-0 right-0 hidden md:block">
           <RightSidebar />
         </div>
       </div>
