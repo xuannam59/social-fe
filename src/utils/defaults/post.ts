@@ -10,6 +10,7 @@ export const POST_DEFAULT: IPost = {
   userLikes: [],
   userLiked: null,
   commentCount: 0,
+  shareCount: 0,
   authorId: {
     _id: '',
     fullname: '',

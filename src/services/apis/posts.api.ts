@@ -31,6 +31,12 @@ export const callApiFetchPosts = (query?: string) => {
   );
 };
 
+export const callApiFetchPostsVideo = (query?: string) => {
+  return axios.get<IBackendResPagination<IPost[]>>(
+    `/api/v1/posts/watch/videos?${query ? query : ''}`
+  );
+};
+
 export const callApiFetchPostsByUserId = (userId: string, query?: string) => {
   return axios.get<IBackendResPagination<IPost[]>>(
     `/api/v1/posts/user/${userId}?${query ? query : ''}`

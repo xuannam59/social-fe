@@ -6,6 +6,7 @@ import ModalEditPost from '../modals/posts/ModalEditPost';
 
 interface IProps {
   post: IPost;
+  buttonClose?: boolean;
   updateLikePost: (type: number, isLike: boolean) => void;
   updateCommentPost: (count: number) => void;
   updatePost: (post: IPost) => void;
@@ -14,6 +15,7 @@ interface IProps {
 
 const PostItem: React.FC<IProps> = ({
   post,
+  buttonClose = true,
   updateLikePost,
   updateCommentPost,
   updatePost,
@@ -38,6 +40,7 @@ const PostItem: React.FC<IProps> = ({
         onLikePost={updateLikePost}
         onClickEditPost={onClickEditPost}
         onDeletePost={deletePost}
+        buttonClose={buttonClose}
       />
 
       {openModalViewPost && (

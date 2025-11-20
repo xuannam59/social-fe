@@ -81,10 +81,10 @@ const PostMediaGallery: React.FC<IProps> = ({ medias }) => {
                       key={media.id}
                       className="max-h-[400px] bg-black border border-gray-200 overflow-hidden "
                     >
-                      <div className="flex items-center justify-center ">
+                      <div className="flex items-center justify-center h-full">
                         <video
                           src={media.url}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-contain"
                           controls
                         />
                       </div>
@@ -124,10 +124,10 @@ const PostMediaGallery: React.FC<IProps> = ({ medias }) => {
                       key={media.id}
                       className="max-h-[400px] bg-black border border-gray-200 overflow-hidden "
                     >
-                      <div className="flex items-center justify-center ">
+                      <div className="flex items-center justify-center h-full">
                         <video
                           src={media.url}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-contain"
                           controls
                         />
                       </div>
@@ -165,10 +165,10 @@ const PostMediaGallery: React.FC<IProps> = ({ medias }) => {
                       key={media.id}
                       className="max-h-[400px] bg-black border border-gray-200 overflow-hidden "
                     >
-                      <div className="flex items-center justify-center ">
+                      <div className="flex items-center justify-center h-full">
                         <video
                           src={media.url}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-contain"
                           controls
                         />
                       </div>
@@ -205,7 +205,7 @@ const PostMediaGallery: React.FC<IProps> = ({ medias }) => {
                           ) : (
                             <video
                               src={media.url}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-contain"
                               controls
                               preload="none"
                             />
