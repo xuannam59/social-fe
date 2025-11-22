@@ -8,6 +8,7 @@ import type {
   IUserConversation,
   IUserFriendList,
   IUpdateProfile,
+  IUserTag,
 } from '@social/types/user.type';
 
 export const callApiGetUserInfo = async (userId: string) => {
@@ -44,5 +45,11 @@ export const callApiGetFriendByUserId = async (
 ) => {
   return axios.get<IBackendResPagination<IUser[]>>(
     `/api/v1/users/friends/${userId}?${query || ''}`
+  );
+};
+
+export const callApiGetUserBySearch = async (search?: string) => {
+  return axios.get<IBackendRes<IUserTag[]>>(
+    `/api/v1/users/search?search=${search}`
   );
 };

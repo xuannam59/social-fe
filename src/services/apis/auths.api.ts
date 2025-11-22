@@ -1,5 +1,6 @@
 import axios from '@social/configs/axios/axiosCustom';
 import type {
+  IChangePasswordForm,
   IForgotPasswordForm,
   ILoginForm,
   IRegisterForm,
@@ -47,4 +48,11 @@ export const callApiGetAccount = () => {
 
 export const callApiLogout = () => {
   return axios.post<IBackendRes<string>>('/api/v1/auths/logout');
+};
+
+export const callApiChangePassword = (data: IChangePasswordForm) => {
+  return axios.patch<IBackendRes<string>>(
+    '/api/v1/auths/change-password',
+    data
+  );
 };

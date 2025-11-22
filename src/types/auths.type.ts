@@ -41,3 +41,9 @@ export interface IVerifyOtpForm {
   email: string;
   otp: string;
 }
+
+export interface IChangePasswordForm {
+  oldPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}

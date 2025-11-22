@@ -24,7 +24,7 @@ const LoginGoogle = (props: IProps) => {
       >
         <div className="flex justify-center items-center gap-2">
           <FcGoogle size={22} />
-          Or login with Google
+          Đăng nhập với Google
         </div>
       </Button>
     </>
