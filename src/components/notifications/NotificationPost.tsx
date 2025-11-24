@@ -1,9 +1,9 @@
+import { callApiGetPostDetail } from '@social/apis/posts.api';
+import { useAppSelector } from '@social/hooks/redux.hook';
+import type { IPost } from '@social/types/posts.type';
+import { notification } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import ModalViewPost from '../modals/posts/ModalViewPost';
-import type { IPost, IPostLike } from '@social/types/posts.type';
-import { callApiGetPostDetail } from '@social/apis/posts.api';
-import { notification } from 'antd';
-import { useAppSelector } from '@social/hooks/redux.hook';
 
 interface IProps {
   post: IPost;

@@ -1,5 +1,5 @@
 import Lottie from 'lottie-react';
-import login from '@social/animations/login.json';
+import login from '@social/animations/Login.json';
 import register from '@social/animations/register.json';
 import forgotPassword from '@social/animations/forgot-password.json';
 import { Outlet, useLocation } from 'react-router-dom';

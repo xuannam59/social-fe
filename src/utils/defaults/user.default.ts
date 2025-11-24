@@ -8,4 +8,12 @@ export const USER_DEFAULT: IUser = {
   avatar: '',
   role: '',
   isActive: false,
+  cover: '',
+  followers: [],
+  following: [],
+  friends: [],
+  createdAt: '',
+  updatedAt: '',
+  isOnline: false,
+  lastActive: '',
 };

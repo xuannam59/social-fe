@@ -2,6 +2,7 @@ import {
   base64ToFile,
   getDominantColor as getImageDominantColor,
 } from '@social/common/get-info-image';
+import type { ITextStory } from '@social/types/stories.type';
 import {
   Button,
   ColorPicker,
@@ -9,7 +10,6 @@ import {
   type FormInstance,
   Input,
   Modal,
-  Spin,
 } from 'antd';
 import type { TextAreaRef } from 'antd/es/input/TextArea';
 import type { EmojiClickData } from 'emoji-picker-react';
@@ -17,11 +17,10 @@ import type { Stage as KonvaStage } from 'konva/lib/Stage';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { TbPlus } from 'react-icons/tb';
 import { Layer, Rect, Stage, Transformer } from 'react-konva';
+import Loading from '../loading/Loading';
 import ModalEmoji from '../modals/common/ModalEmoji';
 import StoryEditableText from './StoryEditableText';
 import StoryEditImg from './StoryEditImg';
-import type { ITextStory } from '@social/types/stories.type';
-import Loading from '../loading/Loading';
 
 interface IProps {
   formSubmit: FormInstance<any>;

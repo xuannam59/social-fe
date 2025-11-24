@@ -2,7 +2,7 @@ import { ROUTES } from '@social/constants/route.constant';
 import logo from '@social/images/logo.webp';
 import { Button } from 'antd';
 import { useState } from 'react';
-import { TbArrowLeft, TbX } from 'react-icons/tb';
+import { TbArrowLeft } from 'react-icons/tb';
 import { useNavigate } from 'react-router-dom';
 import InputSearch from '../common/InputSearch';
 

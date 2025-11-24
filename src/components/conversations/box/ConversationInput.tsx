@@ -1,24 +1,25 @@
-import { Form, Input, Button, Image } from 'antd';
+import { formatFile } from '@social/common/convert';
+import { CHAT_MESSAGE } from '@social/defaults/socket.default';
+import { useAppSelector } from '@social/hooks/redux.hook';
+import { useSockets } from '@social/providers/SocketProvider';
+import type { IConversation } from '@social/types/conversations.type';
+import type { IMessage, IMessageTyping } from '@social/types/messages.type';
+import type { IPreviewMedia } from '@social/types/posts.type';
+import { Button, Form, Image, Input } from 'antd';
+import type { TextAreaRef } from 'antd/es/input/TextArea';
+import { EmojiStyle, type EmojiClickData } from 'emoji-picker-react';
+import { debounce } from 'lodash';
 import React, {
+  lazy,
+  Suspense,
   useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
 } from 'react';
-import { TbMoodSmileBeam, TbPhotoPlus, TbSend, TbX } from 'react-icons/tb';
-import type { IConversation } from '@social/types/conversations.type';
-import type { IMessage, IMessageTyping } from '@social/types/messages.type';
-import { useAppSelector } from '@social/hooks/redux.hook';
-import { useSockets } from '@social/providers/SocketProvider';
-import { CHAT_MESSAGE } from '@social/defaults/socket.default';
-import { debounce } from 'lodash';
-import { EmojiStyle, type EmojiClickData } from 'emoji-picker-react';
-import type { TextAreaRef } from 'antd/es/input/TextArea';
-import { lazy, Suspense } from 'react';
+import { TbMoodSmileBeam, TbSend, TbX } from 'react-icons/tb';
 import Loading from '../../loading/Loading';
-import { formatFile } from '@social/common/convert';
-import type { IPreviewMedia } from '@social/types/posts.type';
 
 const LazyEmojiPicker = lazy(() => import('emoji-picker-react'));
 
@@ -319,7 +320,7 @@ const ConversationInput: React.FC<IProps> = ({
             <Form.Item name={`${conversation._id}_parentId`} hidden>
               <Input />
             </Form.Item>
-            <div className={``}>
+            {/* <div className={``}>
               <Button
                 type="text"
                 shape="circle"
@@ -328,7 +329,7 @@ const ConversationInput: React.FC<IProps> = ({
               >
                 <TbPhotoPlus size={20} />
               </Button>
-            </div>
+            </div> */}
             <div className="bg-gray-200 rounded-xl flex flex-1">
               <Form.Item name={conversation._id} className="!m-0 flex-1">
                 <Input.TextArea

@@ -132,9 +132,6 @@ const ModalSharePost: React.FC<IProps> = ({ open, onClose, parentId }) => {
   );
 
   const toggleEmojiPicker = useCallback(() => {
-    if (!showEmojiPicker && emojiButtonRef.current) {
-      const rect = emojiButtonRef.current.getBoundingClientRect();
-    }
     setShowEmojiPicker(prev => !prev);
     if (showEmojiPicker) {
       form.focusField('content');

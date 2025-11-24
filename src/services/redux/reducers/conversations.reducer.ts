@@ -3,18 +3,18 @@ import {
   createSlice,
   type PayloadAction,
 } from '@reduxjs/toolkit';
-import type {
-  IConversationState,
-  IEditConversation,
-} from '@social/types/conversations.type';
 import {
   callApiGetConversations,
   callApiGetGroupConversations,
   callApiGetUnSeenConversations,
   callApiSeenConversation,
 } from '@social/apis/conversations.api';
-import type { IConversation } from '@social/types/conversations.type';
 import { callApiConversationFriendList } from '@social/apis/user.api';
+import type {
+  IConversation,
+  IConversationState,
+  IEditConversation,
+} from '@social/types/conversations.type';
 import type { IUserTag } from '@social/types/user.type';
 
 const initialState: IConversationState = {
@@ -296,7 +296,7 @@ const conversationSlice = createSlice({
         gc._id === conversationId
           ? {
               ...gc,
-              admins: [...gc.admins, userId],
+              admins: [...(gc.admins || []), userId],
             }
           : gc
       );
@@ -304,7 +304,7 @@ const conversationSlice = createSlice({
         c._id === conversationId
           ? {
               ...c,
-              admins: [...c.admins, userId],
+              admins: [...(c.admins || []), userId],
             }
           : c
       );
@@ -312,7 +312,7 @@ const conversationSlice = createSlice({
         oc._id === conversationId
           ? {
               ...oc,
-              admins: [...oc.admins, userId],
+              admins: [...(oc.admins || []), userId],
             }
           : oc
       );
@@ -323,7 +323,7 @@ const conversationSlice = createSlice({
         gc._id === conversationId
           ? {
               ...gc,
-              admins: gc.admins.filter(admin => admin !== userId),
+              admins: (gc.admins || []).filter(admin => admin !== userId),
             }
           : gc
       );
@@ -331,7 +331,7 @@ const conversationSlice = createSlice({
         c._id === conversationId
           ? {
               ...c,
-              admins: c.admins.filter(admin => admin !== userId),
+              admins: (c.admins || []).filter(admin => admin !== userId),
             }
           : c
       );
@@ -339,7 +339,7 @@ const conversationSlice = createSlice({
         oc._id === conversationId
           ? {
               ...oc,
-              admins: oc.admins.filter(admin => admin !== userId),
+              admins: (oc.admins || []).filter(admin => admin !== userId),
             }
           : oc
       );

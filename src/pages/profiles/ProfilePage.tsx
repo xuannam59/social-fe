@@ -14,7 +14,7 @@ import { doUpdateCover } from '@social/redux/reducers/auth.reducer';
 import { doOpenConversation } from '@social/redux/reducers/conversations.reducer';
 import type { IConversation } from '@social/types/conversations.type';
 import type { IPreviewImage, IUser } from '@social/types/user.type';
-import { Image as AntdImage, Button, message, Tabs, Typography } from 'antd';
+import { Button, message, Tabs, Typography } from 'antd';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { TbCameraFilled, TbEdit, TbMessageCircle } from 'react-icons/tb';
 import { useNavigate, useParams } from 'react-router-dom';

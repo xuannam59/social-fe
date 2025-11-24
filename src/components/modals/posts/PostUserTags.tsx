@@ -28,7 +28,6 @@ const PostUserTags: React.FC<IProps> = ({ onBack, addUserTag, userTags }) => {
   const [selectedUser, setSelectedUser] = useState<IUserTag[]>(userTags);
   const [isLoading, setIsLoading] = useState(false);
   const [listUser, setListUser] = useState<IUserTag[]>([]);
-  const [total, setTotal] = useState(0);
 
   const fetchUserFriendList = useCallback(async () => {
     try {
@@ -38,14 +37,13 @@ const PostUserTags: React.FC<IProps> = ({ onBack, addUserTag, userTags }) => {
       );
       if (res.data) {
         setListUser(res.data.friends);
-        setTotal(res.data.total);
       }
     } catch (error) {
       console.log(error);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [userTags]);
 
   const onSelectUserTag = useCallback((user: IUserTag) => {
     setSelectedUser(prev => [...prev, user]);
@@ -102,7 +100,6 @@ const PostUserTags: React.FC<IProps> = ({ onBack, addUserTag, userTags }) => {
           const res = await callApiFetchUserFriendList(query);
           if (res.data) {
             setListUser(res.data.friends);
-            setTotal(res.data.total);
           }
         } catch (error) {
           console.log(error);

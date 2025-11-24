@@ -9,11 +9,10 @@ import {
   doNextStory,
   doPreviousStory,
   doViewStory,
-  fetchStories,
   setCurrentUserStory,
   setListUserStories,
 } from '@social/redux/reducers/story.reducer';
-import { message, Typography } from 'antd';
+import { Typography } from 'antd';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TbChevronLeft, TbChevronRight, TbPlus } from 'react-icons/tb';
 import { Link, useNavigate, useParams } from 'react-router-dom';

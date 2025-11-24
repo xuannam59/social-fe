@@ -1,4 +1,12 @@
+import {
+  callApiFetchUserFriendList,
+  callApiGetUserBySearch,
+} from '@social/apis/user.api';
+import { convertSlug } from '@social/common/convert';
+import type { IUserTag } from '@social/types/user.type';
+import { Dropdown, Input } from 'antd';
 import type { InputProps } from 'antd/es/input';
+import { debounce } from 'lodash';
 import {
   useCallback,
   useEffect,
@@ -6,18 +14,9 @@ import {
   useState,
   type ChangeEvent,
 } from 'react';
-import { debounce } from 'lodash';
-import {
-  callApiFetchUserFriendList,
-  callApiGetFriendByUserId,
-  callApiGetUserBySearch,
-} from '@social/apis/user.api';
-import { Dropdown, Input } from 'antd';
 import { TbLoader2, TbSearch } from 'react-icons/tb';
-import type { IUserTag } from '@social/types/user.type';
-import { convertSlug } from '@social/common/convert';
-import AvatarUser from './AvatarUser';
 import { useNavigate } from 'react-router-dom';
+import AvatarUser from './AvatarUser';
 
 interface IProps extends InputProps {
   className?: string;

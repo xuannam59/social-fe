@@ -1,8 +1,8 @@
 import { ROUTES } from '@social/constants/route.constant';
-import HeaderSubMenu from './HeaderSubMenu';
 import { useEffect, useState } from 'react';
-import { TbDeviceTv, TbHome, TbUsersGroup } from 'react-icons/tb';
+import { TbDeviceTv, TbHome } from 'react-icons/tb';
 import { useLocation } from 'react-router-dom';
+import HeaderSubMenu from './HeaderSubMenu';
 
 const HeaderMenu = () => {
   const location = useLocation();

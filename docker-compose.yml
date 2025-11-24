@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VITE_BACKEND_URL=${VITE_BACKEND_URL:-http://localhost:8000}
+        - VITE_AWS_REGION=${VITE_AWS_REGION:-ap-southeast-1}
+        - VITE_S3_BUCKET_KEY=${VITE_S3_BUCKET_KEY:-}
+        - VITE_PORT=${VITE_PORT:-3000}
+    container_name: jun-social-frontend
+    ports:
+      - '3000:80'
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production

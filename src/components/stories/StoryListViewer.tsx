@@ -1,15 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { callApiGetViewers } from '@social/apis/stories.api';
+import { emojiReactions } from '@social/constants/emoji';
 import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
 import { doPauseStory } from '@social/redux/reducers/story.reducer';
-import { TbChevronUp } from 'react-icons/tb';
-import { TbX } from 'react-icons/tb';
-import { callApiGetViewers } from '@social/apis/stories.api';
 import type { IStoryViewer } from '@social/types/stories.type';
-import Loading from '../loading/Loading';
-import EmptyState from '../common/EmptyState';
-import AvatarUser from '../common/AvatarUser';
-import { emojiReactions } from '@social/constants/emoji';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { TbChevronUp, TbX } from 'react-icons/tb';
 import { Link } from 'react-router-dom';
+import AvatarUser from '../common/AvatarUser';
+import EmptyState from '../common/EmptyState';
+import Loading from '../loading/Loading';
 
 const StoryListViewer = () => {
   const { currentStory } = useAppSelector(state => state.story);

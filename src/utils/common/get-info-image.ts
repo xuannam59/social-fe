@@ -148,7 +148,7 @@ export const saveStory = async (
   ctx.fillRect(0, 0, width, height);
   let file: File;
   const stageImage = new window.Image();
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     stageImage.onload = () => {
       // Cải thiện chất lượng khi vẽ image
       ctx.save();
