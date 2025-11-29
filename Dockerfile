@@ -16,8 +16,11 @@ ENV VITE_AWS_REGION=$VITE_AWS_REGION
 ENV VITE_S3_BUCKET_KEY=$VITE_S3_BUCKET_KEY
 ENV VITE_PORT=$VITE_PORT
 
+ENV NODE_OPTIONS="--max-old-space-size=512"
+ENV ESBUILD_WORKERS=1
+
 # Copy package files
-COPY package.json ./
+COPY package.json yarn.lock ./
 
 # Install dependencies
 RUN yarn install --frozen-lockfile
