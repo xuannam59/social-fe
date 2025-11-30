@@ -17,15 +17,21 @@ export const SocketProvider = ({
   children: React.ReactNode;
 }) => {
   const sockets = useMemo(() => {
-    const baseURL = import.meta.env.VITE_BACKEND_URL;
+    const isDev = import.meta.env.DEV;
+
+    const SOCKET_PATH = import.meta.env.VITE_SOCKET_PATH;
+    const SOCKET_URL = isDev
+      ? import.meta.env.VITE_SOCKET_URL
+      : window.location.origin;
     const common = {
       auth: { userInfo },
       transports: ['websocket'],
       reconnection: true,
       autoConnect: Boolean(userInfo && userInfo._id !== ''),
+      path: SOCKET_PATH,
     };
 
-    const socket = io(`${baseURL}`, common);
+    const socket = io(SOCKET_URL, common);
     socket.on(SOCKET_MESSAGE.CONNECT, () => {
       console.log('connected');
     });

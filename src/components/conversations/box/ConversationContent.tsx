@@ -99,7 +99,6 @@ const ConversationContent: React.FC<IProps> = ({
     };
 
     const handleRevokeMessage = (data: IMessageRevoke) => {
-      console.log('data revoke message', data);
       if (data.messageId !== message._id) return;
       if (data.userId === userInfo._id) return;
       setIsRevoked(true);
@@ -156,10 +155,6 @@ const ConversationContent: React.FC<IProps> = ({
       userId: userInfo._id,
     });
   };
-
-  if (message.storyId) {
-    console.log('message storyId', message);
-  }
 
   return (
     <>
