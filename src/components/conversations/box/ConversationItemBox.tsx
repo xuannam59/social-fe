@@ -235,7 +235,7 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
 
   useEffect(() => {
     if (!socket) return;
-    socket.on(CHAT_MESSAGE.SEND, data => {
+    const handleSendMessage = (data: any) => {
       if (data.conversationId !== conversation._id) return;
       if (data.status === 'failed') {
         if (userInfo._id !== data.sender._id) return;
@@ -269,9 +269,9 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
           );
         });
       }
-    });
+    };
 
-    socket.on(CHAT_MESSAGE.EDIT, (data: IMessage) => {
+    const handleEditMessage = (data: IMessage) => {
       if (data.conversationId !== conversation._id) return;
       if (data.sender._id === userInfo._id) return;
       setMessages(prev =>
@@ -288,9 +288,9 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
             : message
         )
       );
-    });
+    };
 
-    socket.on(CHAT_MESSAGE.READ, (data: IMessageRead) => {
+    const handleReadMessage = (data: IMessageRead) => {
       if (data.conversationId !== conversation._id) return;
       if (data.userId === userInfo._id) return;
       setUsersState(prev =>
@@ -300,12 +300,15 @@ const ConversationItemBox: React.FC<IProps> = ({ conversation }) => {
             : user
         )
       );
-    });
+    };
 
+    socket.on(CHAT_MESSAGE.SEND, handleSendMessage);
+    socket.on(CHAT_MESSAGE.EDIT, handleEditMessage);
+    socket.on(CHAT_MESSAGE.READ, handleReadMessage);
     return () => {
-      socket.off(CHAT_MESSAGE.SEND);
-      socket.off(CHAT_MESSAGE.EDIT);
-      socket.off(CHAT_MESSAGE.READ);
+      socket.off(CHAT_MESSAGE.SEND, handleSendMessage);
+      socket.off(CHAT_MESSAGE.EDIT, handleEditMessage);
+      socket.off(CHAT_MESSAGE.READ, handleReadMessage);
     };
   }, [socket, userInfo, conversation, usersState]);
 

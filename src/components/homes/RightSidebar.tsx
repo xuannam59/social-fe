@@ -1,17 +1,20 @@
 import { callApiGetInvitationList } from '@social/apis/friend.api';
+import { NOTIFICATION_MESSAGE } from '@social/defaults/socket.default';
 import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
+import { useSockets } from '@social/providers/SocketProvider';
 import {
+  doOpenConversation,
   fetchFriendConversations,
   fetchGroupConversations,
 } from '@social/redux/reducers/conversations.reducer';
+import type { IConversation } from '@social/types/conversations.type';
 import type { IFriend } from '@social/types/friends.type';
 import { Button } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
+import AvatarUser from '../common/AvatarUser';
 import FriendItemCard from '../friends/FriendItemCard';
 import InviteFriendCard from '../friends/InviteFriendCard';
-import AvatarUser from '../common/AvatarUser';
-import type { IConversation } from '@social/types/conversations.type';
-import { doOpenConversation } from '@social/redux/reducers/conversations.reducer';
+import type { INotificationDelete } from '@social/types/notifications.type';
 
 const RightSidebar = () => {
   const [invitationList, setInvitationList] = useState<IFriend[]>([]);
@@ -29,6 +32,33 @@ const RightSidebar = () => {
       console.log(error);
     }
   }, []);
+  const { socket } = useSockets();
+
+  useEffect(() => {
+    if (!socket) return;
+    const handleDeleteFriendRequestNotification = (
+      data: INotificationDelete
+    ) => {
+      if (!data._id) return;
+      setInvitationList(prev => {
+        const newInvitationList = prev.filter(
+          invite => !invite.users.includes(data.friendId)
+        );
+        return newInvitationList;
+      });
+    };
+
+    socket.on(
+      NOTIFICATION_MESSAGE.DELETE,
+      handleDeleteFriendRequestNotification
+    );
+    return () => {
+      socket.off(
+        NOTIFICATION_MESSAGE.DELETE,
+        handleDeleteFriendRequestNotification
+      );
+    };
+  }, [socket]);
 
   useEffect(() => {
     fetchInvitationList();
@@ -49,7 +79,7 @@ const RightSidebar = () => {
     (conversation: IConversation) => {
       dispatch(doOpenConversation(conversation));
     },
-    []
+    [dispatch]
   );
 
   return (

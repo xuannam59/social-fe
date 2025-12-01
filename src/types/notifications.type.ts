@@ -23,6 +23,11 @@ export interface INotificationState {
   limit: number;
 }
 
+export interface INotificationDelete {
+  _id: string;
+  friendId: string;
+}
+
 export enum ENotificationType {
   POST_TAG = 'post_tag',
   POST_LIKE = 'post_like',

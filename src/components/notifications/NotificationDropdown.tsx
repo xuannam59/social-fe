@@ -7,7 +7,10 @@ import { convertNotificationMessage } from '@social/common/convert';
 import { POST_DEFAULT } from '@social/defaults/post';
 import { NOTIFICATION_MESSAGE } from '@social/defaults/socket.default';
 import { useSockets } from '@social/providers/SocketProvider';
-import type { INotificationResponse } from '@social/types/notifications.type';
+import type {
+  INotificationDelete,
+  INotificationResponse,
+} from '@social/types/notifications.type';
 import type { IPost } from '@social/types/posts.type';
 import { Badge, Dropdown, notification, Spin, Typography } from 'antd';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -109,9 +112,8 @@ const NotificationDropdown = () => {
 
   useEffect(() => {
     if (!socket) return;
-    socket.on(NOTIFICATION_MESSAGE.RESPONSE, (data: INotificationResponse) => {
+    const handleNotificationResponse = (data: INotificationResponse) => {
       if (!data._id) return;
-
       if (notificationList.length > 0) {
         setNotificationList(prev => {
           const oldNotificationList = [...prev];
@@ -168,25 +170,27 @@ const NotificationDropdown = () => {
           className: '!px-4 !py-3',
         });
       }
-    });
+    };
 
-    socket.on(NOTIFICATION_MESSAGE.DELETE, (data: INotificationResponse) => {
+    const handleDeleteNotification = (data: INotificationDelete) => {
       if (!data._id) return;
-      console.log('delete notification', data._id);
       setNotificationList(prev => prev.filter(item => item._id !== data._id));
       setUnSeenNotifications(prev => {
         const newUnSeenNotifications = new Set(prev);
         newUnSeenNotifications.delete(data._id);
         return newUnSeenNotifications;
       });
-    });
+    };
+
+    socket.on(NOTIFICATION_MESSAGE.RESPONSE, handleNotificationResponse);
+    socket.on(NOTIFICATION_MESSAGE.DELETE, handleDeleteNotification);
     return () => {
       if (socket) {
-        socket.off(NOTIFICATION_MESSAGE.RESPONSE);
-        socket.off(NOTIFICATION_MESSAGE.DELETE);
+        socket.off(NOTIFICATION_MESSAGE.RESPONSE, handleNotificationResponse);
+        socket.off(NOTIFICATION_MESSAGE.DELETE, handleDeleteNotification);
       }
     };
-  }, [socket, openDropdown, notificationList]);
+  }, [socket, openDropdown]);
 
   const handleOpenDropdown = useCallback(
     async (visible: boolean) => {

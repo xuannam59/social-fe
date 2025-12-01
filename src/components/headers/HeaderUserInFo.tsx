@@ -136,7 +136,7 @@ const HeaderUserInfo = () => {
                     <div className="flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full">
                       <TbLogout size={25} />
                     </div>
-                    <Text className="!text-[16px] font-medium">Logout</Text>
+                    <Text className="!text-[16px] font-medium">Đăng xuất</Text>
                   </div>
                 </div>
               </div>

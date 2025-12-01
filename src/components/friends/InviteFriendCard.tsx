@@ -8,6 +8,8 @@ import {
 import { Button, message } from 'antd';
 import type { IFriend } from '@social/types/friends.type';
 import { useNavigate } from 'react-router-dom';
+import { useSockets } from '@social/providers/SocketProvider';
+import { NOTIFICATION_MESSAGE } from '@social/defaults/socket.default';
 interface IProps {
   invitation: IFriend;
   onRemoveInvitation: (invitationId: string) => void;
@@ -17,16 +19,20 @@ const InviteFriendCard: React.FC<IProps> = ({
   invitation,
   onRemoveInvitation,
 }) => {
-  const user = invitation.fromUserId as IUser;
+  const friendInfo = invitation.fromUserId as IUser;
   const navigate = useNavigate();
+  const { socket } = useSockets();
   const acceptInvite = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
     try {
-      const res = await callApiAcceptFriend(user._id);
+      const res = await callApiAcceptFriend(friendInfo._id);
       if (res.data) {
         message.success('Lời mời đã được chấp nhận');
         onRemoveInvitation(invitation._id);
+        socket.emit(NOTIFICATION_MESSAGE.FRIEND_REQUEST_ACCEPT, {
+          friendId: friendInfo._id,
+        });
       }
     } catch (error) {
       console.error('Failed to accept invite:', error);
@@ -38,10 +44,13 @@ const InviteFriendCard: React.FC<IProps> = ({
     e.preventDefault();
     e.stopPropagation();
     try {
-      const res = await callApiRejectFriend(user._id);
+      const res = await callApiRejectFriend(friendInfo._id);
       if (res.data) {
         message.success('Lời mời đã được từ chối');
         onRemoveInvitation(invitation._id);
+        socket.emit(NOTIFICATION_MESSAGE.FRIEND_REQUEST_REJECT, {
+          friendId: friendInfo._id,
+        });
       }
     } catch (error) {
       console.error('Failed to reject invite:', error);
@@ -52,7 +61,7 @@ const InviteFriendCard: React.FC<IProps> = ({
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    navigate(`/${user._id}`);
+    navigate(`/${friendInfo._id}`);
   };
 
   return (
@@ -61,10 +70,12 @@ const InviteFriendCard: React.FC<IProps> = ({
         className="flex items-center gap-3 cursor-pointer hover:bg-gray-200 rounded-lg p-2"
         onClick={handleClick}
       >
-        <AvatarUser avatar={user.avatar} size={55} />
+        <AvatarUser avatar={friendInfo.avatar} size={55} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <p className="font-semibold text-base truncate">{user.fullname}</p>
+            <p className="font-semibold text-base truncate">
+              {friendInfo.fullname}
+            </p>
             <span className="text-xs text-gray-500 whitespace-nowrap">
               {formatRelativeTime(invitation.createdAt)}
             </span>

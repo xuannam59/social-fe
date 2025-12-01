@@ -3,50 +3,35 @@ import { HEADER_MESSAGE } from '@social/defaults/socket.default';
 import { useAppDispatch, useAppSelector } from '@social/hooks/redux.hook';
 import { useSockets } from '@social/providers/SocketProvider';
 import {
+  doAddMoreConversations,
   doSetConversations,
   doSetUnSeenConversation,
   doUpdateConversationPosition,
   seenConversation,
 } from '@social/redux/reducers/conversations.reducer';
-import { Badge, Button, Dropdown, notification, Typography } from 'antd';
+import type { IUnSeenConversation } from '@social/types/conversations.type';
+import { Badge, Dropdown, notification, Typography } from 'antd';
+import type { UIEvent } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { TbMessageCircle } from 'react-icons/tb';
-import InputSearch from '../common/InputSearch';
+import EmptyState from '../common/EmptyState';
 import LoadingComment from '../loading/LoadingComment';
 import ConversationItem from './ConversationItem';
-import EmptyState from '../common/EmptyState';
-import type { IConversation } from '@social/types/conversations.type';
 
 const { Title } = Typography;
 
 const ConversationDropdown = () => {
-  const { listConversations, unSeenConversations } = useAppSelector(
+  const { listConversations, unSeenConversations, total } = useAppSelector(
     state => state.conversations
   );
   const [openDropdown, setOpenDropdown] = useState(false);
-  const [_, setIsSearchFocused] = useState(false);
-  const [conversationType, setConversationType] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
   const { socket } = useSockets();
   const { userInfo } = useAppSelector(state => state.auth);
   const dispatch = useAppDispatch();
-  const conversationTypeList = [
-    {
-      type: 'all',
-      label: 'Tất cả',
-      width: 'col-span-2',
-    },
-    {
-      type: 'notRead',
-      label: 'Chưa đọc',
-      width: 'col-span-3',
-    },
-    {
-      type: 'group',
-      label: 'Nhóm',
-      width: 'col-span-3',
-    },
-  ];
+  const LIMIT = 10;
 
   const handleOpenDropdown = useCallback(
     async (visible: boolean) => {
@@ -55,7 +40,7 @@ const ConversationDropdown = () => {
         try {
           if (listConversations.length === 0) {
             setIsLoading(true);
-            const res = await callApiGetConversations('page=1&limit=10');
+            const res = await callApiGetConversations(`page=1&limit=${LIMIT}`);
             if (res.data) {
               dispatch(
                 doSetConversations({
@@ -63,6 +48,7 @@ const ConversationDropdown = () => {
                   total: res.data.meta.total,
                 })
               );
+              setPage(1);
             } else {
               notification.error({
                 message: 'Lỗi',
@@ -80,26 +66,66 @@ const ConversationDropdown = () => {
         }
       }
     },
-    [dispatch, listConversations, unSeenConversations]
+    [dispatch, listConversations, unSeenConversations, LIMIT]
+  );
+
+  const loadMoreConversations = useCallback(async () => {
+    if (isLoadingMore || isLoading) return;
+    if (listConversations.length >= total) return;
+    try {
+      setIsLoadingMore(true);
+      const nextPage = page + 1;
+      const res = await callApiGetConversations(
+        `page=${nextPage}&limit=${LIMIT}`
+      );
+      if (res.data && res.data.list.length > 0) {
+        dispatch(doAddMoreConversations(res.data.list));
+        setPage(nextPage);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [
+    LIMIT,
+    dispatch,
+    isLoading,
+    isLoadingMore,
+    listConversations.length,
+    page,
+    total,
+  ]);
+
+  const handleScroll = useCallback(
+    (e: UIEvent<HTMLDivElement>) => {
+      const target = e.currentTarget;
+      const nearBottom =
+        target.scrollTop + target.clientHeight >= target.scrollHeight - 24;
+      const hasMore = listConversations.length < total;
+      if (nearBottom && hasMore) {
+        void loadMoreConversations();
+      }
+    },
+    [listConversations.length, loadMoreConversations, total]
   );
 
   useEffect(() => {
     if (!socket) return;
-    socket.on(
-      HEADER_MESSAGE.UN_SEEN_CONVERSATION,
-      (data: { conversation: IConversation; senderId: string }) => {
-        const { conversation, senderId } = data;
-        if (!conversation._id) return;
-        if (senderId !== userInfo._id) {
-          dispatch(doSetUnSeenConversation(conversation._id));
-        }
-        dispatch(
-          doUpdateConversationPosition({ conversation, userId: userInfo._id })
-        );
+    const handleUnSeenConversation = (data: IUnSeenConversation) => {
+      const { conversation, senderId } = data;
+      if (!conversation._id) return;
+      if (senderId !== userInfo._id) {
+        dispatch(doSetUnSeenConversation(conversation._id));
       }
-    );
+      dispatch(
+        doUpdateConversationPosition({ conversation, userId: userInfo._id })
+      );
+    };
+
+    socket.on(HEADER_MESSAGE.UN_SEEN_CONVERSATION, handleUnSeenConversation);
     return () => {
-      socket.off(HEADER_MESSAGE.UN_SEEN_CONVERSATION);
+      socket.off(HEADER_MESSAGE.UN_SEEN_CONVERSATION, handleUnSeenConversation);
     };
   }, [socket, dispatch, userInfo._id]);
 
@@ -118,32 +144,12 @@ const ConversationDropdown = () => {
                 <div className="flex items-center justify-between">
                   <Title level={3}>Tin nhắn</Title>
                 </div>
-                <div className="flex items-center">
-                  <InputSearch
-                    placeholder="Tìm kiếm cuộc hội thoại"
-                    className="w-full h-[36px]"
-                    onFocus={() => setIsSearchFocused(true)}
-                    onBlur={() => setIsSearchFocused(false)}
-                  />
-                </div>
-                <div className="grid grid-cols-12 gap-1 mt-4 pb-2">
-                  {conversationTypeList.map(item => (
-                    <Button
-                      key={item.type}
-                      color={
-                        conversationType === item.type ? 'primary' : 'default'
-                      }
-                      variant={`${conversationType === item.type ? 'filled' : 'text'}`}
-                      className={item.width}
-                      onClick={() => setConversationType(item.type)}
-                    >
-                      {item.label}
-                    </Button>
-                  ))}
-                </div>
               </div>
 
-              <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain px-2 py-3">
+              <div
+                className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain px-2 py-3"
+                onScroll={handleScroll}
+              >
                 {isLoading ? (
                   <LoadingComment />
                 ) : listConversations.length > 0 ? (
@@ -155,6 +161,11 @@ const ConversationDropdown = () => {
                         onCloseDropdown={() => setOpenDropdown(false)}
                       />
                     ))}
+                    {isLoadingMore && (
+                      <div className="py-2">
+                        <LoadingComment />
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-full">

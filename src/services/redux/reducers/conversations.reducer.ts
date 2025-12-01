@@ -74,9 +74,15 @@ const conversationSlice = createSlice({
       state,
       action: PayloadAction<{ conversations: IConversation[]; total: number }>
     ) => {
-      state.listConversations = action.payload.conversations;
-      state.total = action.payload.total;
+      const { conversations, total } = action.payload;
+      state.listConversations = conversations;
+      state.total = total;
     },
+    doAddMoreConversations: (state, action: PayloadAction<IConversation[]>) => {
+      const conversations = action.payload;
+      state.listConversations = [...state.listConversations, ...conversations];
+    },
+
     doOpenConversation: (state, action: PayloadAction<IConversation>) => {
       const { openConversations } = state;
       const conversation = action.payload;
@@ -392,6 +398,7 @@ export const {
   doCloseConversation,
   doSetIdConversation,
   doSetConversations,
+  doAddMoreConversations,
   doSetUnSeenConversation,
   doUpdateConversationPosition,
   doReadConversation,

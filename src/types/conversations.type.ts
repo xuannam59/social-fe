@@ -72,3 +72,8 @@ export interface IRevokeAdminFromConversation {
   userId: string;
   conversationId: string;
 }
+
+export interface IUnSeenConversation {
+  conversation: IConversation;
+  senderId: string;
+}
