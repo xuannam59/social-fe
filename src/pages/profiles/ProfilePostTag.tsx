@@ -8,9 +8,13 @@ import { useParams } from 'react-router-dom';
 import type { IPost } from '@social/types/posts.type';
 import { callApiFetchPostsByUserId } from '@social/apis/posts.api';
 import { TbLoader2 } from 'react-icons/tb';
+import type { IUser } from '@social/types/user.type';
 
-const ProfilePostTag = () => {
-  const { userId } = useParams();
+interface IProps {
+  userProfile: IUser;
+}
+
+const ProfilePostTag: React.FC<IProps> = ({ userProfile }) => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
   const [listPosts, setListPosts] = useState<IPost[]>([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(false);
@@ -19,10 +23,13 @@ const ProfilePostTag = () => {
   const totalPosts = useRef(0);
 
   const fetchUserPosts = useCallback(async () => {
-    if (!userId) return;
+    if (!userProfile) return;
     setIsLoadingPosts(true);
     try {
-      const res = await callApiFetchPostsByUserId(userId, 'limit=10&page=1');
+      const res = await callApiFetchPostsByUserId(
+        userProfile._id,
+        'limit=10&page=1'
+      );
       if (res.data) {
         setListPosts(res.data.list);
         totalPosts.current = res.data.meta.total;
@@ -33,18 +40,18 @@ const ProfilePostTag = () => {
     } finally {
       setIsLoadingPosts(false);
     }
-  }, [userId]);
+  }, [userProfile._id]);
 
   const loadMore = useCallback(async () => {
     if (isLoadingMore) return;
     if (listPosts.length >= totalPosts.current) return;
-    if (!userId) return;
+    if (!userProfile._id) return;
 
     try {
       setIsLoadingMore(true);
       const nextPage = page + 1;
       const res = await callApiFetchPostsByUserId(
-        userId,
+        userProfile._id,
         `limit=10&page=${nextPage}`
       );
       if (res.data && res.data.list.length > 0) {
@@ -56,7 +63,7 @@ const ProfilePostTag = () => {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [userId, page, isLoadingMore, listPosts.length]);
+  }, [userProfile._id, page, isLoadingMore, listPosts.length]);
 
   useEffect(() => {
     fetchUserPosts();
@@ -137,11 +144,11 @@ const ProfilePostTag = () => {
     <>
       <div className="flex flex-col lg:flex-row gap-5 items-center lg:items-start">
         <div className="w-full lg:w-3/7">
-          <ProfileIntroduction />
+          <ProfileIntroduction userProfile={userProfile} />
         </div>
         <div className="w-full lg:w-4/7 shrink-0">
           <div className="flex flex-col gap-3">
-            {userId === userInfo._id && (
+            {userProfile._id === userInfo._id && (
               <CreatePost onAddPostMySelf={onAddPostMySelf} />
             )}
 

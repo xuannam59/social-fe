@@ -54,6 +54,8 @@ const ProfilePage = () => {
       const res = await callApiGetUserInfo(userId);
       if (res.data) {
         setFriendInfo(res.data);
+      } else {
+        navigate(ROUTES.DEFAULT);
       }
     } catch (error) {
       console.error('Failed to fetch user info:', error);
@@ -187,7 +189,7 @@ const ProfilePage = () => {
   const renderTabContent = () => {
     switch (tabActive) {
       case 'posts':
-        return <ProfilePostTag />;
+        return <ProfilePostTag userProfile={friendInfo} />;
       case 'friends':
         return <ProfileFriendListTab />;
       default:

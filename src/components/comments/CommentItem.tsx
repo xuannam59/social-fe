@@ -34,6 +34,7 @@ import { useSockets } from '@social/providers/SocketProvider';
 import { NOTIFICATION_MESSAGE } from '@social/defaults/socket.default';
 import type { IPost } from '@social/types/posts.type';
 import type { IEmojiReaction } from '@social/types/commons.type';
+import { Link } from 'react-router-dom';
 
 interface IProps {
   post: IPost;
@@ -364,16 +365,20 @@ const CommentItem: React.FC<IProps> = ({
     <>
       <div className={`flex items-start gap-2 `}>
         <div className="flex-shrink-0">
-          <AvatarUser size={40} avatar={comment.authorId.avatar} />
+          <Link to={`/${comment.authorId._id}`}>
+            <AvatarUser size={40} avatar={comment.authorId.avatar} />
+          </Link>
         </div>
         <div className="w-full">
           <div className="w-full group/comment">
             <div className="w-fit max-w-[80%] ">
               <div className="flex items-center gap-2">
                 <div className="bg-gray-200 rounded-xl p-2 mb-1">
-                  <div className="text-sm font-semibold cursor-pointer">
-                    {author.fullname}
-                  </div>
+                  <Link to={`/${comment.authorId._id}`}>
+                    <div className="text-sm font-semibold cursor-pointer text-black">
+                      {author.fullname}
+                    </div>
+                  </Link>
                   <Paragraph className="!m-0">
                     {renderComment(comment.content, comment.mentions)}
                   </Paragraph>
