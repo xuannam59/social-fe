@@ -12,6 +12,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import RouterPrivate from './RouterPrivate';
 import ProfilePage from '@social/pages/profiles/ProfilePage';
 import WatchPage from '@social/pages/watches/WatchPage';
+import FriendCategoryPage from '@social/pages/friends/FriendCategoryPage';
 
 const AppRoutes = () => {
   return (
@@ -30,6 +31,8 @@ const AppRoutes = () => {
             <Route path={ROUTES.DEFAULT} element={<HomePages />} />
             <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
             <Route path={ROUTES.WATCH} element={<WatchPage />} />
+            <Route path={ROUTES.FRIEND} element={<FriendCategoryPage />} />
+            <Route path={ROUTES.SAVED_POST} element={<>saved post</>} />
           </Route>
           <Route element={<StoryLayout />}>
             <Route path={ROUTES.STORY.CREATE} element={<StoryCreate />} />

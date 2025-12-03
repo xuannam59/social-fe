@@ -39,9 +39,16 @@ const ButtonAddFriend: React.FC<IProps> = ({ userIdB }) => {
 
   const getFriendStatus = useCallback(async () => {
     if (!userIdB || userIdB === userInfo._id) return;
-    const res = await callApiGetFriendStatus(userIdB);
-    if (res.data) {
-      setFriendShip(res.data);
+    try {
+      setIsLoading(true);
+      const res = await callApiGetFriendStatus(userIdB);
+      if (res.data) {
+        setFriendShip(res.data);
+      }
+    } catch (error) {
+      console.error('Failed to get friend status:', error);
+    } finally {
+      setIsLoading(false);
     }
   }, [userIdB, userInfo._id]);
 

@@ -1,17 +1,17 @@
-import type { IUser } from '@social/types/user.type';
-import AvatarUser from '../common/AvatarUser';
-import { formatRelativeTime } from '@social/common/convert';
 import {
   callApiAcceptFriend,
   callApiRejectFriend,
 } from '@social/apis/friend.api';
-import { Button, message } from 'antd';
-import type { IFriend } from '@social/types/friends.type';
-import { useNavigate } from 'react-router-dom';
-import { useSockets } from '@social/providers/SocketProvider';
+import { formatRelativeTime } from '@social/common/convert';
 import { NOTIFICATION_MESSAGE } from '@social/defaults/socket.default';
+import { useSockets } from '@social/providers/SocketProvider';
+import type { IInvitationFriend } from '@social/types/friends.type';
+import { Button, message } from 'antd';
+import { useNavigate } from 'react-router-dom';
+import AvatarUser from '../common/AvatarUser';
+import ButtonGradient from '../common/ButtonGradient';
 interface IProps {
-  invitation: IFriend;
+  invitation: IInvitationFriend;
   onRemoveInvitation: (invitationId: string) => void;
 }
 
@@ -19,7 +19,7 @@ const InviteFriendCard: React.FC<IProps> = ({
   invitation,
   onRemoveInvitation,
 }) => {
-  const friendInfo = invitation.fromUserId as IUser;
+  const friendInfo = invitation.fromUserId;
   const navigate = useNavigate();
   const { socket } = useSockets();
   const acceptInvite = async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -81,9 +81,13 @@ const InviteFriendCard: React.FC<IProps> = ({
             </span>
           </div>
           <div className="mt-2 flex items-center gap-2">
-            <Button type="primary" className="flex-1" onClick={acceptInvite}>
+            <ButtonGradient
+              type="primary"
+              className="flex-1"
+              onClick={acceptInvite}
+            >
               Xác nhận
-            </Button>
+            </ButtonGradient>
             <Button
               color="default"
               variant="filled"

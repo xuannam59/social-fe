@@ -1,5 +1,7 @@
 export const ROUTES = {
   DEFAULT: '/',
+  FRIEND: '/friends',
+  SAVED_POST: '/saved-post',
   WATCH: '/watch',
   GROUPS: '/groups',
   STORY: {

@@ -8,7 +8,7 @@ import {
   fetchGroupConversations,
 } from '@social/redux/reducers/conversations.reducer';
 import type { IConversation } from '@social/types/conversations.type';
-import type { IFriend } from '@social/types/friends.type';
+import type { IInvitationFriend } from '@social/types/friends.type';
 import { Button } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 import AvatarUser from '../common/AvatarUser';
@@ -17,16 +17,16 @@ import InviteFriendCard from '../friends/InviteFriendCard';
 import type { INotificationDelete } from '@social/types/notifications.type';
 
 const RightSidebar = () => {
-  const [invitationList, setInvitationList] = useState<IFriend[]>([]);
+  const [invitationList, setInvitationList] = useState<IInvitationFriend[]>([]);
   const { friendConversations, groupConversations } = useAppSelector(
     state => state.conversations
   );
   const dispatch = useAppDispatch();
   const fetchInvitationList = useCallback(async () => {
     try {
-      const res = await callApiGetInvitationList();
+      const res = await callApiGetInvitationList('limit=2&page=1');
       if (res.data) {
-        setInvitationList(res.data);
+        setInvitationList(res.data.list);
       }
     } catch (error) {
       console.log(error);

@@ -87,15 +87,16 @@ export const formatRelativeTimeV2 = (date: string) => {
 };
 
 export const formatFullDateTime = (
-  date: string,
+  timeStamp: string,
   showDayOfWeek = true,
   showYear = true
 ) => {
-  const day = dayjs(date).day();
-  const month = dayjs(date).month() + 1;
-  const year = dayjs(date).year();
-  const hour = dayjs(date).hour();
-  const minute = dayjs(date).minute();
+  const day = dayjs(timeStamp).day();
+  const date = dayjs(timeStamp).date();
+  const month = dayjs(timeStamp).month() + 1;
+  const year = dayjs(timeStamp).year();
+  const hour = dayjs(timeStamp).hour();
+  const minute = dayjs(timeStamp).minute();
   let dayText = '';
   switch (day) {
     case 0:
@@ -120,7 +121,7 @@ export const formatFullDateTime = (
       dayText = 'Thứ Bảy';
       break;
   }
-  return `${showDayOfWeek ? `${dayText}, ` : ''} ${day} Tháng ${month}${showYear ? `, ${year}` : ''} lúc ${hour}:${minute}`;
+  return `${showDayOfWeek ? `${dayText}, ` : ''} ${date} Tháng ${month}${showYear ? `, ${year}` : ''} lúc ${hour}:${minute}`;
 };
 
 export const formatNumberAbbreviate = (count: number): string => {
