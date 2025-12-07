@@ -29,10 +29,11 @@ import AvatarUser from '../common/AvatarUser';
 import UserTagsDisplay from '../common/UserTagsDisplay';
 import PostButtonLike from './PostButtonLike';
 import PostMediaGallery from './PostMediaGallery';
-import { callApiDeletePost } from '@social/apis/posts.api';
+import { callApiDeletePost, callApiSavePost } from '@social/apis/posts.api';
 import { doDeletePost } from '@social/redux/reducers/post.reducer';
 import ModalSharePost from '../modals/posts/ModalSharePost';
 import PostShareContent from './PostShareContent';
+import { TbBookmark } from 'react-icons/tb';
 
 const { Text } = Typography;
 
@@ -130,6 +131,19 @@ const PostView: React.FC<IProps> = ({
     }
   };
 
+  const handleSavePost = async () => {
+    try {
+      const res = await callApiSavePost(post._id);
+      if (res.data) {
+        message.success(res.data);
+      } else {
+        message.error(convertErrorMessage(res.message));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <>
       <div className="w-full h-fit bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 flex-shrink-0">
@@ -181,41 +195,50 @@ const PostView: React.FC<IProps> = ({
             <div className="flex items-center gap-2">
               {buttonClose && (
                 <>
-                  {isMyPost && (
-                    <>
-                      <Dropdown
-                        trigger={['click']}
-                        placement="bottomRight"
-                        arrow={true}
-                        menu={{
-                          items: [
-                            {
-                              label: (
-                                <div className="flex items-center gap-2">
-                                  <TbTrash size={18} className="text-red-500" />
-                                  <span className="text-base text-red-500">
-                                    Xoá bài viết
-                                  </span>
-                                </div>
-                              ),
-                              key: 'delete',
-                              onClick: handleDeletePost,
-                            },
-                            {
-                              label: 'Sửa bài viết',
-                              key: 'edit',
-                              icon: <TbPencil size={20} />,
-                              onClick: handleEditPost,
-                            },
-                          ],
-                        }}
-                      >
-                        <Button type="text" shape="circle">
-                          <TbDots size={24} className="text-gray-500" />
-                        </Button>
-                      </Dropdown>
-                    </>
-                  )}
+                  <Dropdown
+                    trigger={['click']}
+                    placement="bottomRight"
+                    arrow={true}
+                    menu={{
+                      items: [
+                        ...(isMyPost
+                          ? [
+                              {
+                                label: (
+                                  <div className="flex items-center gap-2">
+                                    <TbTrash
+                                      size={18}
+                                      className="text-red-500"
+                                    />
+                                    <span className="text-base text-red-500">
+                                      Xoá bài viết
+                                    </span>
+                                  </div>
+                                ),
+                                key: 'delete',
+                                onClick: handleDeletePost,
+                              },
+                              {
+                                label: 'Sửa bài viết',
+                                key: 'edit',
+                                icon: <TbPencil size={20} />,
+                                onClick: handleEditPost,
+                              },
+                            ]
+                          : []),
+                        {
+                          label: 'Lưu bài viết',
+                          key: 'save',
+                          icon: <TbBookmark size={20} />,
+                          onClick: () => handleSavePost(),
+                        },
+                      ],
+                    }}
+                  >
+                    <Button type="text" shape="circle">
+                      <TbDots size={24} className="text-gray-500" />
+                    </Button>
+                  </Dropdown>
                 </>
               )}
             </div>

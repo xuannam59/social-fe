@@ -19,13 +19,16 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { TbCameraFilled, TbEdit, TbMessageCircle } from 'react-icons/tb';
 import { useNavigate, useParams } from 'react-router-dom';
 import ProfileFriendListTab from './ProfileFriendListTab';
-import ProfilePostTag from './ProfilePostTag';
+import ProfilePostTab from './ProfilePostTab';
 
 const { Text, Paragraph } = Typography;
 
 const ProfilePage = () => {
   const { userId } = useParams();
   const userInfo = useAppSelector(state => state.auth.userInfo);
+  const openConversations = useAppSelector(
+    state => state.conversations.openConversations
+  );
   const [friendInfo, setFriendInfo] = useState<IUser>(USER_DEFAULT);
   const [coverPreview, setCoverPreview] = useState<IPreviewImage | null>(null);
   const [isLoadingCover, setIsLoadingCover] = useState(false);
@@ -106,6 +109,19 @@ const ProfilePage = () => {
       usersState: [],
       lastMessageAt: '',
     };
+
+    const isExist = openConversations.some(oc => {
+      const userIds = [...new Set(oc.users.map(u => u._id))];
+      return (
+        userIds.length === data.users.length &&
+        userIds.every(userId => data.users.some(u => u._id === userId))
+      );
+    });
+
+    if (isExist) {
+      return;
+    }
+
     dispatch(doOpenConversation(data));
   };
 
@@ -189,7 +205,7 @@ const ProfilePage = () => {
   const renderTabContent = () => {
     switch (tabActive) {
       case 'posts':
-        return <ProfilePostTag userProfile={friendInfo} />;
+        return <ProfilePostTab userProfile={friendInfo} />;
       case 'friends':
         return <ProfileFriendListTab />;
       default:

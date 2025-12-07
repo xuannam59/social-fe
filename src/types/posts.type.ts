@@ -36,6 +36,14 @@ export interface IPost {
   updatedAt: string;
 }
 
+export interface IPostSave {
+  _id: string;
+  postId: IPost;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface IFormCreatePost {
   content: string;
   privacy: string;

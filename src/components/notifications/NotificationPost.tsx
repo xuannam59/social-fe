@@ -72,10 +72,10 @@ const NotificationPost: React.FC<IProps> = ({
   }, []);
 
   useEffect(() => {
-    if (post._id) {
+    if (post._id && openModalViewPost) {
       getPostDetail();
     }
-  }, [getPostDetail, post._id]);
+  }, [getPostDetail, post._id, openModalViewPost]);
 
   const handleDeleteComment = useCallback((countDeleted: number) => {
     setPostDetail(prev => ({

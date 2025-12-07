@@ -1,20 +1,19 @@
+import { callApiFetchPostsByUserId } from '@social/apis/posts.api';
 import LoadingPostList from '@social/components/loading/LoadingPostList';
 import CreatePost from '@social/components/posts/CreatePost';
 import PostItem from '@social/components/posts/PostItem';
 import ProfileIntroduction from '@social/components/profiles/ProfileIntroduction';
 import { useAppSelector } from '@social/hooks/redux.hook';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
 import type { IPost } from '@social/types/posts.type';
-import { callApiFetchPostsByUserId } from '@social/apis/posts.api';
-import { TbLoader2 } from 'react-icons/tb';
 import type { IUser } from '@social/types/user.type';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { TbLoader2 } from 'react-icons/tb';
 
 interface IProps {
   userProfile: IUser;
 }
 
-const ProfilePostTag: React.FC<IProps> = ({ userProfile }) => {
+const ProfilePostTab: React.FC<IProps> = ({ userProfile }) => {
   const userInfo = useAppSelector(state => state.auth.userInfo);
   const [listPosts, setListPosts] = useState<IPost[]>([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(false);
@@ -23,7 +22,7 @@ const ProfilePostTag: React.FC<IProps> = ({ userProfile }) => {
   const totalPosts = useRef(0);
 
   const fetchUserPosts = useCallback(async () => {
-    if (!userProfile) return;
+    if (!userProfile || !userProfile._id) return;
     setIsLoadingPosts(true);
     try {
       const res = await callApiFetchPostsByUserId(
@@ -40,7 +39,7 @@ const ProfilePostTag: React.FC<IProps> = ({ userProfile }) => {
     } finally {
       setIsLoadingPosts(false);
     }
-  }, [userProfile._id]);
+  }, [userProfile]);
 
   const loadMore = useCallback(async () => {
     if (isLoadingMore) return;
@@ -205,4 +204,4 @@ const ProfilePostTag: React.FC<IProps> = ({ userProfile }) => {
   );
 };
 
-export default ProfilePostTag;
+export default ProfilePostTab;

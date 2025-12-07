@@ -4,6 +4,7 @@ import type {
   IPost,
   IPostLike,
   IFormCreatePostShare,
+  IPostSave,
 } from '@social/types/posts.type';
 import type {
   IBackendRes,
@@ -53,4 +54,18 @@ export const callApiUpdatePost = (postId: string, data: IFormCreatePost) => {
 
 export const callApiDeletePost = (postId: string) => {
   return axios.delete<IBackendRes<string>>(`/api/v1/posts/${postId}`);
+};
+
+export const callApiSavePost = (postId: string) => {
+  return axios.post<IBackendRes<string>>(`/api/v1/posts/save`, { postId });
+};
+
+export const callApiGetSavedPosts = (query?: string) => {
+  return axios.get<IBackendResPagination<IPostSave[]>>(
+    `/api/v1/posts/saved?${query ? query : ''}`
+  );
+};
+
+export const callApiUnsavePost = (postId: string) => {
+  return axios.delete<IBackendRes<string>>(`/api/v1/posts/unsave/${postId}`);
 };
