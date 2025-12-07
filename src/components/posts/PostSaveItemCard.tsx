@@ -1,12 +1,12 @@
+import { callApiUnsavePost } from '@social/apis/posts.api';
 import { convertErrorMessage, convertUrlString } from '@social/common/convert';
+import noImage from '@social/images/not-image.png';
 import type { IPostSave } from '@social/types/posts.type';
 import { Button, Dropdown, Image, message } from 'antd';
-import { useMemo, useState } from 'react';
-import noImage from '@social/images/not-image.png';
-import AvatarUser from '../common/AvatarUser';
-import { useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
 import { TbBookmarkOff, TbDots } from 'react-icons/tb';
-import { callApiUnsavePost } from '@social/apis/posts.api';
+import { useNavigate } from 'react-router-dom';
+import AvatarUser from '../common/AvatarUser';
 
 interface IProps {
   post: IPostSave;
